@@ -44,8 +44,15 @@ export function recordLoanPayment(db:LifeOSDatabase,paymentId:string,paidAmountM
  let relationships=db.relationships;
  let transaction:FinancialTransaction|undefined;
  let event:Event|undefined;
+ const existingTransaction=source.transactionId?db.transactions.find(x=>x.id===source.transactionId):undefined;
+ const existingEvent=existingTransaction?.eventId?db.events.find(x=>x.id===existingTransaction.eventId):undefined;
 
- if(accountId){
+ if(existingTransaction){
+  transaction={...existingTransaction,updatedAt:t,amountMinor:paidAmountMinor,transactionDate:paidDate,metadata:{...existingTransaction.metadata,loanPaymentId:payment.id}};
+  event=existingEvent?{...existingEvent,updatedAt:t,occurredAt:paidDate,metadata:{...existingEvent.metadata,loanId:loan.id,loanPaymentId:payment.id,paidAmountMinor}}:undefined;
+ }
+
+ if(!transaction && accountId){
   const account=db.accounts.find(a=>a.id===accountId);
   if(account){
    transaction={
@@ -58,18 +65,18 @@ export function recordLoanPayment(db:LifeOSDatabase,paymentId:string,paidAmountM
   }
  }
 
- event={
+ if(!event) event={
   id:id("evt"),entityType:"event",createdAt:t,updatedAt:t,eventType:"payment",
   title:`Payment: ${loan.name}`,status:"completed",occurredAt:paidDate,
   financialTransactionIds:transaction?[transaction.id]:[],
   metadata:{loanId:loan.id,loanPaymentId:payment.id,paidAmountMinor}
  };
 
- if(transaction) transaction.eventId=event.id;
- if(transaction) transactions=transactions.map(x=>x.id===transaction!.id?{...transaction!,eventId:event!.id}:x);
+ if(transaction && !transaction.eventId) transaction={...transaction,eventId:event!.id};
+ if(transaction) transactions=transactions.some(x=>x.id===transaction!.id)?transactions.map(x=>x.id===transaction!.id?transaction!:x):[...transactions,transaction];
 
  payment=transaction?{...payment,transactionId:transaction.id}:payment;
- events=[...events,event];
+ events=events.some(x=>x.id===event!.id)?events.map(x=>x.id===event!.id?event!:x):[...events,event];
  const links=[
   relationship(payment,loan,"payment_for"),
   relationship(event,loan,"payment_for"),
