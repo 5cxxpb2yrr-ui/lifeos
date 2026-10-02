@@ -8,6 +8,13 @@ import { createLoanPayment, recordLoanPayment } from "../domain/services/financi
 import { resolveFinancialHealth } from "../domain/resolvers/financial-health";
 import { validateLifeOSBackup, validateSeedBackup, restoreBackup, importSeed } from "../domain/services/seed";
 import { validateDatabaseIntegrity } from "../domain/resolvers/integrity";
+import { updateVehicleMaintenance } from "../domain/services/asset-operations";
+import { updateHomeEvent } from "../domain/services/home-operations";
+import { createGoal, updateGoal } from "../domain/services/goal-operations";
+import { createProject, updateProject } from "../domain/services/project-operations";
+import { createDecision, updateDecision } from "../domain/services/decision-operations";
+import { createPropertyEvent, updatePropertyEvent } from "../domain/services/property-operations";
+
 
 function base() { return createEmptyDatabase("2026-10-02T12:00:00.000Z"); }
 function entity(id:string, entityType:string) {
@@ -179,4 +186,30 @@ test("corruption rejection leaves the current database unchanged",()=>{
   const broken={...current,loanPayments:[{...entity("pay-bad","loan_payment"),loanId:"missing",scheduledDate:"2026-10-02",scheduledAmountMinor:100,status:"scheduled"} as any]};
   assert.equal(validateDatabaseIntegrity(broken).valid,false);
   assert.equal(JSON.stringify(current),before);
+});
+
+
+test("vehicle maintenance preserves before and after audit snapshots",()=>{
+ let db=base();
+ db={...db,vehicles:[{...entity("veh-a","vehicle"),make:"Test",model:"Vehicle",mileageUnit:"mi",status:"owned"} as any]};
+ db=createVehicleMaintenance(db,{vehicleId:"veh-a",date:"2026-10-02",serviceType:"Oil Change",costMinor:6500});
+ const id=db.vehicleMaintenance[0].id; db=updateVehicleMaintenance(db,id,{costMinor:7500});
+ const audit=db.auditEntries.find(x=>x.targetId===id&&x.action==="update")!;
+ assert.equal((audit.before as any).costMinor,6500); assert.equal((audit.after as any).costMinor,7500);
+});
+
+test("home, property, goal, project, and decision updates preserve before and after snapshots",()=>{
+ let db=base();
+ db=createHomeEvent(db,{title:"HVAC",eventType:"inspection",status:"planned"}); const homeId=db.events[0].id; db=updateHomeEvent(db,homeId,{status:"completed"});
+ db=createPropertyEvent(db,{title:"Roof",eventType:"inspection",status:"planned"}); const propertyId=db.events[1].id; db=updatePropertyEvent(db,propertyId,{status:"completed"});
+ db=createGoal(db,{name:"Goal",level:"annual",status:"planned"}); const goalId=db.goals[0].id; db=updateGoal(db,goalId,{status:"active",currentValue:25});
+ db=createProject(db,{name:"Project",status:"planned"}); const projectId=db.projects[0].id; db=updateProject(db,projectId,{status:"active"});
+ db=createDecision(db,{question:"Choose"}); const decisionId=db.decisions[0].id; db=updateDecision(db,decisionId,{outcome:"Chosen"});
+ const updates=db.auditEntries.filter(x=>x.action==="update");
+ assert.equal(updates.length,5);
+ assert.equal((updates.find(x=>x.targetId===homeId)!.before as any).status,"planned"); assert.equal((updates.find(x=>x.targetId===homeId)!.after as any).status,"completed");
+ assert.equal((updates.find(x=>x.targetId===propertyId)!.before as any).status,"planned"); assert.equal((updates.find(x=>x.targetId===propertyId)!.after as any).status,"completed");
+ assert.equal((updates.find(x=>x.targetId===goalId)!.before as any).status,"planned"); assert.equal((updates.find(x=>x.targetId===goalId)!.after as any).status,"active");
+ assert.equal((updates.find(x=>x.targetId===projectId)!.before as any).status,"planned"); assert.equal((updates.find(x=>x.targetId===projectId)!.after as any).status,"active");
+ assert.equal((updates.find(x=>x.targetId===decisionId)!.before as any).outcome,undefined); assert.equal((updates.find(x=>x.targetId===decisionId)!.after as any).outcome,"Chosen");
 });
