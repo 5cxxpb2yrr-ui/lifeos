@@ -3,7 +3,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import type {ReactNode} from "react";
 import type {LifeOSBackup} from "@/domain/contracts/database";
 import {createEmptyDatabase} from "@/domain/services/empty-database";
-import {importSeed,validateSeedBackup,explainSeedValidation} from "@/domain/services/seed";
+import {importSeed,restoreBackup,validateLifeOSBackup,validateSeedBackup,explainSeedValidation,explainBackupValidation} from "@/domain/services/seed";
 import {validateDatabase} from "@/domain/services/integrity";
 import {resolveMissionControl} from "@/domain/resolvers/mission-control";
 import {resolveSearch} from "@/domain/resolvers/search";
@@ -14,18 +14,32 @@ import {resolveFinancialHealth} from "@/domain/resolvers/financial-health";
 
 export default function MissionControl(){
  const [db,setDb]=useState(createEmptyDatabase); const [query,setQuery]=useState(""); const [notice,setNotice]=useState(""); const [activeView,setActiveView]=useState("mission"); const [command,setCommand]=useState<"event"|"loop"|null>(null);
- const fileRef=useRef<HTMLInputElement>(null);
+ const fileRef=useRef<HTMLInputElement>(null); const backupRef=useRef<HTMLInputElement>(null);
  useEffect(()=>{loadLocalDatabase().then(local=>{if(local)setDb(local);else saveLocalDatabase(createEmptyDatabase())}).catch(()=>setNotice("Local database could not be opened."))},[]);
  const vm=useMemo(()=>resolveMissionControl(db),[db]); const financialHealth=useMemo(()=>resolveFinancialHealth(db),[db]); const results=useMemo(()=>resolveSearch(db,query),[db,query]);
  const graph=useMemo(()=>{const id=db.events[0]?.id??db.openLoops[0]?.id??db.accounts[0]?.id;return id?resolveGraph(db,id):null},[db]);
  const issues=useMemo(()=>validateDatabase(db),[db]);
-function persist(next:typeof db,message:string){setDb(next);saveLocalDatabase(next).then(()=>setNotice(message)).catch(()=>setNotice("Change created in memory but could not be saved."))}
+async function persist(next:typeof db,message:string){
+ try{await saveLocalDatabase(next);setDb(next);setNotice(message)}
+ catch{setNotice("Change was not saved. Local database is unchanged.")}
+}
  function addEvent(title:string){persist(createEvent(db,{title,eventType:"task",status:"planned"}),"Event added to the graph.")}
  function addLoop(title:string){persist(createOpenLoop(db,{title,type:"task",status:"open",priority:"normal"}),"Open loop added to the graph.")}
  function completeEvent(id:string){persist(updateEventStatus(db,id,"completed"),"Event completed.")}
  function resolveLoop(id:string){persist(updateOpenLoopStatus(db,id,"resolved"),"Open loop resolved.")}
- function exportBackup(){const backup:LifeOSBackup={format:"lifeos-backup",formatVersion:"1.0",schemaVersion:db.schemaVersion,seedVersion:db.seedVersion,appVersion:db.appVersion,exportedAt:new Date().toISOString(),database:db};const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="lifeos-backup.json";a.click();URL.revokeObjectURL(url);}
- function importFile(file:File){file.text().then(raw=>{const parsed:unknown=JSON.parse(raw);if(!validateSeedBackup(parsed)){setNotice("Import rejected: "+explainSeedValidation(parsed).reason);return;}const imported=importSeed(parsed);const validation=validateDatabase(imported);if(validation.some(x=>x.severity==="error")){setNotice("Import rejected: database integrity errors found.");return;}saveLocalDatabase(imported).then(()=>{setDb(imported);setNotice("Immutable seed loaded and validated.")}).catch(()=>setNotice("Seed validated but could not be saved locally."));}).catch(()=>setNotice("Import rejected: invalid JSON."));}
+ function makeBackup():LifeOSBackup{return{format:"lifeos-backup",formatVersion:"1.0",schemaVersion:db.schemaVersion,seedVersion:db.seedVersion,appVersion:db.appVersion,exportedAt:new Date().toISOString(),database:db}}
+ function downloadBackup(backup:LifeOSBackup,filename:string){const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+ function exportBackup(){downloadBackup(makeBackup(),"lifeos-backup.json");setNotice("Backup exported.")}
+ function importFile(file:File,mode:"seed"|"restore"){file.text().then(raw=>{let parsed:unknown;try{parsed=JSON.parse(raw)}catch{setNotice("Import rejected: invalid JSON.");return}
+  if(mode==="seed"){
+   if(!validateSeedBackup(parsed)){setNotice("Seed rejected: "+explainSeedValidation(parsed).reason);return}
+  }else if(!validateLifeOSBackup(parsed)){setNotice("Restore rejected: "+explainBackupValidation(parsed).reason);return}
+  const imported=mode==="seed"?importSeed(parsed):restoreBackup(parsed);
+  const validation=validateDatabase(imported);
+  if(validation.some(x=>x.severity==="error")){setNotice(mode==="seed"?"Seed rejected: database integrity errors found.":"Restore rejected: database integrity errors found.");return}
+  if(mode==="restore")downloadBackup(makeBackup(),`lifeos-pre-restore-${new Date().toISOString().replace(/[:.]/g,"-")}.json`);
+  saveLocalDatabase(imported).then(()=>{setDb(imported);setNotice(mode==="seed"?"Immutable seed loaded and validated.":"Backup restored and validated.")}).catch(()=>setNotice(mode==="seed"?"Seed validated but could not be saved locally.":"Restore failed; current local database was not changed."));
+ }).catch(()=>setNotice("Import rejected: unable to read file."));}
  return <div className="lifeos-shell">
   <header className="topbar"><div className="topbar-inner"><div className="brand">LIFE<span>OS</span> V2</div><input className="search" aria-label="Universal search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search the graph…" /><div className="status-pill">LOCAL-FIRST</div></div></header>
   <main className="content">
@@ -54,7 +68,7 @@ function persist(next:typeof db,message:string){setDb(next);saveLocalDatabase(ne
     <Panel title="People & Relationships"><StatusRow label="People" value={String(db.people.length)} tag="GRAPH"/><StatusRow label="Relationships" value={String(db.relationships.length)} tag="GRAPH"/><StatusRow label="Projects" value={String(db.projects.length)} tag="GRAPH"/><StatusRow label="Goals" value={String(db.goals.length)} tag="GRAPH"/><StatusRow label="Decisions" value={String(db.decisions.length)} tag="GRAPH"/><StatusRow label="Documents" value={String(db.documents.length)} tag="GRAPH"/></Panel>
     <Panel title="System"><StatusRow label="Schema" value={db.schemaVersion} tag="CORE"/><StatusRow label="App" value={db.appVersion} tag="CORE"/><StatusRow label="Storage" value="IndexedDB" tag="LOCAL"/><StatusRow label="Seed" value={db.seedVersion} tag={db.seedVersion==="NO_REAL_SEED_LOADED"?"WAITING":"LOADED"}/></Panel>
    </section>}
-   <section className="card tools-panel"><div><div className="section-title"><h2>Data Controls</h2></div><p className="row-meta">The real Full Life Control seed is protected. Imports are validated before they can replace the local graph.</p></div><div className="tool-actions"><button className="action" onClick={exportBackup}>Export backup</button><button className="action primary" onClick={()=>fileRef.current?.click()}>Load immutable seed</button><input ref={fileRef} hidden type="file" accept="application/json,.json" onChange={e=>{const file=e.target.files?.[0];if(file)importFile(file);e.currentTarget.value=""}} /></div></section>
+   <section className="card tools-panel"><div><div className="section-title"><h2>Data Controls</h2></div><p className="row-meta">The real Full Life Control seed is protected. Imports are validated before they can replace the local graph.</p></div><div className="tool-actions"><button className="action" onClick={exportBackup}>Export backup</button><button className="action" onClick={()=>backupRef.current?.click()}>Restore backup</button><button className="action primary" onClick={()=>fileRef.current?.click()}>Load immutable seed</button><input ref={backupRef} hidden type="file" accept="application/json,.json" onChange={e=>{const file=e.target.files?.[0];if(file)importFile(file,"restore");e.currentTarget.value=""}} /><input ref={fileRef} hidden type="file" accept="application/json,.json" onChange={e=>{const file=e.target.files?.[0];if(file)importFile(file,"seed");e.currentTarget.value=""}} /></div></section>
   </main>
   {command&&<CommandModal type={command} onClose={()=>setCommand(null)} onEvent={addEvent} onLoop={addLoop}/>}<nav className="bottom-nav"><div className="nav-inner">{[["mission","⌂","Mission"],["events","◷","Events"],["finance","$","Finance"],["assets","◇","Assets"],["more","⋯","More"]].map(([id,icon,label])=><button key={id} onClick={()=>setActiveView(id)} className={"nav-button "+(activeView===id?"active":"")}><span className="nav-icon">{icon}</span>{label}</button>)}</div></nav>
  </div>
