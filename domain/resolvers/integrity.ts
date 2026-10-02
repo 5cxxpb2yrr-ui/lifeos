@@ -30,9 +30,8 @@ export function validateDatabaseIntegrity(db:LifeOSDatabase):IntegrityResult{
  }
  for(const v of db.vehicleMaintenance){ if(v.eventId) entityRefArrays.push([[v.id,"maintenance.eventId",[v.eventId]]]); }
  for(const r of db.rooms){ /* propertyId is already validated below */ }
- for(const row of entityRefArrays) for(const [recordId,field,targets] of row) for(const target of targets??[]) refs.push(ref(recordId,target,field));
-
  const refs:Array<[string,string,string,string?]>=[
+
   ...db.relationships.map(r=>ref(r.id,r.fromId,"relationship.fromId",r.fromType)),
   ...db.relationships.map(r=>ref(r.id,r.toId,"relationship.toId",r.toType)),
   ...db.loanPayments.map(p=>ref(p.id,p.loanId,"loanPayment.loanId")),
@@ -50,6 +49,7 @@ export function validateDatabaseIntegrity(db:LifeOSDatabase):IntegrityResult{
   ...db.electricalDevices.filter(d=>d.roomId).map(d=>ref(d.id,d.roomId!,"electricalDevice.roomId")),
   ...db.electricalDevices.filter(d=>d.panelId).map(d=>ref(d.id,d.panelId!,"electricalDevice.panelId"))
  ];
+ for(const row of entityRefArrays) for(const [recordId,field,targets] of row) for(const target of targets??[]) refs.push(ref(recordId,target,field));
  for(const [recordId,target,field,expectedType] of refs){const targetInfo=ids.get(target);if(!targetInfo) errors.push({severity:"error",code:"BROKEN_REFERENCE",message:`${field} on ${recordId} references missing id ${target}.`,recordId});else if(expectedType&&targetInfo!==expectedType) errors.push({severity:"error",code:"REFERENCE_TYPE_MISMATCH",message:`${field} on ${recordId} references ${target}, which is ${targetInfo}; expected ${expectedType}.`,recordId});}
  for(const r of db.relationships){
  const allowed=["related_to","person_for","owns","uses","belongs_to","part_of","located_in","supports","depends_on","created_by","assigned_to","linked_to","caused_by","documents","scheduled_for","paid_by","payment_for","maintenance_for","child_of","parent_of","member_of"];
