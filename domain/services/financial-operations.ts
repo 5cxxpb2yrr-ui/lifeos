@@ -3,9 +3,9 @@ import type {AuditEntry,BaseEntity,Event,FinancialTransaction,LifeOSDatabase,Loa
 const now=()=>new Date().toISOString();
 const id=(p:string)=>p+"-"+crypto.randomUUID();
 
-function audit(db:LifeOSDatabase,target:BaseEntity,action:"create"|"update"):LifeOSDatabase{
+function audit(db:LifeOSDatabase,target:BaseEntity,action:"create"|"update",before?:BaseEntity):LifeOSDatabase{
  const t=now();
- const entry:AuditEntry={id:id("audit"),entityType:"audit",createdAt:t,updatedAt:t,action,targetId:target.id,targetType:target.entityType,timestamp:t,after:{...target},source:"financial-operations"};
+ const entry:AuditEntry={id:id("audit"),entityType:"audit",createdAt:t,updatedAt:t,action,targetId:target.id,targetType:target.entityType,timestamp:t,before:before?{...before}:undefined,after:{...target},source:"financial-operations"};
  return {...db,auditEntries:[...db.auditEntries,entry],metadata:{...db.metadata,updatedAt:t}};
 }
 function relationship(from:BaseEntity,to:BaseEntity,relationshipType:Relationship["relationshipType"]):Relationship{
@@ -90,8 +90,8 @@ export function recordLoanPayment(db:LifeOSDatabase,paymentId:string,paidAmountM
  relationships=linked.relationships;
 
  const next:LifeOSDatabase={...db,loanPayments:db.loanPayments.map(p=>p.id===paymentId?payment:p),transactions,events,relationships,metadata:{...db.metadata,updatedAt:t}};
- let result=audit(next,payment,"update");
- if(transaction) result=audit(result,transaction,existingTransaction?"update":"create");
- result=audit(result,event,existingEvent?"update":"create");
+ let result=audit(next,payment,"update",source);
+ if(transaction) result=audit(result,transaction,existingTransaction? "update":"create",existingTransaction);
+ result=audit(result,event,existingEvent?"update":"create",existingEvent);
  return result;
 }
