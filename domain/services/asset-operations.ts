@@ -1,6 +1,10 @@
-import type {LifeOSDatabase,VehicleMaintenance,Relationship,Event} from "@/domain/contracts/database";
+import type {AuditEntry,LifeOSDatabase,VehicleMaintenance,Relationship,Event,BaseEntity} from "@/domain/contracts/database";
 const now=()=>new Date().toISOString(); const id=(p:string)=>p+"-"+crypto.randomUUID();
-const audit=(db:LifeOSDatabase,target:Record<string,unknown>,action:"create")=>{const t=now();return {...db,auditEntries:[...db.auditEntries,{id:id("audit"),entityType:"audit",createdAt:t,updatedAt:t,action,targetId:String(target.id),targetType:String(target.entityType),timestamp:t,after:target,source:"asset-operations"}],metadata:{...db.metadata,updatedAt:t}}};
+const audit=(db:LifeOSDatabase,target:BaseEntity,action:"create"):LifeOSDatabase=>{
+ const t=now();
+ const entry:AuditEntry={id:id("audit"),entityType:"audit",createdAt:t,updatedAt:t,action,targetId:target.id,targetType:target.entityType,timestamp:t,after:{...target},source:"asset-operations"};
+ return {...db,auditEntries:[...db.auditEntries,entry],metadata:{...db.metadata,updatedAt:t}};
+};
 
 export function createVehicleMaintenance(db:LifeOSDatabase,input:Pick<VehicleMaintenance,"vehicleId"|"date"|"serviceType">&Partial<VehicleMaintenance>):LifeOSDatabase{
  const t=now(); const m:VehicleMaintenance={...input,id:id("maint"),entityType:"vehicle_maintenance",createdAt:t,updatedAt:t,vehicleId:input.vehicleId,date:input.date,serviceType:input.serviceType};
