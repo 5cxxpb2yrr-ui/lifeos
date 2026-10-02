@@ -5,8 +5,9 @@ const now=()=>new Date().toISOString(); const id=(p:string)=>p+"-"+crypto.random
 export function createVehicleMaintenance(db:LifeOSDatabase,input:Pick<VehicleMaintenance,"vehicleId"|"date"|"serviceType">&Partial<VehicleMaintenance>):LifeOSDatabase{
  const t=now(); const m:VehicleMaintenance={...input,id:id("maint"),entityType:"vehicle_maintenance",createdAt:t,updatedAt:t,vehicleId:input.vehicleId,date:input.date,serviceType:input.serviceType};
  const e:Event={id:id("evt"),entityType:"event",createdAt:t,updatedAt:t,eventType:"maintenance",title:input.description??input.serviceType,status:"completed",occurredAt:input.date,metadata:{vehicleId:input.vehicleId,maintenanceId:m.id}};
- let next={...db,vehicleMaintenance:[...db.vehicleMaintenance,m],events:[...db.events,e]};
- next=appendAudit(next,m,"create","asset-operations");
+ const linkedMaintenance:VehicleMaintenance={...m,eventId:e.id};
+ let next={...db,vehicleMaintenance:[...db.vehicleMaintenance,linkedMaintenance],events:[...db.events,e]};
+ next=appendAudit(next,linkedMaintenance,"create","asset-operations");
  return appendAudit(next,e,"create","asset-operations");
 }
 export function updateVehicleMaintenance(db:LifeOSDatabase,maintenanceId:string,patch:Partial<Omit<VehicleMaintenance,"id"|"entityType"|"createdAt">>):LifeOSDatabase{
