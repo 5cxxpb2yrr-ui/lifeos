@@ -34,10 +34,10 @@ async function persist(next:typeof db,message:string){
  function downloadBackup(backup:LifeOSBackup,filename:string){const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
  function exportBackup(){downloadBackup(makeBackup(),"lifeos-backup.json");setNotice("Backup exported.")}
  async function installBundledSeed(){
+  const current=structuredClone(db);
   try{
    const backup=getBundledImmutableSeed();
    const candidate=structuredClone(backup.database);
-   const current=structuredClone(db);
    const integrity=validateDatabaseIntegrity(candidate);
    if(!integrity.valid){setNotice("Bundled seed rejected: database integrity errors found.");return}
    const continuity=validateSeedContinuity(db,candidate);
