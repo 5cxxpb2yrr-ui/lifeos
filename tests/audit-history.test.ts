@@ -73,10 +73,10 @@ test("reconstructEntityAt returns the correct state before, between, and after u
   };
 
   assert.equal(reconstructEntityAt(db, "evt-time", "2026-09-30T00:00:00.000Z"), undefined);
-  assert.equal(reconstructEntityAt(db, "evt-time", "2026-10-01T09:00:00.000Z")?.status, "planned");
-  assert.equal(reconstructEntityAt(db, "evt-time", "2026-10-02T23:59:59.999Z")?.status, "in_progress");
-  assert.equal(reconstructEntityAt(db, "evt-time", "2026-10-03T10:00:00.000Z")?.status, "completed");
-  assert.equal(reconstructEntityAt(db, "evt-time", "2026-12-01T00:00:00.000Z")?.status, "completed");
+  assert.equal(historicalStatus(reconstructEntityAt(db, "evt-time", "2026-10-01T09:00:00.000Z") as ReturnType<typeof eventState> | undefined), "planned");
+  assert.equal(historicalStatus(reconstructEntityAt(db, "evt-time", "2026-10-02T23:59:59.999Z") as ReturnType<typeof eventState> | undefined), "in_progress");
+  assert.equal(historicalStatus(reconstructEntityAt(db, "evt-time", "2026-10-03T10:00:00.000Z") as ReturnType<typeof eventState> | undefined), "completed");
+  assert.equal(historicalStatus(reconstructEntityAt(db, "evt-time", "2026-12-01T00:00:00.000Z") as ReturnType<typeof eventState> | undefined), "completed");
 });
 
 test("reconstruction honors deletion and same-timestamp audit order", () => {
@@ -90,7 +90,7 @@ test("reconstruction honors deletion and same-timestamp audit order", () => {
     ],
   };
 
-  assert.equal(reconstructEntityAt(db, "evt-time", "2026-10-02T09:59:59.999Z")?.status, "planned");
+  assert.equal(historicalStatus(reconstructEntityAt(db, "evt-time", "2026-10-02T09:59:59.999Z") as ReturnType<typeof eventState> | undefined), "planned");
   assert.equal(reconstructEntityAt(db, "evt-time", "2026-10-02T10:00:00.000Z"), undefined);
 });
 
@@ -108,11 +108,11 @@ test("reconstructEntityHistory returns immutable historical snapshots", () => {
 
   const history = reconstructEntityHistory(db, "evt-time");
   assert.equal(history.length, 2);
-  assert.equal(history[0].state?.status, "planned");
-  assert.equal(history[1].state?.status, "completed");
+  assert.equal(historicalStatus(history[0].state as ReturnType<typeof eventState> | undefined), "planned");
+  assert.equal(historicalStatus(history[1].state as ReturnType<typeof eventState> | undefined), "completed");
 
   (history[0].state as any).status = "corrupted";
-  assert.equal(reconstructEntityAt(db, "evt-time", "2026-10-01T12:00:00.000Z")?.status, "planned");
+  assert.equal(historicalStatus(reconstructEntityAt(db, "evt-time", "2026-10-01T12:00:00.000Z") as ReturnType<typeof eventState> | undefined), "planned");
   assert.equal(db.auditEntries[0].after?.status, "planned");
 });
 
