@@ -11,6 +11,7 @@ import {resolveGraph} from "@/domain/resolvers/graph";
 import {loadLocalDatabase,saveLocalDatabase} from "@/storage/indexeddb/database";
 import {createEvent,createOpenLoop,updateEventStatus,updateOpenLoopStatus} from "@/domain/services/operations";
 import {resolveFinancialHealth} from "@/domain/resolvers/financial-health";
+import {validateDatabaseIntegrity} from "@/domain/resolvers/integrity";
 
 export default function MissionControl(){
  const [db,setDb]=useState(createEmptyDatabase); const [query,setQuery]=useState(""); const [notice,setNotice]=useState(""); const [activeView,setActiveView]=useState("mission"); const [command,setCommand]=useState<"event"|"loop"|null>(null);
@@ -18,7 +19,8 @@ export default function MissionControl(){
  useEffect(()=>{loadLocalDatabase().then(local=>{if(local)setDb(local);else saveLocalDatabase(createEmptyDatabase())}).catch(()=>setNotice("Local database could not be opened."))},[]);
  const vm=useMemo(()=>resolveMissionControl(db),[db]); const financialHealth=useMemo(()=>resolveFinancialHealth(db),[db]); const results=useMemo(()=>resolveSearch(db,query),[db,query]);
  const graph=useMemo(()=>{const id=db.events[0]?.id??db.openLoops[0]?.id??db.accounts[0]?.id;return id?resolveGraph(db,id):null},[db]);
- const issues=useMemo(()=>validateDatabase(db),[db]);
+ const integrity=useMemo(()=>validateDatabaseIntegrity(db),[db]);
+ const issues=integrity.errors;
 async function persist(next:typeof db,message:string){
  try{await saveLocalDatabase(next);setDb(next);setNotice(message)}
  catch{setNotice("Change was not saved. Local database is unchanged.")}
@@ -35,10 +37,29 @@ async function persist(next:typeof db,message:string){
    if(!validateSeedBackup(parsed)){setNotice("Seed rejected: "+explainSeedValidation(parsed).reason);return}
   }else if(!validateLifeOSBackup(parsed)){setNotice("Restore rejected: "+explainBackupValidation(parsed).reason);return}
   const imported=mode==="seed"?importSeed(parsed):restoreBackup(parsed);
-  const validation=validateDatabase(imported);
-  if(validation.some(x=>x.severity==="error")){setNotice(mode==="seed"?"Seed rejected: database integrity errors found.":"Restore rejected: database integrity errors found.");return}
-  if(mode==="restore")downloadBackup(makeBackup(),`lifeos-pre-restore-${new Date().toISOString().replace(/[:.]/g,"-")}.json`);
-  saveLocalDatabase(imported).then(()=>{setDb(imported);setNotice(mode==="seed"?"Immutable seed loaded and validated.":"Backup restored and validated.")}).catch(()=>setNotice(mode==="seed"?"Seed validated but could not be saved locally.":"Restore failed; current local database was not changed."));
+  const candidateIntegrity=validateDatabaseIntegrity(imported);
+  if(!candidateIntegrity.valid){setNotice(mode==="seed"?"Seed rejected: database integrity errors found.":"Restore rejected: database integrity errors found.");return}
+  const candidate=structuredClone(imported);
+  const revalidated=validateDatabaseIntegrity(candidate);
+  if(!revalidated.valid){setNotice(mode==="seed"?"Seed rejected: cloned database failed integrity validation.":"Restore rejected: cloned database failed integrity validation.");return}
+  const current=structuredClone(db);
+  const currentBackup=makeBackup();
+  if(mode==="restore")downloadBackup(currentBackup,`lifeos-pre-restore-${new Date().toISOString().replace(/[:.]/g,"-")}.json`);
+  saveLocalDatabase(candidate).then(async()=>{
+   try{
+    const reloaded=await loadLocalDatabase();
+    if(!reloaded)throw new Error("Database disappeared after write.");
+    const verified=validateDatabaseIntegrity(reloaded);
+    if(!verified.valid)throw new Error("Reloaded database failed integrity validation.");
+    if(JSON.stringify(reloaded)!==JSON.stringify(candidate))throw new Error("Reloaded database does not match candidate.");
+    setDb(reloaded);
+    setNotice(mode==="seed"?"Immutable seed loaded, persisted, reloaded, and verified.":"Backup restored, persisted, reloaded, and verified.");
+   }catch{
+    try{await saveLocalDatabase(current)}catch{}
+    setDb(current);
+    setNotice(mode==="seed"?"Seed write verification failed; current database was restored.":"Restore verification failed; current database was restored.");
+   }
+  }).catch(()=>{setDb(current);setNotice(mode==="seed"?"Seed could not be saved; current database was not changed.":"Restore failed; current local database was not changed.");});
  }).catch(()=>setNotice("Import rejected: unable to read file."));}
  return <div className="lifeos-shell">
   <header className="topbar"><div className="topbar-inner"><div className="brand">LIFE<span>OS</span> V2</div><input className="search" aria-label="Universal search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search the graph…" /><div className="status-pill">LOCAL-FIRST</div></div></header>
