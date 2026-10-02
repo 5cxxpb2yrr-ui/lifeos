@@ -15,8 +15,7 @@ export function getAuditTrail(db: LifeOSDatabase, targetId: string): AuditEntry[
     .sort((a, b) => {
       const time = a.entry.timestamp.localeCompare(b.entry.timestamp);
       if (time !== 0) return time;
-      const id = a.entry.id.localeCompare(b.entry.id);
-      return id !== 0 ? id : a.index - b.index;
+      return a.index - b.index;
     })
     .map(({ entry }) => entry);
 }
