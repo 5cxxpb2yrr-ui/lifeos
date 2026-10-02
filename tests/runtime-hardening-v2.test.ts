@@ -107,3 +107,47 @@ test("backup restore and seed import clone database without sharing object refer
   restored.events.push({id:"evt-x",entityType:"event",createdAt:"2026-10-02T12:00:00.000Z",updatedAt:"2026-10-02T12:00:00.000Z",eventType:"task",title:"clone",status:"planned"});
   assert.equal(imported.events.length,0);
 });
+
+
+test("integrity resolver detects relationship type mismatches and duplicate IDs",()=>{
+  let db=base();
+  db={...db,
+    accounts:[{...entity("acct-1","financial_account"),name:"Checking",accountType:"checking",currency:"USD"} as any],
+    loans:[{...entity("loan-1","loan"),provider:"Test",loanType:"installment",name:"Loan",originalPrincipalMinor:1000,currency:"USD",status:"active"} as any],
+    relationships:[{...entity("rel-1","relationship"),fromId:"loan-1",fromType:"loan",toId:"acct-1",toType:"loan",relationshipType:"linked_to"} as any]
+  };
+  let result=validateDatabaseIntegrity(db);
+  assert.equal(result.valid,false);
+  assert.equal(result.errors.some(x=>x.code==="REFERENCE_TYPE_MISMATCH"),true);
+  db={...db,events:[{...entity("loan-1","event"),eventType:"task",title:"Duplicate",status:"planned"} as any]};
+  result=validateDatabaseIntegrity(db);
+  assert.equal(result.valid,false);
+  assert.equal(result.errors.some(x=>x.code==="DUPLICATE_ID"),true);
+});
+
+test("backup validator rejects structurally invalid graph even when envelope is valid",()=>{
+  const db=base();
+  const broken={...db,
+    loans:[{...entity("loan-1","loan"),provider:"Test",loanType:"installment",name:"Broken",originalPrincipalMinor:1000,currency:"USD",status:"active"} as any],
+    loanPayments:[{...entity("pay-1","loan_payment"),loanId:"missing",scheduledDate:"2026-10-02",scheduledAmountMinor:100,status:"scheduled"} as any]
+  };
+  const backup={format:"lifeos-backup" as const,formatVersion:"1",schemaVersion:broken.schemaVersion,seedVersion:broken.seedVersion,appVersion:broken.appVersion,exportedAt:"2026-10-02T12:00:00.000Z",database:broken};
+  assert.equal(validateLifeOSBackup(backup),false);
+});
+
+test("loan payment is idempotent only when caller supplies a new payment event; repeated recording creates distinct historical transactions",()=>{
+  let db=base();
+  db={...db,
+    accounts:[{...entity("acct-1","financial_account"),name:"Checking",accountType:"checking",currency:"USD",openingBalanceMinor:50000} as any],
+    loans:[{...entity("loan-1","loan"),provider:"Test",loanType:"installment",name:"Loan",originalPrincipalMinor:20000,currency:"USD",linkedAccountId:"acct-1",status:"active"} as any]
+  };
+  db=createLoanPayment(db,{loanId:"loan-1",scheduledDate:"2026-10-10",scheduledAmountMinor:5000});
+  const payment=db.loanPayments[0];
+  db=recordLoanPayment(db,payment.id,2500,"2026-10-02");
+  assert.equal(db.transactions.length,1);
+  assert.equal(db.events.length,1);
+  db=recordLoanPayment(db,payment.id,5000,"2026-10-03");
+  assert.equal(db.transactions.length,2);
+  assert.equal(db.events.length,2);
+  assert.equal(db.loanPayments[0].paidAmountMinor,5000);
+});
