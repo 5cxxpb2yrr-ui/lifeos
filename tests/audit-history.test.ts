@@ -34,7 +34,11 @@ function audit(
   };
 }
 
-function historicalStatus(state: ReturnType<typeof eventState> | undefined): string | undefined {\n  return state?.status;\n}\n\nfunction eventState(status: string, updatedAt: string) {
+function historicalStatus(state: ReturnType<typeof eventState> | undefined): string | undefined {
+  return state?.status;
+}
+
+function eventState(status: string, updatedAt: string) {
   return {
     id: "evt-time",
     entityType: "event",
