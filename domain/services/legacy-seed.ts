@@ -8,10 +8,14 @@ const nowIso=()=>new Date().toISOString();
 const iso=(v:any, fallback:string)=>{if(typeof v==="number")return new Date(v).toISOString();if(typeof v==="string"&&v)return v.length===10?v+"T00:00:00.000Z":v;return fallback};
 const money=(v:any)=>typeof v==="number"?Math.round(v*100):0;
 const base=<T extends string>(id:string,type:T,created:any,updated:any,metadata:R={})=>({id,entityType:type,createdAt:iso(created,nowIso()),updatedAt:iso(updated,nowIso()),metadata});
-const eventType=(v:any):EventType=>({task:"task",meeting:"meeting",conversation:"conversation",appointment:"appointment",purchase:"purchase",payment:"payment",income:"income",expense:"expense",transfer:"transfer",maintenance:"maintenance",repair:"repair",inspection:"inspection",travel:"travel",decision:"decision",observation:"observation",milestone:"milestone",document:"document",communication:"communication",workout:"workout",learning:"learning","Doctor Visit":"appointment","Workout":"workout","Maintenance":"maintenance","Learning Session":"learning","Vacation":"travel","Planning":"task","Work":"task","Relationship":"conversation","Conversation":"conversation","Meeting":"meeting","Purchase":"purchase",system:"observation"}[String(v)]??"other");
-const status=(v:any):EventStatus=>({Completed:"completed",completed:"completed",Planned:"planned",planned:"planned",Scheduled:"scheduled",InProgress:"in_progress","In Progress":"in_progress",Cancelled:"cancelled",cancelled:"cancelled"}[String(v)]??"planned");
-const loopStatus=(v:any):"open"|"in_progress"|"waiting"|"blocked"|"resolved"|"cancelled"=>({open:"open",Open:"open",active:"in_progress",Active:"in_progress",complete:"resolved",Completed:"resolved",resolved:"resolved",waiting:"waiting",Waiting:"waiting",blocked:"blocked",Blocked:"blocked"}[String(v)]??"open");
-const priority=(v:any):"low"|"normal"|"high"|"critical"|undefined=>({Low:"low",low:"low",Medium:"normal",medium:"normal",High:"high",high:"high",Critical:"critical",critical:"critical"}[String(v)] as any);
+const EVENT_TYPES:Record<string,EventType>={task:"task",meeting:"meeting",conversation:"conversation",appointment:"appointment",purchase:"purchase",payment:"payment",income:"income",expense:"expense",transfer:"transfer",maintenance:"maintenance",repair:"repair",inspection:"inspection",travel:"travel",decision:"decision",observation:"observation",milestone:"milestone",document:"document",communication:"communication",workout:"workout",learning:"learning","Doctor Visit":"appointment","Workout":"workout","Maintenance":"maintenance","Learning Session":"learning","Vacation":"travel","Planning":"task","Work":"task","Relationship":"conversation","Conversation":"conversation","Meeting":"meeting","Purchase":"purchase",system:"observation"};
+const EVENT_STATUS:Record<string,EventStatus>={Completed:"completed",completed:"completed",Planned:"planned",planned:"planned",Scheduled:"scheduled",InProgress:"in_progress","In Progress":"in_progress",Cancelled:"cancelled",cancelled:"cancelled"};
+const LOOP_STATUS:Record<string,"open"|"in_progress"|"waiting"|"blocked"|"resolved"|"cancelled">={open:"open",Open:"open",active:"in_progress",Active:"in_progress",complete:"resolved",Completed:"resolved",resolved:"resolved",waiting:"waiting",Waiting:"waiting",blocked:"blocked",Blocked:"blocked"};
+const PRIORITIES:Record<string,"low"|"normal"|"high"|"critical">={Low:"low",low:"low",Medium:"normal",medium:"normal",High:"high",high:"high",Critical:"critical",critical:"critical"};
+const eventType=(v:any):EventType=>EVENT_TYPES[String(v)]??"other";
+const status=(v:any):EventStatus=>EVENT_STATUS[String(v)]??"planned";
+const loopStatus=(v:any):"open"|"in_progress"|"waiting"|"blocked"|"resolved"|"cancelled"=>LOOP_STATUS[String(v)]??"open";
+const priority=(v:any):"low"|"normal"|"high"|"critical"|undefined=>PRIORITIES[String(v)];
 const goalLevel=(v:any):"annual"|"quarterly"|"monthly"|"weekly"=>String(v??"weekly").toLowerCase() as any;
 const relationType=(v:any):RelationshipType=>v==="vehicle"?"uses":"linked_to";
 const vehicleParts=(name:string)=>{const m=name.match(/^(\d{4})\s+(.+)$/);const rest=m?.[2]??name;const parts=rest.split(" ");return{year:m?Number(m[1]):undefined,make:parts[0]??"Unknown",model:parts.slice(1).join(" ")||"Unknown"}};
@@ -49,7 +53,7 @@ export function normalizeLegacySeed(source:unknown):LifeOSBackup{
  const billPayments:any[]=[];
  const billPaymentEvents:Event[]=[];
  const billAccountId="legacy-account-bill-payments";
- if(!accounts.some(x=>x.id===billAccountId))accounts.push({...base(billAccountId,"financial_account",created,created,{legacy:{source:"bill-payment-history"}}),name:"Legacy Bill Payments",currency:"USD",accountType:"checking"});
+ if(!accounts.some((x:R)=>x.id===billAccountId))accounts.push({...base(billAccountId,"financial_account",created,created,{legacy:{source:"bill-payment-history"}}),name:"Legacy Bill Payments",currency:"USD",accountType:"checking"});
  for(const b of (s.bills??[]) as R[]){
   const id=String(b.id);const eventId="bill-event-"+id;const paid=Number(b.remainingBalance??0)<=0;
   billEvents.push({...base(eventId,"event",b.createdAt,b.updatedAt,{legacy:{source:"bills",record:{...b}}}),eventType:"payment",title:String(b.title??"Bill"),description:String(b.payee??""),status:paid?"completed":"planned",occurredAt:iso(b.dueDate,created),dueAt:iso(b.dueDate,created),source:"Full Life Control FLC-v5"});
