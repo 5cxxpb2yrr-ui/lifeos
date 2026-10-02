@@ -33,7 +33,26 @@ async function persist(next:typeof db,message:string){
  function makeBackup():LifeOSBackup{return{format:"lifeos-backup",formatVersion:"1.0",schemaVersion:db.schemaVersion,seedVersion:db.seedVersion,appVersion:db.appVersion,exportedAt:new Date().toISOString(),database:db}}
  function downloadBackup(backup:LifeOSBackup,filename:string){const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
  function exportBackup(){downloadBackup(makeBackup(),"lifeos-backup.json");setNotice("Backup exported.")}
- async function installBundledSeed(){\n  try{\n   const backup=getBundledImmutableSeed();\n   const candidate=structuredClone(backup.database);\n   const integrity=validateDatabaseIntegrity(candidate);\n   if(!integrity.valid){setNotice("Bundled seed rejected: database integrity errors found.");return}\n   const continuity=validateSeedContinuity(db,candidate);\n   if(!continuity.valid){setNotice("Bundled seed rejected: "+continuity.reason);return}\n   const current=structuredClone(db);\n   await saveLocalDatabase(candidate);\n   const reloaded=await loadLocalDatabase();\n   if(!reloaded)throw new Error("Database disappeared after bundled seed write.");\n   const verified=validateDatabaseIntegrity(reloaded);\n   if(!verified.valid||JSON.stringify(reloaded)!==JSON.stringify(candidate))throw new Error("Bundled seed verification failed.");\n   setDb(reloaded);\n   setNotice("Bundled Full Life Control seed installed, persisted, reloaded, and verified.");\n  }catch{\n   setNotice("Bundled immutable seed could not be installed. Local database was not changed.");\n  }\n }\n function importFile(file:File,mode:"seed"|"restore"){file.text().then(raw=>{let parsed:unknown;try{parsed=JSON.parse(raw)}catch{setNotice("Import rejected: invalid JSON.");return}
+ async function installBundledSeed(){
+  try{
+   const backup=getBundledImmutableSeed();
+   const candidate=structuredClone(backup.database);
+   const integrity=validateDatabaseIntegrity(candidate);
+   if(!integrity.valid){setNotice("Bundled seed rejected: database integrity errors found.");return}
+   const continuity=validateSeedContinuity(db,candidate);
+   if(!continuity.valid){setNotice("Bundled seed rejected: "+continuity.reason);return}
+   await saveLocalDatabase(candidate);
+   const reloaded=await loadLocalDatabase();
+   if(!reloaded)throw new Error("Database disappeared after bundled seed write.");
+   const verified=validateDatabaseIntegrity(reloaded);
+   if(!verified.valid||JSON.stringify(reloaded)!==JSON.stringify(candidate))throw new Error("Bundled seed verification failed.");
+   setDb(reloaded);
+   setNotice("Bundled Full Life Control seed installed, persisted, reloaded, and verified.");
+  }catch{
+   setNotice("Bundled immutable seed could not be installed. Local database was not changed.");
+  }
+ }
+ function importFile(file:File,mode:"seed"|"restore"){file.text().then(raw=>{let parsed:unknown;try{parsed=JSON.parse(raw)}catch{setNotice("Import rejected: invalid JSON.");return}
   if(mode==="seed"){
    if(!validateSeedBackup(parsed)){setNotice("Seed rejected: "+explainSeedValidation(parsed).reason);return}
   }else if(!validateLifeOSBackup(parsed)){setNotice("Restore rejected: "+explainBackupValidation(parsed).reason);return}
