@@ -5,7 +5,7 @@ const audit=(db:LifeOSDatabase,target:Record<string,unknown>,action:"create")=>{
 export function createVehicleMaintenance(db:LifeOSDatabase,input:Pick<VehicleMaintenance,"vehicleId"|"date"|"serviceType">&Partial<VehicleMaintenance>):LifeOSDatabase{
  const t=now(); const m:VehicleMaintenance={...input,id:id("maint"),entityType:"vehicle_maintenance",createdAt:t,updatedAt:t,vehicleId:input.vehicleId,date:input.date,serviceType:input.serviceType};
  let next={...db,vehicleMaintenance:[...db.vehicleMaintenance,m]};
- const e:Event={id:id("evt"),entityType:"event",createdAt:t,updatedAt:t,eventType:"maintenance",title:input.description??input.serviceType,status:"completed",occurredAt:input.datemetadata:{vehicleId:input.vehicleId,maintenanceId:m.id}};
+ const e:Event={id:id("evt"),entityType:"event",createdAt:t,updatedAt:t,eventType:"maintenance",title:input.description??input.serviceType,status:"completed",occurredAt:input.date,metadata:{vehicleId:input.vehicleId,maintenanceId:m.id}};
  next={...next,events:[...next.events,e]};
  return audit(next,m,"create");
 }
