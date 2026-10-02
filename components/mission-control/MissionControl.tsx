@@ -3,7 +3,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import type {ReactNode} from "react";
 import type {LifeOSBackup} from "@/domain/contracts/database";
 import {createEmptyDatabase} from "@/domain/services/empty-database";
-import {importSeed,restoreBackup,validateLifeOSBackup,validateSeedBackup,explainSeedValidation,explainBackupValidation,validateSeedContinuity} from "@/domain/services/seed";
+import {importSeed,restoreBackup,validateLifeOSBackup,validateSeedBackup,explainSeedValidation,explainBackupValidation,validateSeedContinuity,isPlaceholderSeedVersion} from "@/domain/services/seed";
 import {resolveMissionControl} from "@/domain/resolvers/mission-control";
 import {resolveSearch} from "@/domain/resolvers/search";
 import {resolveGraph} from "@/domain/resolvers/graph";
@@ -17,7 +17,16 @@ import HistoryPanel from "@/components/mission-control/HistoryPanel";
 export default function MissionControl(){
  const [db,setDb]=useState(createEmptyDatabase); const [query,setQuery]=useState(""); const [notice,setNotice]=useState(""); const [activeView,setActiveView]=useState("mission"); const [command,setCommand]=useState<"event"|"loop"|null>(null); const [historyTarget,setHistoryTarget]=useState<string|null>(null);
  const fileRef=useRef<HTMLInputElement>(null); const backupRef=useRef<HTMLInputElement>(null);
- useEffect(()=>{loadLocalDatabase().then(local=>{if(local)setDb(local);else saveLocalDatabase(createEmptyDatabase())}).catch(()=>setNotice("Local database could not be opened."))},[]);
+ useEffect(()=>{loadLocalDatabase().then(async local=>{
+  if(local){
+   const empty=!local.events.length&&!local.openLoops.length&&!local.people.length&&!local.assets.length&&!local.accounts.length&&!local.transactions.length&&!local.loans.length&&!local.loanPayments.length&&!local.vehicles.length&&!local.vehicleMaintenance.length&&!local.properties.length&&!local.rooms.length&&!local.homeSystems.length&&!local.electricalDevices.length&&!local.projects.length&&!local.goals.length&&!local.decisions.length&&!local.documents.length&&!local.recurringRules.length&&!local.relationships.length;
+   if(isPlaceholderSeedVersion(local.seedVersion)&&empty){
+    try{const seed=getBundledImmutableSeed();await saveLocalDatabase(seed.database);const reloaded=await loadLocalDatabase();if(!reloaded)throw new Error("Seed disappeared after initialization.");setDb(reloaded);setNotice("Full Life Control immutable seed initialized and verified.");}catch{setDb(local);setNotice("Bundled immutable seed could not be initialized; local database was left unchanged.");}
+   }else setDb(local);
+  }else{
+   try{const seed=getBundledImmutableSeed();await saveLocalDatabase(seed.database);const reloaded=await loadLocalDatabase();if(!reloaded)throw new Error("Seed disappeared after initialization.");setDb(reloaded);setNotice("Full Life Control immutable seed initialized and verified.");}catch{setNotice("Bundled immutable seed could not be initialized.");}
+  }
+ }).catch(()=>setNotice("Local database could not be opened."))},[]);
  const vm=useMemo(()=>resolveMissionControl(db),[db]); const financialHealth=useMemo(()=>resolveFinancialHealth(db),[db]); const results=useMemo(()=>resolveSearch(db,query),[db,query]);
  const graph=useMemo(()=>{const id=db.events[0]?.id??db.openLoops[0]?.id??db.accounts[0]?.id;return id?resolveGraph(db,id):null},[db]);
  const integrity=useMemo(()=>validateDatabaseIntegrity(db),[db]);
