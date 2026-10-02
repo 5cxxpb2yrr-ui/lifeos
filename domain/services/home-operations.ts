@@ -1,11 +1,12 @@
-import type {AuditEntry,Event,LifeOSDatabase} from "@/domain/contracts/database";
+import type {Event,LifeOSDatabase} from "@/domain/contracts/database";
+import {appendAudit} from "@/domain/services/audit";
 const now=()=>new Date().toISOString();const id=(p:string)=>p+"-"+crypto.randomUUID();
-function commit(db:LifeOSDatabase,e:Event):LifeOSDatabase{
- const t=now();
- const entry:AuditEntry={id:id("audit"),entityType:"audit",createdAt:t,updatedAt:t,action:"create",targetId:e.id,targetType:e.entityType,timestamp:t,after:{...e},source:"home-operations"};
- return {...db,events:[...db.events,e],auditEntries:[...db.auditEntries,entry],metadata:{...db.metadata,updatedAt:t}};
-}
 export function createHomeEvent(db:LifeOSDatabase,input:Pick<Event,"title"|"eventType"|"status">&Partial<Event>):LifeOSDatabase{
- const t=now();const e:Event={...input,id:id("evt"),entityType:"event",createdAt:t,updatedAt:t,title:input.title,eventType:input.eventType,status:input.status};
- return commit(db,e);
+ const t=now(); const e:Event={...input,id:id("evt"),entityType:"event",createdAt:t,updatedAt:t,title:input.title,eventType:input.eventType,status:input.status};
+ return appendAudit({...db,events:[...db.events,e]},e,"create","home-operations");
+}
+export function updateHomeEvent(db:LifeOSDatabase,eventId:string,patch:Partial<Omit<Event,"id"|"entityType"|"createdAt">>):LifeOSDatabase{
+ const before=db.events.find(x=>x.id===eventId); if(!before)return db;
+ const updated:Event={...before,...patch,updatedAt:now()};
+ return appendAudit({...db,events:db.events.map(x=>x.id===eventId?updated:x)},updated,"update","home-operations",before);
 }
