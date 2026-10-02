@@ -213,3 +213,20 @@ test("home, property, goal, project, and decision updates preserve before and af
  assert.equal((updates.find(x=>x.targetId===projectId)!.before as any).status,"planned"); assert.equal((updates.find(x=>x.targetId===projectId)!.after as any).status,"active");
  assert.equal((updates.find(x=>x.targetId===decisionId)!.before as any).outcome,undefined); assert.equal((updates.find(x=>x.targetId===decisionId)!.after as any).outcome,"Chosen");
 });
+
+
+test("integrity resolver validates embedded graph references and audit snapshots",()=>{
+ let db=base();
+ db={...db,
+  people:[{...entity("person-1","person"),firstName:"A",displayName:"A"} as any],
+  events:[{...entity("evt-1","event"),eventType:"task",title:"Event",status:"planned",personIds:["missing-person"]} as any],
+  relationships:[{...entity("rel-bad","relationship"),fromId:"evt-1",fromType:"event",toId:"person-1",toType:"person",relationshipType:"not-valid"} as any],
+  auditEntries:[{...entity("audit-bad","audit"),action:"update",targetId:"missing-target",targetType:"event",timestamp:"2026-10-02T12:00:00.000Z",before:{id:"wrong"},after:{id:"missing-target"}} as any]
+ };
+ const result=validateDatabaseIntegrity(db);
+ assert.equal(result.valid,false);
+ assert.equal(result.errors.some(x=>x.code==="BROKEN_REFERENCE"&&x.recordId==="evt-1"),true);
+ assert.equal(result.errors.some(x=>x.code==="INVALID_RELATIONSHIP_TYPE"),true);
+ assert.equal(result.errors.some(x=>x.code==="BROKEN_AUDIT_TARGET"),true);
+ assert.equal(result.errors.some(x=>x.code==="AUDIT_BEFORE_ID_MISMATCH"),true);
+});
