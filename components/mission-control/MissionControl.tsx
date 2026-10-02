@@ -37,6 +37,7 @@ async function persist(next:typeof db,message:string){
   try{
    const backup=getBundledImmutableSeed();
    const candidate=structuredClone(backup.database);
+   const current=structuredClone(db);
    const integrity=validateDatabaseIntegrity(candidate);
    if(!integrity.valid){setNotice("Bundled seed rejected: database integrity errors found.");return}
    const continuity=validateSeedContinuity(db,candidate);
@@ -49,7 +50,9 @@ async function persist(next:typeof db,message:string){
    setDb(reloaded);
    setNotice("Bundled Full Life Control seed installed, persisted, reloaded, and verified.");
   }catch{
-   setNotice("Bundled immutable seed could not be installed. Local database was not changed.");
+   try{await saveLocalDatabase(current)}catch{}
+   setDb(current);
+   setNotice("Bundled immutable seed verification failed; current database was restored.");
   }
  }
  function importFile(file:File,mode:"seed"|"restore"){file.text().then(raw=>{let parsed:unknown;try{parsed=JSON.parse(raw)}catch{setNotice("Import rejected: invalid JSON.");return}
