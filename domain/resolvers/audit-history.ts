@@ -76,3 +76,9 @@ export function reconstructEntityHistory(
     };
   });
 }
+
+export const AuditResolver = {
+  getAuditTrail,
+  reconstructEntityAt,
+  reconstructEntityHistory,
+};
