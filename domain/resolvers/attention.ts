@@ -36,6 +36,7 @@ export function resolveAttentionDetailed(item: Event | OpenLoop, now = new Date(
   const due = resolveDue(dueAt, nowMs);
 
   if (due.state !== "none") return due;
+  if (dueAt) return due;
 
   if ("type" in item && item.type === "decision") {
     return {state:"needs_decision",priority:4,reason:"Open decision requires resolution."};
