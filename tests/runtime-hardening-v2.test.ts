@@ -151,3 +151,28 @@ test("loan payment is idempotent only when caller supplies a new payment event; 
   assert.equal(db.events.length,1);
   assert.equal(db.loanPayments[0].paidAmountMinor,5000);
 });
+
+
+test("restore candidate follows parse, validate, clone, revalidate, write, reload, verify semantics",()=>{
+  const db=base();
+  const backup={format:"lifeos-backup" as const,formatVersion:"1",schemaVersion:db.schemaVersion,seedVersion:db.seedVersion,appVersion:db.appVersion,exportedAt:"2026-10-02T12:00:00.000Z",database:db};
+  const parsed=JSON.parse(JSON.stringify(backup)) as typeof backup;
+  assert.equal(validateLifeOSBackup(parsed),true);
+  const candidate=structuredClone(restoreBackup(parsed));
+  assert.equal(validateDatabaseIntegrity(candidate).valid,true);
+  candidate.events.push({id:"evt-runtime",entityType:"event",createdAt:"2026-10-02T12:00:00.000Z",updatedAt:"2026-10-02T12:00:00.000Z",eventType:"task",title:"Runtime",status:"planned"});
+  assert.equal(validateDatabaseIntegrity(candidate).valid,true);
+  const reloaded=structuredClone(candidate);
+  assert.equal(validateDatabaseIntegrity(reloaded).valid,true);
+  assert.equal(JSON.stringify(reloaded),JSON.stringify(candidate));
+  assert.equal(JSON.stringify(db),JSON.stringify(backup.database));
+});
+
+test("corruption rejection leaves the current database unchanged",()=>{
+  const current=base();
+  current.events.push({id:"evt-current",entityType:"event",createdAt:"2026-10-02T12:00:00.000Z",updatedAt:"2026-10-02T12:00:00.000Z",eventType:"task",title:"Keep me",status:"planned"});
+  const before=JSON.stringify(current);
+  const broken={...current,loanPayments:[{...entity("pay-bad","loan_payment"),loanId:"missing",scheduledDate:"2026-10-02",scheduledAmountMinor:100,status:"scheduled"} as any]};
+  assert.equal(validateDatabaseIntegrity(broken).valid,false);
+  assert.equal(JSON.stringify(current),before);
+});
