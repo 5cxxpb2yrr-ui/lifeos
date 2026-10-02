@@ -1,0 +1,29 @@
+{
+  "name": "lifeos-v2",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "deploy": "vinext build && npx @vinext/cloudflare deploy",
+    "preview": "vinext build && npx @vinext/cloudflare preview",
+    "cf:typegen": "wrangler types"
+  },
+  "dependencies": {
+    "next": "^16.0.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260901.0",
+    "@types/node": "^22.18.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "typescript": "^5.9.2",
+    "vinext": "latest",
+    "wrangler": "latest"
+  },
+  "engines": { "node": ">=22" }
+}
