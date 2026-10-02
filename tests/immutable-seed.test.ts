@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
-import {normalizeLegacySeed,validateLegacySeedSource,IMMUTABLE_SEED_VERSION} from "../domain/services/legacy-seed.ts";
-import {validateDatabaseIntegrity} from "../domain/resolvers/integrity.ts";
+import {normalizeLegacySeed,validateLegacySeedSource,IMMUTABLE_SEED_VERSION} from "../domain/services/legacy-seed";
+import {validateDatabaseIntegrity} from "../domain/resolvers/integrity";
 
 test("Full Life Control seed normalizes into a valid canonical LifeOS database",()=>{
  const source=JSON.parse(readFileSync(new URL("../seed/full-life-control-seed-backup.json",import.meta.url),"utf8"));
