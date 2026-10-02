@@ -24,6 +24,6 @@ export type EventUpdateInput = Partial<Pick<Event,"title"|"description"|"eventTy
 export function updateEvent(db:LifeOSDatabase,eventId:string,changes:EventUpdateInput):LifeOSDatabase{
  const before=db.events.find(e=>e.id===eventId); if(!before)return db;
  const t=now();
- const target:Event={...before,...changes,updatedAt:t,completedAt:changes.status==="completed"?t:changes.status&&changes.status!=="completed"?undefined:before.completedAt};
+ const target:Event={...before,...changes,updatedAt:t,completedAt:changes.status ? (changes.status==="completed" ? t : undefined) : before.completedAt};
  return appendAudit({...db,events:db.events.map(e=>e.id===eventId?target:e)},target,"update","event-engine",before);
 }
