@@ -20,3 +20,15 @@ export function explainBackupValidation(input:unknown):SeedCheck{
 }
 export function importSeed(input:LifeOSBackup):LifeOSDatabase{return structuredClone(input.database)}
 export function restoreBackup(input:LifeOSBackup):LifeOSDatabase{return structuredClone(input.database)}
+
+export function isPlaceholderSeedVersion(version:string):boolean{
+ return version==="UNSET-REAL-SEED"||version==="NO_REAL_SEED_LOADED";
+}
+
+export function validateSeedContinuity(current:LifeOSDatabase,candidate:LifeOSDatabase):SeedCheck{
+ if(isPlaceholderSeedVersion(current.seedVersion)) return {valid:true,reason:"No immutable seed baseline has been established yet."};
+ if(current.seedVersion!==candidate.seedVersion){
+  return {valid:false,reason:"The candidate database belongs to a different immutable seed version and cannot replace the established seed baseline."};
+ }
+ return {valid:true,reason:"Immutable seed lineage preserved."};
+}
