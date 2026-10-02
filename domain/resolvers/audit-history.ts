@@ -23,7 +23,7 @@ export function getAuditTrail(db: LifeOSDatabase, targetId: string): AuditEntry[
 function snapshot(entry: AuditEntry, value: Record<string, unknown> | undefined): BaseEntity | undefined {
   if (!value) return undefined;
   if (value.id !== entry.targetId || value.entityType !== entry.targetType) return undefined;
-  return structuredClone(value) as BaseEntity;
+  return structuredClone(value) as unknown as BaseEntity;
 }
 
 function applyEntry(current: BaseEntity | undefined, entry: AuditEntry): BaseEntity | undefined {
