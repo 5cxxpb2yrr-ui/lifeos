@@ -8,7 +8,7 @@ function audit(db:LifeOSDatabase,target:BaseEntity,action:"create"|"update"):Lif
  const entry:AuditEntry={id:id("audit"),entityType:"audit",createdAt:t,updatedAt:t,action,targetId:target.id,targetType:target.entityType,timestamp:t,after:{...target},source:"financial-operations"};
  return {...db,auditEntries:[...db.auditEntries,entry],metadata:{...db.metadata,updatedAt:t}};
 }
-function relationship(db:LifeOSDatabase,from:BaseEntity,to:BaseEntity,relationshipType:Relationship["relationshipType"]):Relationship{
+function relationship(from:BaseEntity,to:BaseEntity,relationshipType:Relationship["relationshipType"]):Relationship{
  const t=now();
  return {id:id("rel"),entityType:"relationship",createdAt:t,updatedAt:t,fromId:from.id,fromType:from.entityType,toId:to.id,toType:to.entityType,relationshipType};
 }
