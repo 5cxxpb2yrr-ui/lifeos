@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { AuditEntry, LifeOSDatabase } from "../domain/contracts/database";
-import { createEmptyDatabase } from "../domain/services/empty-database";
+import type { AuditEntry, LifeOSDatabase } from "../domain/contracts/database.ts";
+import { createEmptyDatabase } from "../domain/services/empty-database.ts";
 import {
   getAuditTrail,
   reconstructEntityAt,
   reconstructEntityHistory,
-} from "../domain/resolvers/audit-history";
+} from "../domain/resolvers/audit-history.ts";
 
 function base() {
   return createEmptyDatabase("2026-10-02T12:00:00.000Z");
