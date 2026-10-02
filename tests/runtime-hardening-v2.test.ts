@@ -30,11 +30,15 @@ test("event and open-loop lifecycle writes audit history",()=>{
   assert.equal(db.auditEntries.length,1);
   db=updateEventStatus(db,event.id,"completed");
   assert.equal(db.events[0].status,"completed");
+  assert.equal(db.auditEntries[1].before?.status,"planned");
+  assert.equal(db.auditEntries[1].after?.status,"completed");
   assert.equal(db.events[0].completedAt!==undefined,true);
   db=createOpenLoop(db,{title:"Test loop",type:"task"});
   const loop=db.openLoops[0];
   db=updateOpenLoopStatus(db,loop.id,"resolved");
   assert.equal(db.openLoops[0].status,"resolved");
+  assert.equal(db.auditEntries[3].before?.status,"open");
+  assert.equal(db.auditEntries[3].after?.status,"resolved");
   assert.equal(db.openLoops[0].resolvedAt!==undefined,true);
   assert.equal(db.auditEntries.length,4);
 });
