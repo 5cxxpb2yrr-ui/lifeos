@@ -1,13 +1,9 @@
-import type {AuditEntry,BaseEntity,Event,FinancialTransaction,LifeOSDatabase,LoanPayment,Relationship} from "@/domain/contracts/database";
+import type {Event,FinancialTransaction,LifeOSDatabase,LoanPayment,Relationship} from "@/domain/contracts/database";
+import {appendAudit} from "@/domain/services/audit";
 
 const now=()=>new Date().toISOString();
 const id=(p:string)=>p+"-"+crypto.randomUUID();
 
-function audit(db:LifeOSDatabase,target:BaseEntity,action:"create"|"update",before?:BaseEntity):LifeOSDatabase{
- const t=now();
- const entry:AuditEntry={id:id("audit"),entityType:"audit",createdAt:t,updatedAt:t,action,targetId:target.id,targetType:target.entityType,timestamp:t,before:before?{...before}:undefined,after:{...target},source:"financial-operations"};
- return {...db,auditEntries:[...db.auditEntries,entry],metadata:{...db.metadata,updatedAt:t}};
-}
 function relationship(from:BaseEntity,to:BaseEntity,relationshipType:Relationship["relationshipType"]):Relationship{
  const t=now();
  return {id:id("rel"),entityType:"relationship",createdAt:t,updatedAt:t,fromId:from.id,fromType:from.entityType,toId:to.id,toType:to.entityType,relationshipType};
@@ -23,13 +19,13 @@ function addRelationships(db:LifeOSDatabase,rows:Relationship[]):LifeOSDatabase{
 export function createTransaction(db:LifeOSDatabase,input:Pick<FinancialTransaction,"transactionType"|"transactionDate"|"amountMinor"|"currency"|"accountId">&Partial<FinancialTransaction>):LifeOSDatabase{
  const t=now();
  const tx:FinancialTransaction={...input,id:id("txn"),entityType:"financial_transaction",createdAt:t,updatedAt:t,transactionType:input.transactionType,transactionDate:input.transactionDate,amountMinor:input.amountMinor,currency:input.currency,accountId:input.accountId};
- return audit({...db,transactions:[...db.transactions,tx]},tx,"create");
+ return appendAudit({...db,transactions:[...db.transactions,tx]},tx,"create","financial-operations");
 }
 
 export function createLoanPayment(db:LifeOSDatabase,input:Pick<LoanPayment,"loanId"|"scheduledDate"|"scheduledAmountMinor">&Partial<LoanPayment>):LifeOSDatabase{
  const t=now();
  const payment:LoanPayment={...input,id:id("loanpay"),entityType:"loan_payment",createdAt:t,updatedAt:t,loanId:input.loanId,scheduledDate:input.scheduledDate,scheduledAmountMinor:input.scheduledAmountMinor,status:input.status??"scheduled"};
- return audit({...db,loanPayments:[...db.loanPayments,payment]},payment,"create");
+ return appendAudit({...db,loanPayments:[...db.loanPayments,payment]},payment,"create","financial-operations");
 }
 
 export function recordLoanPayment(db:LifeOSDatabase,paymentId:string,paidAmountMinor:number,paidDate:string):LifeOSDatabase{
@@ -90,8 +86,8 @@ export function recordLoanPayment(db:LifeOSDatabase,paymentId:string,paidAmountM
  relationships=linked.relationships;
 
  const next:LifeOSDatabase={...db,loanPayments:db.loanPayments.map(p=>p.id===paymentId?payment:p),transactions,events,relationships,metadata:{...db.metadata,updatedAt:t}};
- let result=audit(next,payment,"update",source);
- if(transaction) result=audit(result,transaction,existingTransaction? "update":"create",existingTransaction);
- result=audit(result,event,existingEvent?"update":"create",existingEvent);
+ let result=appendAudit(next,payment,"update","financial-operations",source);
+ if(transaction) result=appendAudit(result,transaction,existingTransaction? "update":"create","financial-operations",existingTransaction);
+ result=appendAudit(result,event,existingEvent?"update":"create","financial-operations",existingEvent);
  return result;
 }
