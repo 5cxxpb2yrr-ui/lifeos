@@ -2,7 +2,7 @@
 import {useEffect,useMemo,useRef,useState} from "react";
 import type {LifeOSBackup} from "@/domain/contracts/database";
 import {createEmptyDatabase} from "@/domain/services/empty-database";
-import {importSeed,validateSeedBackup} from "@/domain/services/seed";
+import {importSeed,validateSeedBackup,explainSeedValidation} from "@/domain/services/seed";
 import {validateDatabase} from "@/domain/services/integrity";
 import {resolveMissionControl} from "@/domain/resolvers/mission-control";
 import {resolveSearch} from "@/domain/resolvers/search";
@@ -17,7 +17,7 @@ export default function MissionControl(){
  const graph=useMemo(()=>{const id=db.events[0]?.id??db.openLoops[0]?.id??db.accounts[0]?.id;return id?resolveGraph(db,id):null},[db]);
  const issues=useMemo(()=>validateDatabase(db),[db]);
  function exportBackup(){const backup:LifeOSBackup={format:"lifeos-backup",formatVersion:"1.0",schemaVersion:db.schemaVersion,seedVersion:db.seedVersion,appVersion:db.appVersion,exportedAt:new Date().toISOString(),database:db};const blob=new Blob([JSON.stringify(backup,null,2)],{type:"application/json"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download="lifeos-backup.json";a.click();URL.revokeObjectURL(url);}
- function importFile(file:File){file.text().then(raw=>{const parsed:unknown=JSON.parse(raw);const check=validateSeedBackup(parsed);if(!check.valid){setNotice("Import rejected: "+check.reason);return;}const imported=importSeed(parsed as LifeOSBackup);const validation=validateDatabase(imported);if(validation.some(x=>x.severity==="error")){setNotice("Import rejected: database integrity errors found.");return;}saveLocalDatabase(imported).then(()=>{setDb(imported);setNotice("Immutable seed loaded and validated.")}).catch(()=>setNotice("Seed validated but could not be saved locally."));}).catch(()=>setNotice("Import rejected: invalid JSON."));}
+ function importFile(file:File){file.text().then(raw=>{const parsed:unknown=JSON.parse(raw);if(!validateSeedBackup(parsed)){setNotice("Import rejected: "+explainSeedValidation(parsed).reason);return;}const imported=importSeed(parsed);const validation=validateDatabase(imported);if(validation.some(x=>x.severity==="error")){setNotice("Import rejected: database integrity errors found.");return;}saveLocalDatabase(imported).then(()=>{setDb(imported);setNotice("Immutable seed loaded and validated.")}).catch(()=>setNotice("Seed validated but could not be saved locally."));}).catch(()=>setNotice("Import rejected: invalid JSON."));}
  return <div className="lifeos-shell">
   <header className="topbar"><div className="topbar-inner"><div className="brand">LIFE<span>OS</span> V2</div><input className="search" aria-label="Universal search" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search the graph…" /><div className="status-pill">LOCAL-FIRST</div></div></header>
   <main className="content">
