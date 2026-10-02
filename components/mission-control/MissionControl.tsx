@@ -4,7 +4,6 @@ import type {ReactNode} from "react";
 import type {LifeOSBackup} from "@/domain/contracts/database";
 import {createEmptyDatabase} from "@/domain/services/empty-database";
 import {importSeed,restoreBackup,validateLifeOSBackup,validateSeedBackup,explainSeedValidation,explainBackupValidation} from "@/domain/services/seed";
-import {validateDatabase} from "@/domain/services/integrity";
 import {resolveMissionControl} from "@/domain/resolvers/mission-control";
 import {resolveSearch} from "@/domain/resolvers/search";
 import {resolveGraph} from "@/domain/resolvers/graph";
