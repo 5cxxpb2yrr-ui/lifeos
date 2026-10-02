@@ -1,4 +1,4 @@
-import type {Event,FinancialTransaction,LifeOSDatabase,LoanPayment,Relationship} from "@/domain/contracts/database";
+import type {BaseEntity,Event,FinancialTransaction,LifeOSDatabase,LoanPayment,Relationship} from "@/domain/contracts/database";
 import {appendAudit} from "@/domain/services/audit";
 
 const now=()=>new Date().toISOString();
