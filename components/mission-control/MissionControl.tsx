@@ -10,12 +10,13 @@ import {resolveSearch} from "@/domain/resolvers/search";
 import {resolveGraph} from "@/domain/resolvers/graph";
 import {loadLocalDatabase,saveLocalDatabase} from "@/storage/indexeddb/database";
 import {createEvent,createOpenLoop,updateEventStatus,updateOpenLoopStatus} from "@/domain/services/operations";
+import {resolveFinancialHealth} from "@/domain/resolvers/financial-health";
 
 export default function MissionControl(){
  const [db,setDb]=useState(createEmptyDatabase); const [query,setQuery]=useState(""); const [notice,setNotice]=useState(""); const [activeView,setActiveView]=useState("mission"); const [command,setCommand]=useState<"event"|"loop"|null>(null);
  const fileRef=useRef<HTMLInputElement>(null);
  useEffect(()=>{loadLocalDatabase().then(local=>{if(local)setDb(local);else saveLocalDatabase(createEmptyDatabase())}).catch(()=>setNotice("Local database could not be opened."))},[]);
- const vm=useMemo(()=>resolveMissionControl(db),[db]); const results=useMemo(()=>resolveSearch(db,query),[db,query]);
+ const vm=useMemo(()=>resolveMissionControl(db),[db]); const financialHealth=useMemo(()=>resolveFinancialHealth(db),[db]); const results=useMemo(()=>resolveSearch(db,query),[db,query]);
  const graph=useMemo(()=>{const id=db.events[0]?.id??db.openLoops[0]?.id??db.accounts[0]?.id;return id?resolveGraph(db,id):null},[db]);
  const issues=useMemo(()=>validateDatabase(db),[db]);
 function persist(next:typeof db,message:string){setDb(next);saveLocalDatabase(next).then(()=>setNotice(message)).catch(()=>setNotice("Change created in memory but could not be saved."))}
@@ -42,7 +43,7 @@ function persist(next:typeof db,message:string){setDb(next);saveLocalDatabase(ne
    </section>}
    {activeView==="finance"&&<section className="grid two" style={{marginTop:14}}>
     <Panel title="Financial Accounts" badge={db.accounts.length}><div className="list">{db.accounts.length?db.accounts.map(a=><div className="row" key={a.id}><div className="row-main"><div className="row-title">{a.name}</div><div className="row-meta">{a.accountType} · {a.institution??"Institution not set"} · {a.currency}</div></div></div>):<Empty text="No financial accounts loaded."/ >}</div></Panel>
-    <Panel title="Loans & Payments" badge={db.loans.length}><div className="list">{db.loans.length?db.loans.map(l=><div className="row" key={l.id}><div className="row-main"><div className="row-title">{l.name}</div><div className="row-meta">{l.provider} · {l.status} · {l.scheduledPaymentMinor!=null?(l.scheduledPaymentMinor/100).toLocaleString(undefined,{style:"currency",currency:l.currency}):"Payment not set"}</div></div></div>):<Empty text="No loans loaded."/ >}</div><div className="section-title" style={{marginTop:12}}><span className="row-meta">Scheduled payments</span><span className="badge">{vm.finance.upcomingPayments}</span></div></Panel>
+    <Panel title="Loans & Payments" badge={db.loans.length}><div className="list"><StatusRow label="Scheduled debt" value={(financialHealth.scheduledDebtMinor/100).toLocaleString(undefined,{style:"currency",currency:"USD"})} tag="FORECAST"/><StatusRow label="Overdue payments" value={String(financialHealth.overduePayments)} tag={financialHealth.overduePayments?"ATTENTION":"CLEAR"}/><StatusRow label="Transactions" value={String(financialHealth.transactionCount)} tag="LEDGER"/>{db.loans.length?db.loans.map(l=><div className="row" key={l.id}><div className="row-main"><div className="row-title">{l.name}</div><div className="row-meta">{l.provider} · {l.status} · {l.scheduledPaymentMinor!=null?(l.scheduledPaymentMinor/100).toLocaleString(undefined,{style:"currency",currency:l.currency}):"Payment not set"}</div></div></div>):<Empty text="No loans loaded."/ >}</div><div className="section-title" style={{marginTop:12}}><span className="row-meta">Scheduled payments</span><span className="badge">{vm.finance.upcomingPayments}</span></div></Panel>
    </section>}
    {activeView==="assets"&&<section className="grid two" style={{marginTop:14}}>
     <Panel title="Vehicles" badge={db.vehicles.length}><div className="list">{db.vehicles.length?db.vehicles.map(v=><div className="row" key={v.id}><div className="row-main"><div className="row-title">{v.year??""} {v.make} {v.model}</div><div className="row-meta">{v.status} · {v.currentMileage!=null?v.currentMileage.toLocaleString()+" "+v.mileageUnit:"Mileage not set"}</div></div></div>):<Empty text="No vehicles loaded."/ >}</div></Panel>
