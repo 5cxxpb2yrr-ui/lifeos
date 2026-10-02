@@ -1998,3 +1998,10 @@
   "streams": [],
   "documents": [],
   "eventHistory": [],
+  "entityIndex": [],
+  "attachments": [],
+  "reports": [],
+  "_format": "FLC-v5",
+  "_architecture": "LifeOS Core: Events + Graph + Resolver-owned Views",
+  "_exportedAt": "2026-09-30T23:21:22.562Z"
+}
