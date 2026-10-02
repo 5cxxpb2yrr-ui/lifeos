@@ -13,7 +13,11 @@ function relationship(from:BaseEntity,to:BaseEntity,relationshipType:Relationshi
  return {id:id("rel"),entityType:"relationship",createdAt:t,updatedAt:t,fromId:from.id,fromType:from.entityType,toId:to.id,toType:to.entityType,relationshipType};
 }
 function addRelationships(db:LifeOSDatabase,rows:Relationship[]):LifeOSDatabase{
- return {...db,relationships:[...db.relationships,...rows]};
+ const relationships=[...db.relationships];
+ for(const row of rows){
+  if(!relationships.some(x=>x.fromId===row.fromId&&x.toId===row.toId&&x.relationshipType===row.relationshipType)) relationships.push(row);
+ }
+ return {...db,relationships};
 }
 
 export function createTransaction(db:LifeOSDatabase,input:Pick<FinancialTransaction,"transactionType"|"transactionDate"|"amountMinor"|"currency"|"accountId">&Partial<FinancialTransaction>):LifeOSDatabase{
@@ -82,11 +86,12 @@ export function recordLoanPayment(db:LifeOSDatabase,paymentId:string,paidAmountM
   relationship(event,loan,"payment_for"),
   ...(transaction?[relationship(transaction,loan,"payment_for"),relationship(event,transaction,"linked_to")]:[])
  ];
- relationships=[...relationships,...links];
+ const linked=addRelationships({...db,relationships},links);
+ relationships=linked.relationships;
 
  const next:LifeOSDatabase={...db,loanPayments:db.loanPayments.map(p=>p.id===paymentId?payment:p),transactions,events,relationships,metadata:{...db.metadata,updatedAt:t}};
  let result=audit(next,payment,"update");
- if(transaction) result=audit(result,transaction,"create");
- result=audit(result,event,"create");
+ if(transaction) result=audit(result,transaction,existingTransaction?"update":"create");
+ result=audit(result,event,existingEvent?"update":"create");
  return result;
 }
