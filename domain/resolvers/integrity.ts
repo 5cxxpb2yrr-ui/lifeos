@@ -14,7 +14,7 @@ export function validateDatabaseIntegrity(db:LifeOSDatabase):IntegrityResult{
    if(x.entityType!==expectedEntityType(c)) warnings.push({severity:"warning",code:"ENTITY_TYPE_MISMATCH",message:`${c} record ${x.id} declares entityType ${x.entityType}.`,recordId:x.id,recordType:x.entityType});
  }}
  const ref=(recordId:string,target:string,field:string,expectedType?:string):[string,string,string,string?]=>[recordId,target,field,expectedType];
- const entityRefArrays:Array<[string,string,string[]|undefined][]> = [];
+ const refs:Array<[string,string,string,string?]> = [];\n const entityRefArrays:Array<[string,string,string[]|undefined][]> = [];
  for(const e of db.events){
   entityRefArrays.push([
    [e.id,"event.personIds",e.personIds], [e.id,"event.assetIds",e.assetIds], [e.id,"event.projectIds",e.projectIds],
