@@ -12,23 +12,24 @@ export function validateDatabaseIntegrity(db:LifeOSDatabase):IntegrityResult{
    else ids.set(x.id,c);
    if(x.entityType!==c.replace(/([A-Z])/g,"_$1").toLowerCase().replace("open_loops","open_loop").replace("loan_payments","loan_payment").replace("vehicle_maintenance","vehicle_maintenance").replace("home_systems","home_system").replace("electrical_devices","electrical_device").replace("recurring_rules","recurring_rule")) warnings.push({severity:"warning",code:"ENTITY_TYPE_MISMATCH",message:`${c} record ${x.id} declares entityType ${x.entityType}.`,recordId:x.id,recordType:x.entityType});
  }}
+ const ref=(recordId:string,target:string,field:string,expectedType?:string):[string,string,string,string?]=>[recordId,target,field,expectedType];
  const refs:Array<[string,string,string,string?]>=[
-  ...db.relationships.map(r=>[r.id,r.fromId,"relationship.fromId",r.fromType] as [string,string,string,string?]),
-  ...db.relationships.map(r=>[r.id,r.toId,"relationship.toId",r.toType] as [string,string,string,string?]),
-  ...db.loanPayments.map(p=>[p.id,p.loanId,"loanPayment.loanId"]),
-  ...db.loanPayments.filter(p=>p.transactionId).map(p=>[p.id,p.transactionId!,"loanPayment.transactionId"]),
-  ...db.transactions.map(t=>[t.id,t.accountId,"transaction.accountId"]),
-  ...db.transactions.filter(t=>t.counterpartyAccountId).map(t=>[t.id,t.counterpartyAccountId!,"transaction.counterpartyAccountId"]),
-  ...db.transactions.filter(t=>t.loanId).map(t=>[t.id,t.loanId!,"transaction.loanId"]),
-  ...db.transactions.filter(t=>t.eventId).map(t=>[t.id,t.eventId!,"transaction.eventId"]),
-  ...db.vehicles.filter(v=>v.assetId).map(v=>[v.id,v.assetId!,"vehicle.assetId"]),
-  ...db.vehicleMaintenance.map(v=>[v.id,v.vehicleId,"maintenance.vehicleId"]),
-  ...db.vehicleMaintenance.filter(v=>v.eventId).map(v=>[v.id,v.eventId!,"maintenance.eventId"]),
-  ...db.rooms.map(r=>[r.id,r.propertyId,"room.propertyId"]),
-  ...db.homeSystems.map(s=>[s.id,s.propertyId,"homeSystem.propertyId"]),
-  ...db.electricalDevices.map(d=>[d.id,d.propertyId,"electricalDevice.propertyId"]),
-  ...db.electricalDevices.filter(d=>d.roomId).map(d=>[d.id,d.roomId!,"electricalDevice.roomId"]),
-  ...db.electricalDevices.filter(d=>d.panelId).map(d=>[d.id,d.panelId!,"electricalDevice.panelId"])
+  ...db.relationships.map(r=>ref(r.id,r.fromId,"relationship.fromId",r.fromType)),
+  ...db.relationships.map(r=>ref(r.id,r.toId,"relationship.toId",r.toType)),
+  ...db.loanPayments.map(p=>ref(p.id,p.loanId,"loanPayment.loanId")),
+  ...db.loanPayments.filter(p=>p.transactionId).map(p=>ref(p.id,p.transactionId!,"loanPayment.transactionId")),
+  ...db.transactions.map(t=>ref(t.id,t.accountId,"transaction.accountId")),
+  ...db.transactions.filter(t=>t.counterpartyAccountId).map(t=>ref(t.id,t.counterpartyAccountId!,"transaction.counterpartyAccountId")),
+  ...db.transactions.filter(t=>t.loanId).map(t=>ref(t.id,t.loanId!,"transaction.loanId")),
+  ...db.transactions.filter(t=>t.eventId).map(t=>ref(t.id,t.eventId!,"transaction.eventId")),
+  ...db.vehicles.filter(v=>v.assetId).map(v=>ref(v.id,v.assetId!,"vehicle.assetId")),
+  ...db.vehicleMaintenance.map(v=>ref(v.id,v.vehicleId,"maintenance.vehicleId")),
+  ...db.vehicleMaintenance.filter(v=>v.eventId).map(v=>ref(v.id,v.eventId!,"maintenance.eventId")),
+  ...db.rooms.map(r=>ref(r.id,r.propertyId,"room.propertyId")),
+  ...db.homeSystems.map(s=>ref(s.id,s.propertyId,"homeSystem.propertyId")),
+  ...db.electricalDevices.map(d=>ref(d.id,d.propertyId,"electricalDevice.propertyId")),
+  ...db.electricalDevices.filter(d=>d.roomId).map(d=>ref(d.id,d.roomId!,"electricalDevice.roomId")),
+  ...db.electricalDevices.filter(d=>d.panelId).map(d=>ref(d.id,d.panelId!,"electricalDevice.panelId"))
  ];
  for(const [recordId,target,field] of refs) if(!ids.has(target)) errors.push({severity:"error",code:"BROKEN_REFERENCE",message:`${field} on ${recordId} references missing id ${target}.`,recordId});
  if(db.schemaVersion!==db.metadata.schemaVersion) errors.push({severity:"error",code:"SCHEMA_VERSION_MISMATCH",message:"Database and metadata schema versions differ."});
