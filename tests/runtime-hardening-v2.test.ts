@@ -7,6 +7,7 @@ import { createHomeEvent } from "../domain/services/home-operations";
 import { createLoanPayment, recordLoanPayment } from "../domain/services/financial-operations";
 import { resolveFinancialHealth } from "../domain/resolvers/financial-health";
 import { validateLifeOSBackup, validateSeedBackup, restoreBackup, importSeed } from "../domain/services/seed";
+import { validateDatabaseIntegrity } from "../domain/resolvers/integrity";
 
 function base() { return createEmptyDatabase("2026-10-02T12:00:00.000Z"); }
 function entity(id:string, entityType:string) {
@@ -86,6 +87,14 @@ test("loan payment without linked account still creates canonical payment event"
   assert.equal(db.transactions.length,0);
   assert.equal(db.events.length,1);
   assert.equal(db.loanPayments[0].status,"paid");
+});
+
+test("integrity resolver detects broken graph references",()=>{
+  const db=base();
+  const broken={...db,loans:[{...entity("loan-x","loan"),provider:"X",loanType:"installment",name:"Broken",originalPrincipalMinor:100,currency:"USD",status:"active"} as any],loanPayments:[{...entity("payment-x","loan_payment"),loanId:"missing-loan",scheduledDate:"2026-10-02",scheduledAmountMinor:100,status:"scheduled"} as any]};
+  const result=validateDatabaseIntegrity(broken);
+  assert.equal(result.valid,false);
+  assert.equal(result.errors.some(x=>x.code==="BROKEN_REFERENCE"),true);
 });
 
 test("backup restore and seed import clone database without sharing object references",()=>{
