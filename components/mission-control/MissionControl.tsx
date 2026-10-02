@@ -12,7 +12,7 @@ import {loadLocalDatabase,saveLocalDatabase} from "@/storage/indexeddb/database"
 import {createEvent,createOpenLoop,updateEventStatus,updateOpenLoopStatus} from "@/domain/services/operations";
 
 export default function MissionControl(){
- const [db,setDb]=useState(createEmptyDatabase); const [query,setQuery]=useState(""); const [notice,setNotice]=useState(""); const [activeView,setActiveView]=useState("mission");
+ const [db,setDb]=useState(createEmptyDatabase); const [query,setQuery]=useState(""); const [notice,setNotice]=useState(""); const [activeView,setActiveView]=useState("mission"); const [command,setCommand]=useState<"event"|"loop"|null>(null);
  const fileRef=useRef<HTMLInputElement>(null);
  useEffect(()=>{loadLocalDatabase().then(local=>{if(local)setDb(local);else saveLocalDatabase(createEmptyDatabase())}).catch(()=>setNotice("Local database could not be opened."))},[]);
  const vm=useMemo(()=>resolveMissionControl(db),[db]); const results=useMemo(()=>resolveSearch(db,query),[db,query]);
