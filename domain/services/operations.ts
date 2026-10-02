@@ -19,3 +19,11 @@ export function updateOpenLoopStatus(db:LifeOSDatabase,loopId:string,status:Open
  const t=now(); const target:OpenLoop={...before,status,updatedAt:t,resolvedAt:status==="resolved"?t:before.resolvedAt};
  return appendAudit({...db,openLoops:db.openLoops.map(o=>o.id===loopId?target:o)},target,"update","mission-control",before);
 }
+export type EventUpdateInput = Partial<Pick<Event,"title"|"description"|"eventType"|"status"|"occurredAt"|"startAt"|"endAt"|"dueAt"|"source"|"personIds"|"assetIds"|"projectIds"|"goalIds"|"openLoopIds"|"decisionIds"|"financialTransactionIds"|"documentIds"|"metadata">>;
+
+export function updateEvent(db:LifeOSDatabase,eventId:string,changes:EventUpdateInput):LifeOSDatabase{
+ const before=db.events.find(e=>e.id===eventId); if(!before)return db;
+ const t=now();
+ const target:Event={...before,...changes,updatedAt:t,completedAt:changes.status==="completed"?t:changes.status&&changes.status!=="completed"?undefined:before.completedAt};
+ return appendAudit({...db,events:db.events.map(e=>e.id===eventId?target:e)},target,"update","event-engine",before);
+}
