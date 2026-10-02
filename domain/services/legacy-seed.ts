@@ -68,7 +68,7 @@ export function normalizeLegacySeed(source:unknown):LifeOSBackup{
  const db:LifeOSDatabase={
   schemaVersion:SCHEMA_VERSION,seedVersion:IMMUTABLE_SEED_VERSION,appVersion:APP_VERSION,
   entities,relationships,events:events.concat(billEvents,billPaymentEvents),openLoops:openLoops.concat(billLoops),people,assets,accounts,transactions,loans:[],loanPayments:[],vehicles,vehicleMaintenance:maintenance,properties:[],rooms:[],homeSystems:[],electricalDevices:[],projects,goals,decisions,documents,recurringRules,auditEntries,
-  metadata:{databaseId:"lifeos-f8c4d3d9-immutable-seed",schemaVersion:SCHEMA_VERSION,seedVersion:IMMUTABLE_SEED_VERSION,appVersion:APP_VERSION,createdAt:created,updatedAt:created ,seedSource:{format:s._format,architecture:s._architecture,sha256:"d22e0386087b4d6eee4063d4d77eab29b17b6d675f0a92dc87c2bd5d546531b7",exportedAt:iso(s._exportedAt,created),legacySource:s}}}
+  metadata:{databaseId:"lifeos-f8c4d3d9-immutable-seed",schemaVersion:SCHEMA_VERSION,seedVersion:IMMUTABLE_SEED_VERSION,appVersion:APP_VERSION,createdAt:created,updatedAt:created ,seedSource:{format:s._format,architecture:s._architecture,sha256:"d22e0386087b4d6eee4063d4d77eab29b17b6d675f0a92dc87c2bd5d546531b7",exportedAt:iso(s._exportedAt,created),legacySource:s}}
  };
  return {format:"lifeos-backup",formatVersion:"1.0",schemaVersion:SCHEMA_VERSION,seedVersion:IMMUTABLE_SEED_VERSION,appVersion:APP_VERSION,exportedAt:created,checksum:"d22e0386087b4d6e9",database:db};
 }
