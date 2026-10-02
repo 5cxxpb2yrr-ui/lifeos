@@ -3,7 +3,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import type {ReactNode} from "react";
 import type {LifeOSBackup} from "@/domain/contracts/database";
 import {createEmptyDatabase} from "@/domain/services/empty-database";
-import {importSeed,restoreBackup,validateLifeOSBackup,validateSeedBackup,explainSeedValidation,explainBackupValidation} from "@/domain/services/seed";
+import {importSeed,restoreBackup,validateLifeOSBackup,validateSeedBackup,explainSeedValidation,explainBackupValidation,validateSeedContinuity} from "@/domain/services/seed";
 import {resolveMissionControl} from "@/domain/resolvers/mission-control";
 import {resolveSearch} from "@/domain/resolvers/search";
 import {resolveGraph} from "@/domain/resolvers/graph";
@@ -43,6 +43,8 @@ async function persist(next:typeof db,message:string){
   const revalidated=validateDatabaseIntegrity(candidate);
   if(!revalidated.valid){setNotice(mode==="seed"?"Seed rejected: cloned database failed integrity validation.":"Restore rejected: cloned database failed integrity validation.");return}
   const current=structuredClone(db);
+  const seedContinuity=validateSeedContinuity(current,candidate);
+  if(!seedContinuity.valid){setNotice((mode==="seed"?"Seed rejected: ":"Restore rejected: ")+seedContinuity.reason);return}
   const currentBackup=makeBackup();
   if(mode==="restore")downloadBackup(currentBackup,`lifeos-pre-restore-${new Date().toISOString().replace(/[:.]/g,"-")}.json`);
   saveLocalDatabase(candidate).then(async()=>{
