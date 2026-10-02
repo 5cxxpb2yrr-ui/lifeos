@@ -49,7 +49,7 @@ export function validateDatabaseIntegrity(db:LifeOSDatabase):IntegrityResult{
   ...db.electricalDevices.filter(d=>d.roomId).map(d=>ref(d.id,d.roomId!,"electricalDevice.roomId")),
   ...db.electricalDevices.filter(d=>d.panelId).map(d=>ref(d.id,d.panelId!,"electricalDevice.panelId"))
  );
- for(const [recordId,target,field,expectedType] of refs){const targetInfo=ids.get(target);if(!targetInfo) errors.push({severity:"error",code:"BROKEN_REFERENCE",message:`${field} on ${recordId} references missing id ${target}.`,recordId});else if(expectedType&&targetInfo!==expectedType) errors.push({severity:"error",code:"REFERENCE_TYPE_MISMATCH",message:`${field} on ${recordId} references ${target}, which is ${targetInfo}; expected ${expectedType}.`,recordId});}
+ for(const [recordId,target,field,expectedType] of refs){const targetInfo=ids.get(target);if(!targetInfo) errors.push({severity:"error",code:"BROKEN_REFERENCE",message:`${field} on ${recordId} references missing id ${target}.`,recordId});else if(expectedType&&expectedEntityType(targetInfo)!==expectedType) errors.push({severity:"error",code:"REFERENCE_TYPE_MISMATCH",message:`${field} on ${recordId} references ${target}, which is ${targetInfo}; expected ${expectedType}.`,recordId});}
  for(const r of db.relationships){
  const allowed=["related_to","person_for","owns","uses","belongs_to","part_of","located_in","supports","depends_on","created_by","assigned_to","linked_to","caused_by","documents","scheduled_for","paid_by","payment_for","maintenance_for","child_of","parent_of","member_of"];
  if(!allowed.includes(r.relationshipType)) errors.push({severity:"error",code:"INVALID_RELATIONSHIP_TYPE",message:`Relationship ${r.id} has invalid type ${r.relationshipType}.`,recordId:r.id,recordType:r.entityType});
