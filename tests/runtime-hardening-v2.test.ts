@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createEmptyDatabase } from "../domain/services/empty-database.ts";
-import { createEvent, createOpenLoop, updateEventStatus, updateOpenLoopStatus } from "../domain/services/operations.ts";
-import { createVehicleMaintenance, createRelationship } from "../domain/services/asset-operations.ts";
-import { createHomeEvent } from "../domain/services/home-operations.ts";
-import { createLoanPayment, recordLoanPayment } from "../domain/services/financial-operations.ts";
-import { resolveFinancialHealth } from "../domain/resolvers/financial-health.ts";
-import { validateLifeOSBackup, validateSeedBackup, restoreBackup, importSeed } from "../domain/services/seed.ts";
+import { createEmptyDatabase } from "../domain/services/empty-database";
+import { createEvent, createOpenLoop, updateEventStatus, updateOpenLoopStatus } from "../domain/services/operations";
+import { createVehicleMaintenance, createRelationship } from "../domain/services/asset-operations";
+import { createHomeEvent } from "../domain/services/home-operations";
+import { createLoanPayment, recordLoanPayment } from "../domain/services/financial-operations";
+import { resolveFinancialHealth } from "../domain/resolvers/financial-health";
+import { validateLifeOSBackup, validateSeedBackup, restoreBackup, importSeed } from "../domain/services/seed";
 
 function base() { return createEmptyDatabase("2026-10-02T12:00:00.000Z"); }
 function entity(id:string, entityType:string) {
@@ -94,7 +94,7 @@ test("backup restore and seed import clone database without sharing object refer
   assert.equal(validateSeedBackup(backup),true);
   const restored=restoreBackup(backup);
   const imported=importSeed(backup);
-  assert.notEqual(restored.databaseId,undefined);
+  assert.notEqual(restored.metadata.databaseId,undefined);
   restored.events.push({id:"evt-x",entityType:"event",createdAt:"2026-10-02T12:00:00.000Z",updatedAt:"2026-10-02T12:00:00.000Z",eventType:"task",title:"clone",status:"planned"});
   assert.equal(imported.events.length,0);
 });
