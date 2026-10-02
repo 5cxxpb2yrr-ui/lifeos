@@ -135,7 +135,7 @@ test("backup validator rejects structurally invalid graph even when envelope is 
   assert.equal(validateLifeOSBackup(backup),false);
 });
 
-test("loan payment is idempotent only when caller supplies a new payment event; repeated recording creates distinct historical transactions",()=>{
+test("repeated loan payment recording updates one canonical payment transaction and event",()=>{
   let db=base();
   db={...db,
     accounts:[{...entity("acct-1","financial_account"),name:"Checking",accountType:"checking",currency:"USD",openingBalanceMinor:50000} as any],
