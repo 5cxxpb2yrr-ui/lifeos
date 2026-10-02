@@ -1,19 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createEmptyDatabase } from "../domain/services/empty-database";
-import { createEvent, createOpenLoop, updateEventStatus, updateOpenLoopStatus } from "../domain/services/operations";
-import { createVehicleMaintenance, createRelationship } from "../domain/services/asset-operations";
-import { createHomeEvent } from "../domain/services/home-operations";
-import { createLoanPayment, recordLoanPayment } from "../domain/services/financial-operations";
-import { resolveFinancialHealth } from "../domain/resolvers/financial-health";
-import { validateLifeOSBackup, validateSeedBackup, restoreBackup, importSeed } from "../domain/services/seed";
-import { validateDatabaseIntegrity } from "../domain/resolvers/integrity";
-import { updateVehicleMaintenance } from "../domain/services/asset-operations";
-import { updateHomeEvent } from "../domain/services/home-operations";
-import { createGoal, updateGoal } from "../domain/services/goal-operations";
-import { createProject, updateProject } from "../domain/services/project-operations";
-import { createDecision, updateDecision } from "../domain/services/decision-operations";
-import { createPropertyEvent, updatePropertyEvent } from "../domain/services/property-operations";
+import { createEmptyDatabase } from "../domain/services/empty-database.ts";
+import { createEvent, createOpenLoop, updateEventStatus, updateOpenLoopStatus } from "../domain/services/operations.ts";
+import { createVehicleMaintenance, createRelationship } from "../domain/services/asset-operations.ts";
+import { createHomeEvent } from "../domain/services/home-operations.ts";
+import { createLoanPayment, recordLoanPayment } from "../domain/services/financial-operations.ts";
+import { resolveFinancialHealth } from "../domain/resolvers/financial-health.ts";
+import { validateLifeOSBackup, validateSeedBackup, restoreBackup, importSeed } from "../domain/services/seed.ts";
+import { validateDatabaseIntegrity } from "../domain/resolvers/integrity.ts";
+import { updateVehicleMaintenance } from "../domain/services/asset-operations.ts";
+import { updateHomeEvent } from "../domain/services/home-operations.ts";
+import { createGoal, updateGoal } from "../domain/services/goal-operations.ts";
+import { createProject, updateProject } from "../domain/services/project-operations.ts";
+import { createDecision, updateDecision } from "../domain/services/decision-operations.ts";
+import { createPropertyEvent, updatePropertyEvent } from "../domain/services/property-operations.ts";
 
 
 function base() { return createEmptyDatabase("2026-10-02T12:00:00.000Z"); }
