@@ -79,3 +79,20 @@ html,body{overflow-x:hidden}
   .recent-events-mobile .section-body{padding-bottom:8px}
   .recent-events-mobile .row-title,.recent-events-mobile .row-meta{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 }
+
+/* Modal/form containment: native iOS controls must never determine the modal width. */
+.field-label{display:block;min-width:0;width:100%;color:var(--text)}
+.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0;width:100%}
+.command-modal{box-sizing:border-box;min-width:0;max-width:calc(100vw - 36px);max-height:calc(100dvh - 36px);overflow-x:hidden;overflow-y:auto}
+.command-modal>*{min-width:0;max-width:100%}
+.command-input{box-sizing:border-box;display:block;min-width:0;max-width:100%;width:100%}
+textarea.command-input{resize:vertical}
+@media(max-width:560px){
+  .modal-backdrop{padding:calc(10px + env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom))}
+  .command-modal{width:100%;max-width:100%;max-height:calc(100dvh - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom));padding:14px;border-radius:16px}
+  .command-modal .section-title{align-items:flex-start}
+  .command-modal .section-title h2{font-size:18px}
+  .field-grid{grid-template-columns:minmax(0,1fr);gap:0}
+  .field-label{font-size:12px}
+  .command-input{font-size:16px;padding:12px}
+}
