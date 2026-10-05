@@ -14,6 +14,20 @@ export default function EventPanel({db,eventId,onPersist,onClose}:{db:LifeOSData
  const event=db.events.find(e=>e.id===eventId);
  const [draft,setDraft]=useState<Event | null>(()=>event ? {...event} : null);
  if(!event || !draft)return null;
+ const connectedPeople=db.people.filter(x=>event.personIds?.includes(x.id));
+ const connectedAssets=db.assets.filter(x=>event.assetIds?.includes(x.id));
+ const connectedLoops=db.openLoops.filter(x=>event.openLoopIds?.includes(x.id));
+ const connectedDecisions=db.decisions.filter(x=>event.decisionIds?.includes(x.id));
+ const connectedProjects=db.projects.filter(x=>event.projectIds?.includes(x.id));
+ const connectedGoals=db.goals.filter(x=>event.goalIds?.includes(x.id));
+ const connectedTransactions=db.transactions.filter(x=>event.financialTransactionIds?.includes(x.id));
+ const connectedDocuments=db.documents.filter(x=>event.documentIds?.includes(x.id));
+ const relatedGraph=db.relationships.filter(r=>r.fromId===event.id||r.toId===event.id).map(r=>({
+  type:r.fromId===event.id?r.toType:r.fromType,
+  id:r.fromId===event.id?r.toId:r.fromId,
+  label:r.relationshipType.replaceAll("_"," ")
+ }));
+ const hasContext=connectedPeople.length+connectedAssets.length+connectedLoops.length+connectedDecisions.length+connectedProjects.length+connectedGoals.length+connectedTransactions.length+connectedDocuments.length+relatedGraph.length>0;
  const attention=resolveAttentionDetailed(event);
  const save=()=>{
   const next=updateEvent(db,event.id,{title:draft.title,description:draft.description,eventType:draft.eventType,status:draft.status,occurredAt:draft.occurredAt,startAt:draft.startAt,endAt:draft.endAt,dueAt:draft.dueAt,source:draft.source});
@@ -24,6 +38,20 @@ export default function EventPanel({db,eventId,onPersist,onClose}:{db:LifeOSData
    <div className="event-modal-header"><div><div className="kicker">Event Engine</div><h2>Event detail</h2></div><button className="mini-action" onClick={onClose}>Close</button></div>
    <div className="event-modal-body">
    <div className="event-status-line"><span className={"attention "+(attention.state==="overdue"?"overdue":attention.state==="blocked"?"blocked":"")}>{attention.state.replaceAll("_"," ")}</span><span className="row-meta">{attention.reason}</span></div>
+   <section className="event-context" aria-label="Connected context">
+    <div className="event-context-heading"><span className="kicker">Connected context</span><span className="row-meta">{hasContext?"From the LifeOS graph":"No linked context"}</span></div>
+    {hasContext&&<div className="event-context-chips">
+      {connectedPeople.map(x=><span className="context-chip" key={"person-"+x.id}>Person · {x.displayName}</span>)}
+      {connectedAssets.map(x=><span className="context-chip" key={"asset-"+x.id}>Asset · {x.name}</span>)}
+      {connectedProjects.map(x=><span className="context-chip" key={"project-"+x.id}>Project · {x.name}</span>)}
+      {connectedGoals.map(x=><span className="context-chip" key={"goal-"+x.id}>Goal · {x.name}</span>)}
+      {connectedLoops.map(x=><span className="context-chip" key={"loop-"+x.id}>Loop · {x.title}</span>)}
+      {connectedDecisions.map(x=><span className="context-chip" key={"decision-"+x.id}>Decision · {x.question}</span>)}
+      {connectedTransactions.map(x=><span className="context-chip" key={"tx-"+x.id}>Transaction · {x.description??x.merchant??"Financial transaction"}</span>)}
+      {connectedDocuments.map(x=><span className="context-chip" key={"doc-"+x.id}>Document · {x.name}</span>)}
+      {relatedGraph.map(x=><span className="context-chip" key={"rel-"+x.id+"-"+x.type}>Graph · {x.type} · {x.label}</span>)}
+    </div>}
+   </section>
    <label className="field-label">Title<input className="command-input" value={draft.title} onChange={e=>setDraft({...draft,title:e.target.value})}/></label>
    <label className="field-label">Description<textarea className="command-input" value={draft.description??""} onChange={e=>setDraft({...draft,description:e.target.value})}/></label>
    <div className="field-grid">
