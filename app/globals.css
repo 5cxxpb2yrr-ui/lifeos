@@ -22,3 +22,42 @@ button,input{font:inherit}button{cursor:pointer}.lifeos-shell{min-height:100dvh;
 .mobile-module .module-copy{min-width:0}.mobile-module .module-title{font-size:12px;font-weight:700}.mobile-module .module-note{font-size:9px;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mobile-module .module-count{font:700 20px Orbitron,sans-serif;color:var(--cyan)}
 .mobile-section{margin-top:10px;border:1px solid var(--border);border-radius:14px;background:var(--glass);overflow:hidden}.mobile-section>summary{list-style:none;cursor:pointer;padding:12px;display:flex;align-items:center;justify-content:space-between;gap:8px}.mobile-section>summary::-webkit-details-marker{display:none}.mobile-section>summary:after{content:"⌄";font-size:14px;color:var(--muted);transition:transform .15s ease}.mobile-section[open]>summary:after{transform:rotate(180deg)}.mobile-section .section-body{padding:0 10px 10px}.queue-note{color:var(--muted);font-size:10px}.queue-count{color:var(--orange);font-size:10px;margin-left:auto}
 @media(min-width:561px){.mobile-module-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
+/* True mobile information architecture */
+.mobile-module-grid{display:none}
+.mobile-data-controls{display:none}
+.module-arrow{display:none}
+@media(max-width:560px){
+  .desktop-summary,.desktop-mission-details{display:none!important}
+  .mobile-module-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:2px}
+  .mobile-module{
+    position:relative;min-width:0;min-height:78px;padding:11px 10px;
+    border:1px solid var(--border);border-radius:14px;background:var(--glass);
+    color:var(--text);text-align:left;display:flex;align-items:center;gap:7px;
+    box-shadow:none;overflow:hidden
+  }
+  .mobile-module:active{transform:scale(.985)}
+  .mobile-module.module-attention{border-color:rgba(255,106,0,.35);background:rgba(255,106,0,.06)}
+  .mobile-module .module-copy{display:flex;flex:1;min-width:0;flex-direction:column}
+  .mobile-module .module-title{font-size:11px;font-weight:700;letter-spacing:.02em}
+  .mobile-module .module-note{display:block;margin-top:5px;font-size:9px;line-height:1.2;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mobile-module .module-count{flex:0 0 auto;font:700 19px Orbitron,sans-serif;color:var(--cyan)}
+  .mobile-module .module-arrow{display:block;flex:0 0 auto;color:var(--muted);font-size:17px}
+  .mobile-section{scroll-margin-top:76px}
+  .mobile-section>summary{min-height:48px;padding:11px 10px}
+  .mobile-section .section-body{padding:0 8px 8px}
+  .mobile-section .row{background:rgba(255,255,255,.02)}
+  .mobile-data-controls{display:block;margin-top:10px;border:1px solid var(--border);border-radius:14px;background:var(--glass);overflow:hidden}
+  .mobile-data-controls>summary{list-style:none;padding:12px;display:flex;align-items:center;gap:8px}
+  .mobile-data-controls>summary::-webkit-details-marker{display:none}
+  .mobile-data-controls>summary:after{content:"⌄";margin-left:auto;color:var(--muted)}
+  .mobile-data-controls[open]>summary:after{transform:rotate(180deg)}
+  .mobile-data-controls .tools-panel{margin-top:0;border:0;border-radius:0;box-shadow:none;padding:10px}
+  .mobile-data-controls .tools-panel>div:first-child{display:none}
+  .mobile-data-controls .tool-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .mobile-data-controls .action{min-width:0;padding:9px 7px;font-size:10px}
+  .command-bar{margin-top:12px}
+  .command-bar .action{flex:1;padding:9px 8px;font-size:11px}
+  .notice{font-size:11px;padding:9px 10px}
+  .search-results{display:none}
+}
