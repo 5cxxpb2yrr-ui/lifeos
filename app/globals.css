@@ -116,3 +116,7 @@ textarea.command-input{resize:vertical}
 .context-chip-button{appearance:none;font:inherit;text-align:left;cursor:pointer}
 .context-chip-button:active{transform:scale(.98)}
 .context-chip-button:focus-visible{outline:1px solid var(--cyan);outline-offset:1px}
+
+.context-return{display:flex;align-items:center;gap:8px;margin:10px 0;padding:8px 10px;border:1px solid var(--border);border-radius:12px;background:var(--glass);font-size:10px;color:var(--muted)}
+.context-return-button{appearance:none;border:0;background:transparent;color:var(--cyan);font:700 10px Orbitron,sans-serif;padding:5px 2px;cursor:pointer}
+@media(max-width:560px){.context-return{margin:8px 0;padding:7px 8px;font-size:9px}.context-return-button{font-size:9px}}
