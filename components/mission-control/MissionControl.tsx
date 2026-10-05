@@ -33,7 +33,8 @@ export default function MissionControl(){
  const graph=useMemo(()=>graphContextId?resolveGraph(db,graphContextId):null,[db,graphContextId]);
  const integrity=useMemo(()=>validateDatabaseIntegrity(db),[db]);
  const issues=integrity.errors;
- function openMobileQueue(id:"attention-queue"|"loops-queue"|"today-queue"){setMobileFocus(id==="attention-queue"?"attention":id==="loops-queue"?"loops":"today");document.querySelectorAll<HTMLElement>(".mobile-section").forEach(el=>{if(el.id&&el.id!==id&&el instanceof HTMLDetailsElement)el.open=false});const target=document.getElementById(id);if(target instanceof HTMLDetailsElement){target.open=true;requestAnimationFrame(()=>target.scrollIntoView({behavior:"smooth",block:"start"}));}}\nasync function persist(next:typeof db,message:string){
+ function openMobileQueue(id:"attention-queue"|"loops-queue"|"today-queue"){setMobileFocus(id==="attention-queue"?"attention":id==="loops-queue"?"loops":"today");document.querySelectorAll<HTMLElement>(".mobile-section").forEach(el=>{if(el.id&&el.id!==id&&el instanceof HTMLDetailsElement)el.open=false});const target=document.getElementById(id);if(target instanceof HTMLDetailsElement){target.open=true;requestAnimationFrame(()=>target.scrollIntoView({behavior:"smooth",block:"start"}));}}
+async function persist(next:typeof db,message:string){
  try{await saveLocalDatabase(next);setDb(next);setNotice(message)}
  catch{setNotice("Change was not saved. Local database is unchanged.")}
 }
