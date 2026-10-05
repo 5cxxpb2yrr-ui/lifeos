@@ -12,8 +12,8 @@ function toInput(value?:string){return value?value.slice(0,16):"";}
 
 export default function EventPanel({db,eventId,onPersist,onClose}:{db:LifeOSDatabase;eventId:string;onPersist:(next:LifeOSDatabase,message:string)=>void;onClose:()=>void}){
  const event=db.events.find(e=>e.id===eventId);
- if(!event)return null;
- const [draft,setDraft]=useState<Event>({...event});
+ const [draft,setDraft]=useState<Event | null>(()=>event ? {...event} : null);
+ if(!event || !draft)return null;
  const attention=resolveAttentionDetailed(event);
  const save=()=>{
   const next=updateEvent(db,event.id,{title:draft.title,description:draft.description,eventType:draft.eventType,status:draft.status,occurredAt:draft.occurredAt,startAt:draft.startAt,endAt:draft.endAt,dueAt:draft.dueAt,source:draft.source});
