@@ -8,7 +8,14 @@ import {updateEvent} from "@/domain/services/operations";
 const EVENT_TYPES:EventType[]=["task","meeting","conversation","appointment","purchase","payment","income","expense","transfer","maintenance","repair","inspection","travel","decision","observation","milestone","document","communication","workout","learning","other"];
 const EVENT_STATUS:EventStatus[]=["planned","scheduled","in_progress","completed","cancelled","skipped","failed"];
 
-function toInput(value?:string){return value?value.slice(0,16):"";}
+function toInput(value?:string){
+ if(!value)return "";
+ const date=new Date(value);
+ if(Number.isNaN(date.getTime()))return "";
+ const pad=(n:number)=>String(n).padStart(2,"0");
+ return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+function fromInput(value:string){return value?new Date(value).toISOString():undefined;}
 
 export default function EventPanel({db,eventId,onPersist,onClose,onContext}:{db:LifeOSDatabase;eventId:string;onPersist:(next:LifeOSDatabase,message:string)=>void;onClose:()=>void;onContext:(kind:"person"|"asset"|"project"|"goal"|"loop"|"decision"|"transaction"|"document"|"graph",id:string)=>void}){
  const event=db.events.find(e=>e.id===eventId);
@@ -59,8 +66,8 @@ export default function EventPanel({db,eventId,onPersist,onClose,onContext}:{db:
     <label className="field-label">Status<select className="command-input" value={draft.status} onChange={e=>setDraft({...draft,status:e.target.value as EventStatus})}>{EVENT_STATUS.map(x=><option key={x}>{x}</option>)}</select></label>
    </div>
    <div className="field-grid">
-    <label className="field-label">Start<input className="command-input" type="datetime-local" value={toInput(draft.startAt)} onChange={e=>setDraft({...draft,startAt:e.target.value?new Date(e.target.value).toISOString():undefined})}/></label>
-    <label className="field-label">Due<input className="command-input" type="datetime-local" value={toInput(draft.dueAt)} onChange={e=>setDraft({...draft,dueAt:e.target.value?new Date(e.target.value).toISOString():undefined})}/></label>
+    <label className="field-label">Start<input className="command-input" type="datetime-local" value={toInput(draft.startAt)} onChange={e=>setDraft({...draft,startAt:fromInput(e.target.value)})}/></label>
+    <label className="field-label">Due<input className="command-input" type="datetime-local" value={toInput(draft.dueAt)} onChange={e=>setDraft({...draft,dueAt:fromInput(e.target.value)})}/></label>
    </div>
    <label className="field-label">Source<input className="command-input" value={draft.source??""} onChange={e=>setDraft({...draft,source:e.target.value||undefined})} placeholder="manual, import, email, system…"/></label>
    <div className="row-meta">Created {new Date(event.createdAt).toLocaleString()} · Updated {new Date(event.updatedAt).toLocaleString()}</div>
