@@ -96,3 +96,19 @@ textarea.command-input{resize:vertical}
   .field-label{font-size:12px}
   .command-input{font-size:16px;padding:12px}
 }
+
+/* Native mobile detail-sheet behavior. */
+.event-panel{display:flex;flex-direction:column;overflow:hidden}
+.event-modal-header{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.event-modal-header h2{margin:0}
+.event-modal-body{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:10px 2px 4px;overscroll-behavior:contain}
+.event-modal-footer{flex:0 0 auto;padding-top:10px;border-top:1px solid var(--border);background:#0c1120}
+@media(max-width:560px){
+  .modal-backdrop{place-items:end center}
+  .event-panel{width:100%;max-width:100%;height:min(88dvh,760px);max-height:calc(100dvh - env(safe-area-inset-top) - 8px);border-radius:20px 20px 0 0;padding:14px 12px calc(10px + env(safe-area-inset-bottom));animation:lifeos-sheet-in .18s ease-out}
+  .event-modal-header{position:sticky;top:0;z-index:2;padding-bottom:10px}
+  .event-modal-body{padding-left:0;padding-right:0}
+  .event-modal-footer{position:sticky;bottom:0;padding-bottom:2px}
+  .event-panel .command-input{margin-top:5px}
+}
+@keyframes lifeos-sheet-in{from{transform:translateY(18px);opacity:.7}to{transform:translateY(0);opacity:1}}
