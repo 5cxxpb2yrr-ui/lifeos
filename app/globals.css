@@ -112,3 +112,7 @@ textarea.command-input{resize:vertical}
   .event-panel .command-input{margin-top:5px}
 }
 @keyframes lifeos-sheet-in{from{transform:translateY(18px);opacity:.7}to{transform:translateY(0);opacity:1}}
+
+.context-chip-button{appearance:none;font:inherit;text-align:left;cursor:pointer}
+.context-chip-button:active{transform:scale(.98)}
+.context-chip-button:focus-visible{outline:1px solid var(--cyan);outline-offset:1px}
