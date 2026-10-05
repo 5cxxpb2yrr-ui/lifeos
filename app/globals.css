@@ -61,3 +61,21 @@ button,input{font:inherit}button{cursor:pointer}.lifeos-shell{min-height:100dvh;
   .notice{font-size:11px;padding:9px 10px}
   .search-results{display:none}
 }
+
+/* Hard mobile width containment: prevent long canonical event text from widening flex/grid ancestors. */
+html,body{overflow-x:hidden}
+.lifeos-shell,.content,.content>*{min-width:0;max-width:100%}
+.list,.row{min-width:0;max-width:100%}
+.row{overflow:hidden}
+.row-main{flex:1 1 auto;width:0;min-width:0;overflow:hidden}
+.row-actions{flex:0 0 auto;min-width:0}
+@media(max-width:560px){
+  .content{width:calc(100% - 20px);overflow-x:hidden}
+  .card,.mobile-section,.mobile-module-grid,.mobile-data-controls{width:100%;min-width:0;max-width:100%}
+  .mobile-section .list{width:100%;min-width:0}
+  .mobile-section .row{width:100%;min-width:0}
+  .mobile-section .row-main{min-width:0}
+  .recent-events-mobile{margin-top:10px}
+  .recent-events-mobile .section-body{padding-bottom:8px}
+  .recent-events-mobile .row-title,.recent-events-mobile .row-meta{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
