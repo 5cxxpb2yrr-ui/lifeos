@@ -10,7 +10,7 @@ const EVENT_STATUS:EventStatus[]=["planned","scheduled","in_progress","completed
 
 function toInput(value?:string){return value?value.slice(0,16):"";}
 
-export default function EventPanel({db,eventId,onPersist,onClose}:{db:LifeOSDatabase;eventId:string;onPersist:(next:LifeOSDatabase,message:string)=>void;onClose:()=>void}){
+export default function EventPanel({db,eventId,onPersist,onClose,onContext}:{db:LifeOSDatabase;eventId:string;onPersist:(next:LifeOSDatabase,message:string)=>void;onClose:()=>void;onContext:(kind:"person"|"asset"|"project"|"goal"|"loop"|"decision"|"transaction"|"document"|"graph",id:string)=>void}){
  const event=db.events.find(e=>e.id===eventId);
  const [draft,setDraft]=useState<Event | null>(()=>event ? {...event} : null);
  if(!event || !draft)return null;
