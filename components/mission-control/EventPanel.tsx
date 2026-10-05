@@ -41,15 +41,15 @@ export default function EventPanel({db,eventId,onPersist,onClose}:{db:LifeOSData
    <section className="event-context" aria-label="Connected context">
     <div className="event-context-heading"><span className="kicker">Connected context</span><span className="row-meta">{hasContext?"From the LifeOS graph":"No linked context"}</span></div>
     {hasContext&&<div className="event-context-chips">
-      {connectedPeople.map(x=><span className="context-chip" key={"person-"+x.id}>Person · {x.displayName}</span>)}
-      {connectedAssets.map(x=><span className="context-chip" key={"asset-"+x.id}>Asset · {x.name}</span>)}
-      {connectedProjects.map(x=><span className="context-chip" key={"project-"+x.id}>Project · {x.name}</span>)}
-      {connectedGoals.map(x=><span className="context-chip" key={"goal-"+x.id}>Goal · {x.name}</span>)}
-      {connectedLoops.map(x=><span className="context-chip" key={"loop-"+x.id}>Loop · {x.title}</span>)}
-      {connectedDecisions.map(x=><span className="context-chip" key={"decision-"+x.id}>Decision · {x.question}</span>)}
-      {connectedTransactions.map(x=><span className="context-chip" key={"tx-"+x.id}>Transaction · {x.description??x.merchant??"Financial transaction"}</span>)}
-      {connectedDocuments.map(x=><span className="context-chip" key={"doc-"+x.id}>Document · {x.name}</span>)}
-      {relatedGraph.map(x=><span className="context-chip" key={"rel-"+x.id+"-"+x.type}>Graph · {x.type} · {x.label}</span>)}
+      {connectedPeople.map(x=><button className="context-chip context-chip-button" key={"person-"+x.id} onClick={()=>onContext("person",x.id)}>Person · {x.displayName}</button>)}
+      {connectedAssets.map(x=><button className="context-chip context-chip-button" key={"asset-"+x.id} onClick={()=>onContext("asset",x.id)}>Asset · {x.name}</button>)}
+      {connectedProjects.map(x=><button className="context-chip context-chip-button" key={"project-"+x.id} onClick={()=>onContext("project",x.id)}>Project · {x.name}</button>)}
+      {connectedGoals.map(x=><button className="context-chip context-chip-button" key={"goal-"+x.id} onClick={()=>onContext("goal",x.id)}>Goal · {x.name}</button>)}
+      {connectedLoops.map(x=><button className="context-chip context-chip-button" key={"loop-"+x.id} onClick={()=>onContext("loop",x.id)}>Loop · {x.title}</button>)}
+      {connectedDecisions.map(x=><button className="context-chip context-chip-button" key={"decision-"+x.id} onClick={()=>onContext("decision",x.id)}>Decision · {x.question}</button>)}
+      {connectedTransactions.map(x=><button className="context-chip context-chip-button" key={"tx-"+x.id} onClick={()=>onContext("transaction",x.id)}>Transaction · {x.description??x.merchant??"Financial transaction"}</button>)}
+      {connectedDocuments.map(x=><button className="context-chip context-chip-button" key={"doc-"+x.id} onClick={()=>onContext("document",x.id)}>Document · {x.name}</button>)}
+      {relatedGraph.map(x=><button className="context-chip context-chip-button" key={"rel-"+x.id+"-"+x.type} onClick={()=>onContext("graph",x.id)}>Graph · {x.type} · {x.label}</button>)}
     </div>}
    </section>
    <label className="field-label">Title<input className="command-input" value={draft.title} onChange={e=>setDraft({...draft,title:e.target.value})}/></label>
