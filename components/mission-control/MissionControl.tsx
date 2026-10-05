@@ -16,7 +16,7 @@ import HistoryPanel from "@/components/mission-control/HistoryPanel";
 import EventPanel from "@/components/mission-control/EventPanel";
 
 export default function MissionControl(){
- const [db,setDb]=useState(createEmptyDatabase); const [query,setQuery]=useState(""); const [notice,setNotice]=useState(""); const [activeView,setActiveView]=useState("mission"); const [command,setCommand]=useState<"event"|"loop"|null>(null); const [historyTarget,setHistoryTarget]=useState<string|null>(null); const [eventTarget,setEventTarget]=useState<string|null>(null);
+ const [db,setDb]=useState(createEmptyDatabase); const [query,setQuery]=useState(""); const [notice,setNotice]=useState(""); const [activeView,setActiveView]=useState("mission"); const [mobileFocus,setMobileFocus]=useState<"attention"|"loops"|"today"|null>(null); const [command,setCommand]=useState<"event"|"loop"|null>(null); const [historyTarget,setHistoryTarget]=useState<string|null>(null); const [eventTarget,setEventTarget]=useState<string|null>(null);
  const fileRef=useRef<HTMLInputElement>(null); const backupRef=useRef<HTMLInputElement>(null);
  useEffect(()=>{loadLocalDatabase().then(async local=>{
   if(local){
@@ -33,7 +33,7 @@ export default function MissionControl(){
  const graph=useMemo(()=>graphContextId?resolveGraph(db,graphContextId):null,[db,graphContextId]);
  const integrity=useMemo(()=>validateDatabaseIntegrity(db),[db]);
  const issues=integrity.errors;
-async function persist(next:typeof db,message:string){
+ function openMobileQueue(id:"attention-queue"|"loops-queue"|"today-queue"){setMobileFocus(id==="attention-queue"?"attention":id==="loops-queue"?"loops":"today");document.querySelectorAll<HTMLElement>(".mobile-section").forEach(el=>{if(el.id&&el.id!==id&&el instanceof HTMLDetailsElement)el.open=false});const target=document.getElementById(id);if(target instanceof HTMLDetailsElement){target.open=true;requestAnimationFrame(()=>target.scrollIntoView({behavior:"smooth",block:"start"}));}}\nasync function persist(next:typeof db,message:string){
  try{await saveLocalDatabase(next);setDb(next);setNotice(message)}
  catch{setNotice("Change was not saved. Local database is unchanged.")}
 }
@@ -106,9 +106,9 @@ async function persist(next:typeof db,message:string){
    <section className="desktop-summary"><section className="grid metrics"><Metric label="Attention" value={String(vm.attention.length)} accent/><Metric label="Open loops" value={String(vm.openLoops.length)}/><Metric label="Relationships" value={String(db.relationships.length)}/><Metric label="Events" value={String(db.events.length)}/></section>
    <section className="grid metrics secondary-metrics"><Metric label="Accounts" value={String(db.accounts.length)}/><Metric label="Loans" value={String(db.loans.length)}/><Metric label="Vehicles" value={String(db.vehicles.length)}/><Metric label="Properties" value={String(db.properties.length)}/></section></section>
    {activeView==="mission"&&<section className="mobile-module-grid">
-    <MobileModule label="Attention" count={vm.attention.length} note={vm.attention[0]?.title??"Queue clear"} tone="attention" onClick={()=>document.getElementById("attention-queue")?.scrollIntoView({behavior:"smooth",block:"start"})}/>
-    <MobileModule label="Open Loops" count={vm.openLoops.length} note={vm.openLoops[0]?.title??"No open loops"} onClick={()=>document.getElementById("loops-queue")?.scrollIntoView({behavior:"smooth",block:"start"})}/>
-    <MobileModule label="Today" count={vm.today.length} note={vm.today[0]?.title??"Nothing scheduled"} onClick={()=>document.getElementById("today-queue")?.scrollIntoView({behavior:"smooth",block:"start"})}/>
+    <MobileModule label="Attention" count={vm.attention.length} note={vm.attention[0]?.title??"Queue clear"} tone="attention" onClick={()=>openMobileQueue("attention-queue")}/>
+    <MobileModule label="Open Loops" count={vm.openLoops.length} note={vm.openLoops[0]?.title??"No open loops"} onClick={()=>openMobileQueue("loops-queue")}/>
+    <MobileModule label="Today" count={vm.today.length} note={vm.today[0]?.title??"Nothing scheduled"} onClick={()=>openMobileQueue("today-queue")}/>
     <MobileModule label="Relationships" count={db.relationships.length} note="People + connections" onClick={()=>setActiveView("more")}/>
     <MobileModule label="Events" count={db.events.length} note="Canonical event stream" onClick={()=>setActiveView("events")}/>
     <MobileModule label="Accounts" count={db.accounts.length} note="Financial accounts" onClick={()=>setActiveView("finance")}/>
