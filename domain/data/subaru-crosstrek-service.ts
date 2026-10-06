@@ -156,5 +156,5 @@ export const SUBARU_CROSSTREK_MANUAL_SECTIONS=[
  link("CVT drive cycles",DRIVE_CVT),
  link("Engine drive cycles",DRIVE_ENGINE)
 ];
-
+export const SUBARU_CROSSTREK_DIAGNOSTIC_LINKS:Record<string,SubaruManualLink[]>={};
 export const SUBARU_CROSSTREK_SERVICE_SOURCE_NOTE="Service-manual links and procedures are sourced from sucross.com. Some torque/quick-spec values remain explicitly marked as supplied Garage Diagnostic Assistant profile data. Verify VIN, market, drivetrain and the applicable Subaru Warranty & Maintenance Booklet before performing scheduled service.";
