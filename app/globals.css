@@ -233,9 +233,10 @@ textarea.command-input{resize:vertical}
 .mission-collapsible[open]>summary:after{transform:rotate(180deg)}
 .mission-collapsible .collapsible-body{padding:0 12px 12px}
 .graph-explainer{margin:0 0 10px;line-height:1.45}
-.graph-node-button{width:100%;color:inherit;text-align:left;font:inherit;cursor:pointer}
+.graph-node-button{width:100%;color:var(--cyan);text-align:left;font:inherit;cursor:pointer}
 .graph-node-button{grid-template-columns:auto 1fr auto;align-items:center}
-.graph-node-button:hover{background:rgba(255,255,255,.05)}
+.graph-node-button:hover{background:rgba(0,229,255,.06);color:#7ff3ff}
+.graph-node-button:focus-visible{outline:1px solid var(--cyan);outline-offset:2px;border-radius:6px}
 .graph-node-button .graph-type{white-space:nowrap}
 @media(max-width:560px){
  .mission-menu-fab{left:12px;bottom:14px;width:50px;height:50px;border-radius:15px}
