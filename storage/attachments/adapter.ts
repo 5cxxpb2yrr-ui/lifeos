@@ -28,3 +28,10 @@ export const r2AttachmentAdapter:AttachmentStorageAdapter={
  revokePreview:revokePreviewUrl,
  resolveUrl:attachment=>attachment.storageReference??null,
 };
+
+export const icloudAttachmentAdapter:AttachmentStorageAdapter={
+ provider:"icloud",
+ createPreview:createPreviewUrl,
+ revokePreview:revokePreviewUrl,
+ resolveUrl:attachment=>attachment.storageReference?.startsWith("http")?attachment.storageReference:null,
+};
