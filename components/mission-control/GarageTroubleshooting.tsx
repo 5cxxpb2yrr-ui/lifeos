@@ -9,7 +9,6 @@ import {
   SCION_XB_MANUAL_SECTIONS,
   SCION_XB_TORQUE_CARDS,
 } from "@/domain/data/garage-troubleshooting";
-type ScionTab = "diagnose"|"dtc"|"service"|"torque"|"wiring"|"maintenance"|"manual";
 import {SUBARU_CROSSTREK_2019_PROFILE,SUBARU_CROSSTREK_TROUBLESHOOTING,SUBARU_CROSSTREK_QUICK_SPECS,SUBARU_CROSSTREK_TORQUES,SUBARU_CROSSTREK_OBD_CODES} from "@/domain/data/subaru-crosstrek-troubleshooting";
 import {
   SUBARU_CROSSTREK_DTC_CARDS,
@@ -23,20 +22,20 @@ import {
   type SubaruManualLink
 } from "@/domain/data/subaru-crosstrek-service";
 
-type SubaruTab="diagnose"|"dtc"|"service"|"torque"|"wiring"|"maintenance"|"manual";
-const ManualLinks=({links}:{links:SubaruManualLink[]})=><div className="garage-chip-list">{links.map((l,i)=><a className="garage-chip" key={l.url+i} href={l.url} target="_blank" rel="noreferrer">{l.label} ↗</a>)}</div>;
+type SubaruTab = "diagnose" | "dtc" | "service" | "torque" | "wiring" | "maintenance" | "manual";
+type ScionTab = "diagnose" | "dtc" | "service" | "torque" | "wiring" | "maintenance" | "manual";
 
-export default function GarageTroubleshooting({onClose}:{onClose?:()=>void}){
- const [open,setOpen]=useState(false);
- const [vehicle,setVehicle]=useState<"scion"|"subaru">("scion");
- const [query,setQuery]=useState("");
- const [selectedId,setSelectedId]=useState(SCION_XB_TROUBLESHOOTING[0]?.id??"");
- const [tab,setTab]=useState<SubaruTab>("diagnose");
- const [selectedDtc,setSelectedDtc]=useState(SUBARU_CROSSTREK_DTC_CARDS[0]?.code??"");
- const [selectedConnector,setSelectedConnector]=useState(SUBARU_CROSSTREK_CONNECTORS[0]?.connector??"");
- const [scionTab,setScionTab]=useState<SubaruTab>("diagnose");
- const [selectedScionDtc,setSelectedScionDtc]=useState(SCION_XB_DTC_CARDS[0]?.code??"");
- const [selectedScionConnector,setSelectedScionConnector]=useState(SCION_XB_CONNECTORS[0]?.connector??"");
+export default function GarageTroubleshooting({ onClose }: { onClose?: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [vehicle, setVehicle] = useState<"scion" | "subaru">("scion");
+  const [query, setQuery] = useState("");
+  const [selectedId, setSelectedId] = useState(SCION_XB_TROUBLESHOOTING[0]?.id ?? "");
+  const [tab, setTab] = useState<SubaruTab>("diagnose");
+  const [selectedDtc, setSelectedDtc] = useState(SUBARU_CROSSTREK_DTC_CARDS[0]?.code ?? "");
+  const [selectedConnector, setSelectedConnector] = useState(SUBARU_CROSSTREK_CONNECTORS[0]?.connector ?? "");
+  const [scionTab, setScionTab] = useState<ScionTab>("diagnose");
+  const [selectedScionDtc, setSelectedScionDtc] = useState(SCION_XB_DTC_CARDS[0]?.code ?? "");
+  const [selectedScionConnector, setSelectedScionConnector] = useState(SCION_XB_CONNECTORS[0]?.connector ?? "");
  const paths=vehicle==="subaru"?SUBARU_CROSSTREK_TROUBLESHOOTING:SCION_XB_TROUBLESHOOTING;
  const matches=useMemo(()=>{const q=query.trim().toLowerCase();if(!q)return paths;return paths.filter(p=>[p.symptom,p.system,...p.triggers,...p.likelyCauses].join(" ").toLowerCase().includes(q));},[query,paths]);
  const selected=matches.find(p=>p.id===selectedId)??matches[0];
