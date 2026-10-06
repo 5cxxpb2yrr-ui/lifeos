@@ -6,7 +6,8 @@ import {updateEntityRecord} from "@/domain/services/operations";
 
 type Editable={key:string;value:unknown;original:unknown};
 
-function findRecord(db:LifeOSDatabase,type:string,id:string):BaseEntity|undefined{\n const aliases:Record<string,string>={account:"financial_account",transaction:"financial_transaction",maintenance:"vehicle_maintenance"}; type=aliases[type]??type;
+function findRecord(db:LifeOSDatabase,type:string,id:string):BaseEntity|undefined{
+ const aliases:Record<string,string>={account:"financial_account",transaction:"financial_transaction",maintenance:"vehicle_maintenance"}; type=aliases[type]??type;
  const collections=["events","openLoops","people","assets","accounts","transactions","loans","loanPayments","vehicles","vehicleMaintenance","properties","rooms","homeSystems","electricalDevices","projects","goals","decisions","documents","recurringRules","relationships"] as const;
  for(const name of collections){const item=(db[name] as BaseEntity[]).find(x=>x.id===id);if(item&&(type==="record"||item.entityType===type||name===type))return item}
  const attachment=db.attachments?.find(x=>x.id===id); if(attachment&&(!type||type==="attachment"))return attachment;
