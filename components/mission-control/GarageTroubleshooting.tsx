@@ -11,6 +11,8 @@ import {
   type ScionXbManualLink,
 } from "@/domain/data/garage-troubleshooting";
 import {SUBARU_CROSSTREK_2019_PROFILE,SUBARU_CROSSTREK_TROUBLESHOOTING,SUBARU_CROSSTREK_QUICK_SPECS,SUBARU_CROSSTREK_TORQUES,SUBARU_CROSSTREK_OBD_CODES,SUBARU_CROSSTREK_DIAGNOSTIC_LINKS} from "@/domain/data/subaru-crosstrek-troubleshooting";
+import {SUBARU_ASSISTANT_CARDS,SUBARU_ASSISTANT_SEARCH_FIELDS} from "@/domain/data/subaru-garage-assistant";
+import {SCION_XB_ASSISTANT_CARDS,SCION_XB_ASSISTANT_SEARCH_FIELDS} from "@/domain/data/scion-xb-garage-assistant";
 import {
   SUBARU_CROSSTREK_DTC_CARDS,
   SUBARU_CROSSTREK_TORQUE_CARDS,
@@ -23,7 +25,7 @@ import {
 } from "@/domain/data/subaru-crosstrek-service";
 
 type SubaruTab = "assistant" | "diagnose" | "dtc" | "service" | "torque" | "wiring" | "maintenance" | "manual";
-type ScionTab = "diagnose" | "dtc" | "service" | "torque" | "wiring" | "maintenance" | "manual";
+type ScionTab = "assistant" | "diagnose" | "dtc" | "service" | "torque" | "wiring" | "maintenance" | "manual";
 type ManualLink = SubaruManualLink | ScionXbManualLink;
 
 const ManualLinks = ({ links }: { links: ManualLink[] }) => (
@@ -50,9 +52,10 @@ export default function GarageTroubleshooting({ onClose }: { onClose?: () => voi
   const [tab, setTab] = useState<SubaruTab>("assistant");\n  const [selectedAssistantId, setSelectedAssistantId] = useState(SUBARU_ASSISTANT_CARDS[0]?.id ?? "");
   const [selectedDtc, setSelectedDtc] = useState(SUBARU_CROSSTREK_DTC_CARDS[0]?.code ?? "");
   const [selectedConnector, setSelectedConnector] = useState(SUBARU_CROSSTREK_CONNECTORS[0]?.connector ?? "");
-  const [scionTab, setScionTab] = useState<ScionTab>("diagnose");
+  const [scionTab, setScionTab] = useState<ScionTab>("assistant");
   const [selectedScionDtc, setSelectedScionDtc] = useState(SCION_XB_DTC_CARDS[0]?.code ?? "");
   const [selectedScionConnector, setSelectedScionConnector] = useState(SCION_XB_CONNECTORS[0]?.connector ?? "");
+  const [selectedScionAssistantId, setSelectedScionAssistantId] = useState(SCION_XB_ASSISTANT_CARDS[0]?.id ?? "");
   const paths = vehicle === "subaru" ? SUBARU_CROSSTREK_TROUBLESHOOTING : SCION_XB_TROUBLESHOOTING;
   const matches = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -94,6 +97,8 @@ export default function GarageTroubleshooting({ onClose }: { onClose?: () => voi
   }, [query]);
   const selectedAssistantCard = assistantMatches.find(x => x.id === selectedAssistantId) ?? assistantMatches[0];
 
+  const scionAssistantMatches = useMemo(() => { const q=query.trim().toLowerCase(); if(!q) return SCION_XB_ASSISTANT_CARDS; return SCION_XB_ASSISTANT_CARDS.filter(x=>SCION_XB_ASSISTANT_SEARCH_FIELDS(x).includes(q)); }, [query]);
+  const selectedScionAssistantCard = scionAssistantMatches.find(x=>x.id===selectedScionAssistantId) ?? scionAssistantMatches[0];
   const scionDtcMatches = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return SCION_XB_DTC_CARDS;
