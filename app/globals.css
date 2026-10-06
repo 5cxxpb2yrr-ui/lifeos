@@ -198,3 +198,43 @@ textarea.command-input{resize:vertical}
 .metric-card.card-navigable{cursor:pointer}
 .metric-card.card-navigable:hover{background:rgba(255,255,255,.08);transform:translateY(-1px)}
 .metric-card .entity-chevron{position:absolute;right:10px;bottom:8px}
+
+
+/* Mission Control navigation: compact cards live in a collapsible sidebar. */
+.mission-menu-fab{position:fixed;left:16px;bottom:18px;z-index:55;width:52px;height:52px;border:1px solid rgba(0,229,255,.35);border-radius:16px;background:rgba(8,11,20,.9);color:var(--cyan);box-shadow:0 12px 34px rgba(0,0,0,.4);backdrop-filter:blur(16px);font-size:20px}
+.mission-sidebar{position:fixed;left:14px;top:88px;bottom:18px;z-index:54;width:min(330px,calc(100vw - 28px));padding:14px;border:1px solid var(--border);border-radius:20px;background:rgba(8,11,20,.94);box-shadow:0 24px 80px rgba(0,0,0,.5);backdrop-filter:blur(22px);transform:translateX(calc(-100% - 28px));transition:transform .18s ease;overflow:auto}
+.mission-sidebar.open{transform:translateX(0)}
+.sidebar-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.sidebar-head strong{display:block;margin-top:3px;font:700 16px Orbitron,sans-serif}
+.sidebar-close{width:34px;height:34px;border:1px solid var(--border);border-radius:10px;background:var(--glass);color:var(--text);font-size:18px}
+.sidebar-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.sidebar-grid .metric-card{padding:12px;min-height:88px;border-radius:14px;box-shadow:none}
+.sidebar-grid .metric-value{font-size:21px}
+.sidebar-scrim{position:fixed;inset:0;z-index:53;border:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px)}
+.mission-top-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.mission-top-grid .card{min-width:0}
+.mission-collapsible{margin-top:10px;border:1px solid var(--border);border-radius:16px;background:var(--glass);overflow:hidden}
+.mission-collapsible>summary{list-style:none;cursor:pointer;min-height:52px;padding:12px 14px;display:flex;align-items:center;gap:10px}
+.mission-collapsible>summary::-webkit-details-marker{display:none}
+.mission-collapsible>summary:after{content:"⌄";margin-left:auto;color:var(--muted);transition:transform .15s ease}
+.mission-collapsible[open]>summary:after{transform:rotate(180deg)}
+.mission-collapsible .collapsible-body{padding:0 12px 12px}
+.graph-explainer{margin:0 0 10px;line-height:1.45}
+.graph-node-button{width:100%;color:inherit;text-align:left;font:inherit;cursor:pointer}
+.graph-node-button{grid-template-columns:auto 1fr auto;align-items:center}
+.graph-node-button:hover{background:rgba(255,255,255,.05)}
+.graph-node-button .graph-type{white-space:nowrap}
+@media(max-width:560px){
+ .mission-menu-fab{left:12px;bottom:14px;width:50px;height:50px;border-radius:15px}
+ .mission-sidebar{left:10px;top:72px;bottom:12px;width:min(320px,calc(100vw - 20px));border-radius:18px}
+ .mission-top-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+ .mission-top-grid .card{padding:10px;border-radius:14px}
+ .mission-top-grid .section-title h2{font-size:12px}
+ .mission-top-grid .row{padding:8px 5px}
+ .mission-top-grid .row-title{font-size:11px}
+ .mission-top-grid .row-meta{font-size:9px}
+ .mission-collapsible{margin-top:8px;border-radius:14px}
+ .mission-collapsible>summary{min-height:48px;padding:10px}
+ .mission-collapsible .collapsible-body{padding:0 8px 8px}
+ .graph-explainer{font-size:9px}
+}
