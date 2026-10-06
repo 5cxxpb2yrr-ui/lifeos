@@ -346,3 +346,6 @@ select optgroup{
 .garage-guide-panel .garage-troubleshooting-head{position:sticky;top:-1rem;padding-top:1rem;background:linear-gradient(#0a101d 75%,transparent);z-index:2}
 .danger-action{border-color:rgba(255,107,107,.35);color:#ff7b7b}.danger-action:hover{border-color:rgba(255,107,107,.6);color:#ff9b9b;background:rgba(255,107,107,.06)}
 @media(max-width:560px){.garage-guide-modal{padding:calc(8px + env(safe-area-inset-top)) 8px calc(8px + env(safe-area-inset-bottom))}.garage-guide-panel{max-height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));border-radius:14px;padding:.75rem}.garage-guide-panel .garage-troubleshooting-head{top:-.75rem;padding-top:.75rem}.garage-guide-panel .garage-troubleshooting-list{max-height:220px}}
+
+.context-return-dismiss{margin-left:auto;flex:0 0 auto;border:0;background:transparent;color:var(--muted);font-size:16px;line-height:1;padding:2px 4px;cursor:pointer}.context-return-dismiss:hover{color:var(--text)}
+@media(max-width:560px){.context-return{position:sticky;top:74px;z-index:18;box-shadow:0 8px 24px rgba(0,0,0,.18)}.context-return>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
