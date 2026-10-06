@@ -5,8 +5,8 @@ import type {Event,EventType,EventStatus,LifeOSDatabase} from "@/domain/contract
 import {resolveAttentionDetailed} from "@/domain/resolvers/attention";
 import {updateEvent} from "@/domain/services/operations";
 
-const EVENT_TYPES:EventType[]=["task","meeting","conversation","appointment","purchase","payment","income","expense","transfer","maintenance","repair","inspection","travel","decision","observation","milestone","document","communication","workout","learning","other"];
-const EVENT_STATUS:EventStatus[]=["planned","scheduled","in_progress","completed","cancelled","skipped","failed"];
+export const EVENT_TYPES:EventType[]=["task","meeting","conversation","appointment","purchase","payment","income","expense","transfer","maintenance","repair","inspection","travel","decision","observation","milestone","document","communication","workout","learning","other"];
+export const EVENT_STATUS:EventStatus[]=["planned","scheduled","in_progress","completed","cancelled","skipped","failed"];
 
 function toInput(value?:string){
  if(!value)return "";
