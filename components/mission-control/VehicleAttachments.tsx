@@ -4,7 +4,7 @@ import type {LifeOSDatabase} from "@/domain/contracts/database";
 import {addAttachment,attachmentKind,attachmentsForEntity,createAttachmentRecord,removeAttachment} from "@/domain/services/attachments";
 import {deleteR2Attachment,loadR2AttachmentPreview,uploadR2Attachment} from "@/storage/attachments/r2";
 import {browserSessionAttachmentAdapter,externalUrlAttachmentAdapter} from "@/storage/attachments/adapter";
-import {createICloudAttachmentPath,openICloudFiles} from "@/storage/attachments/icloud";
+import {openICloudFiles} from "@/storage/attachments/icloud";
 
 export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSDatabase;vehicle:LifeOSDatabase["vehicles"][number];onPersist:(next:LifeOSDatabase,message:string)=>void}){
  const attachments=useMemo(()=>attachmentsForEntity(db,vehicle.id,"vehicle"),[db,vehicle.id]);
