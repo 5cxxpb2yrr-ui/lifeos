@@ -1,7 +1,8 @@
 "use client";
 import {useEffect,useMemo,useState} from "react";
 import type {LifeOSDatabase} from "@/domain/contracts/database";
-import {addAttachment,attachmentKind,attachmentsForEntity,createAttachmentRecord,createPreviewUrl,revokePreviewUrl} from "@/domain/services/attachments";
+import {addAttachment,attachmentKind,attachmentsForEntity,createAttachmentRecord} from "@/domain/services/attachments";
+import {browserSessionAttachmentAdapter,externalUrlAttachmentAdapter} from "@/storage/attachments/adapter";
 
 export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSDatabase;vehicle:LifeOSDatabase["vehicles"][number];onPersist:(next:LifeOSDatabase,message:string)=>void}){
  const attachments=useMemo(()=>attachmentsForEntity(db,vehicle.id,"vehicle"),[db,vehicle.id]);
@@ -11,7 +12,7 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
  const [name,setName]=useState("");
  const [category,setCategory]=useState<"manual"|"service_record"|"receipt"|"photo"|"other">("manual");
  const [previewUrls,setPreviewUrls]=useState<Record<string,string>>({});
- useEffect(()=>()=>Object.values(previewUrls).forEach(revokePreviewUrl),[previewUrls]);
+ useEffect(()=>{return()=>{Object.values(previewUrls).forEach(browserSessionAttachmentAdapter.revokePreview)}},[previewUrls]);
  const add=()=>{
   if(!file&&!url.trim())return;
   const title=name.trim()||file?.name||"Vehicle document";
@@ -22,12 +23,12 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
    description:category==="manual"?"Vehicle manual / service reference":"Vehicle attachment",
    linkedEntities:[{entityId:vehicle.id,entityType:"vehicle"}],
   });
-  if(file){const objectUrl=createPreviewUrl(file);setPreviewUrls(current=>({...current,[attachment.id]:objectUrl}));}
+  if(file){const objectUrl=browserSessionAttachmentAdapter.createPreview(file);setPreviewUrls(current=>({...current,[attachment.id]:objectUrl}));}
   onPersist(addAttachment(db,attachment),"Vehicle attachment added.");
   setFile(null);setUrl("");setName("");
  };
  const selectedAttachment=attachments.find(item=>item.id===selected);
- const selectedUrl=selectedAttachment?previewUrls[selectedAttachment.id]||selectedAttachment.storageReference||null:null;
+ const selectedUrl=selectedAttachment?previewUrls[selectedAttachment.id]||externalUrlAttachmentAdapter.resolveUrl(selectedAttachment):null;
  return <section className="vehicle-attachments card">
   <div className="section-title"><div><div className="kicker">Vehicle Context</div><h3>Attachments</h3></div><span className="badge">{attachments.length}</span></div>
   <p className="row-meta attachment-note">Files stay outside the LifeOS database. LifeOS stores metadata and a storage reference; browser-selected files are session previews until an external storage link is supplied.</p>
