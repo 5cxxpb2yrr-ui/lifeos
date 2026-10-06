@@ -45,7 +45,7 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
    const uploaded=await uploadR2Attachment(file,attachment);
    const preview=await loadR2AttachmentPreview(attachment);
    if(preview)setPreviewUrls(current=>({...current,[attachment.id]:preview}));
-   const persisted={...attachment,storageReference:uploaded.key,externalId:uploaded.etag??undefined};
+   const persisted={...attachment,storageReference:uploaded.key};
    onPersist(addAttachment(db,persisted),"Vehicle attachment uploaded to secure R2 storage.");
    setFile(null);setName("");
   }catch(error){
