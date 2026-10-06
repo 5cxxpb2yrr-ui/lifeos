@@ -294,3 +294,23 @@ select optgroup{
   background-color:#080b14 !important;
   color:var(--text) !important;
 }
+
+/* Data Control Center */
+.data-control-center{margin-top:8px}
+.data-control-tabs{display:flex;gap:6px;overflow-x:auto;padding:3px;margin:4px 0 14px;border-bottom:1px solid rgba(255,255,255,.08);scrollbar-width:none}
+.data-control-tabs::-webkit-scrollbar{display:none}
+.data-control-tabs button{border:1px solid transparent;background:rgba(255,255,255,.035);color:var(--muted);border-radius:999px;padding:9px 12px;font:600 10px Orbitron,sans-serif;white-space:nowrap}
+.data-control-tabs button.active{background:rgba(0,229,255,.1);border-color:rgba(0,229,255,.3);color:var(--cyan)}
+.data-control-panel{display:grid;gap:12px}
+.data-control-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.data-control-action{min-width:0;text-align:left;border:1px solid rgba(255,255,255,.1);border-radius:13px;background:rgba(255,255,255,.025);color:var(--text);padding:13px;display:grid;gap:6px}
+.data-control-action:hover{border-color:rgba(0,229,255,.3);background:rgba(0,229,255,.04)}
+.data-control-action strong{font-size:12px}.data-control-action span{font-size:10px;line-height:1.4;color:var(--muted)}
+.data-preview{padding:13px;border:1px solid rgba(0,229,255,.25);border-radius:14px;background:rgba(0,229,255,.04)}
+.data-preview h3{margin:3px 0;font-size:14px;overflow-wrap:anywhere}.data-preview-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+.data-export-list{display:grid;gap:8px}.data-csv-grid{display:flex;flex-wrap:wrap;gap:6px}.data-csv-grid .mini-action{font-size:9px}
+.integrity-ok,.integrity-fail{display:flex;justify-content:space-between;gap:10px;padding:14px;border-radius:13px;border:1px solid rgba(0,229,255,.25);background:rgba(0,229,255,.05);color:var(--cyan)}
+.integrity-fail{border-color:rgba(255,107,107,.3);background:rgba(255,107,107,.05);color:#ff7b7b}
+.data-integrity-list{display:grid;gap:6px}.data-seed-card{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;border:1px solid rgba(255,213,79,.25);border-radius:14px;background:rgba(255,213,79,.05)}
+.data-seed-card h3{margin:3px 0;font-size:16px}
+@media(max-width:560px){.data-control-grid{grid-template-columns:1fr}.data-control-action{min-height:78px}.data-preview-actions{display:grid;grid-template-columns:1fr 1fr}.data-seed-card{align-items:stretch;flex-direction:column}.data-seed-card .action{width:100%}}
