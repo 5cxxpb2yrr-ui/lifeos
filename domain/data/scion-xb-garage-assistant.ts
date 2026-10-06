@@ -8,12 +8,13 @@ export interface ScionXbAssistantCard {
   manual?:{label:string;url:string}[]; category?:string; canDrive?:string; message?:string; reasons?:string[];
   interval?:string; lastService?:number; date?:string; mileage?:number; service?:string;
 }
+import {SCION_XB_MANUAL_LINKS} from "@/domain/data/scion-xb-manuals";
 const manual=(label:string,url:string)=>({label,url});
-const MANUAL="https://charm.li/Scion/2006/xB%20L4-1.5L%20%281NZ-FE%29/";
-const ENGINE="https://charm.li/Scion/2006/xB%20L4-1.5L%20%281NZ-FE%29/Repair%20and%20Diagnosis/Powertrain%20Management/";
-const DTC="https://charm.li/Scion/2006/xB%20L4-1.5L%20%281NZ-FE%29/Repair%20and%20Diagnosis/Powertrain%20Management/Diagrams/Diagnostic%20Aids/How%20to%20Troubleshoot%20ECU%20Controlled%20Systems/Diagnostic%20Trouble%20Code%20Chart/";
-const READINESS="https://charm.li/Scion/2006/xB%20L4-1.5L%20%281NZ-FE%29/Repair%20and%20Diagnosis/Powertrain%20Management/Computers%20and%20Control%20Systems/Testing%20and%20Inspection/Monitors%2C%20Trips%2C%20Drive%20Cycles%20and%20Readiness%20Codes/";
-const ECM="https://charm.li/Scion/2006/xB%20L4-1.5L%20%281NZ-FE%29/Repair%20and%20Diagnosis/Relays%20and%20Modules/Relays%20and%20Modules%20-%20Powertrain%20Management/Relays%20and%20Modules%20-%20Computers%20and%20Control%20Systems/Engine%20Control%20Module/";
+const MANUAL=SCION_XB_MANUAL_LINKS.manual.url;
+const ENGINE=SCION_XB_MANUAL_LINKS.powertrain.url;
+const DTC=SCION_XB_MANUAL_LINKS.dtc.url;
+const READINESS=SCION_XB_MANUAL_LINKS.readiness.url;
+const ECM=SCION_XB_MANUAL_LINKS.ecm.url;
 
 export const SCION_XB_ASSISTANT_DIAGNOSTICS:ScionXbAssistantCard[]=[
 {id:"no-crank",type:"diagnostic",title:"No Crank",severity:"ORANGE",icon:"battery",quickAnswer:"Start with battery state, terminals, start-control circuit, then starter.",workflow:["Verify battery state of charge","Inspect battery terminals and grounds","Verify park/neutral or clutch start input","Check starter relay / start circuit","Test starter power and control"],actionSteps:["Open Wiring","Start Checklist","Save Notes"],commonCauses:["Weak battery","Corroded terminals / grounds","Starter relay or control circuit","Starter motor"],specifications:{platform:"2006 Scion xB · 1NZ-FE"},relatedDiagnostics:["Starting system","Battery / charging","Park / Neutral switch"],manual:[manual("2006 xB factory manual",MANUAL),manual("ECM / wiring diagnostics",ECM)]},
