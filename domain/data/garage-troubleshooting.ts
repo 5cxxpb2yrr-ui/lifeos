@@ -13,4 +13,80 @@ export const SCION_XB_TROUBLESHOOTING:GarageTroubleshootingPath[]=[
 {id:"coolant-temp",symptom:"Coolant temperature behavior is abnormal / thermostat or ECT fault indicated",system:"Cooling / Engine Control",triggers:["overheating","overheat","coolant temperature","ect","thermostat","runs hot","temperature gauge"],likelyCauses:["Thermostat","Engine Coolant Temperature (ECT) sensor","ECT sensor circuit faults when related DTCs are present"],sequence:["Treat this as the factory ECT/thermostat diagnostic path; the repair manual does not provide a standalone generic overheating symptom table.","Read current DTCs with the intelligent tester.","If P0116 is present alone, inspect thermostat opening temperature.","If related ECT DTCs P0115/P0117/P0118/P0125 are also present, troubleshoot those first per the manual.","If thermostat is within specification, replace the ECT sensor as directed by the P0116 flow."],sections:[{section:"SFI DTC P0116",ref:"ES-102 to ES-104"},{section:"Thermostat inspection",ref:"CO-12 / ES-104"},{section:"Engine coolant system",ref:"CO-1 onward"}],measurements:["Thermostat valve opening temperature: 80–84°C (176–183°F).","Battery voltage for the ECT monitor: 10.5 V or more.","ECT sensor value should change in accordance with actual coolant temperature.","Coolant capacity: 4.4 L M/T; 4.3 L A/T."],garageLinks:["Coolant service","Fluid capacities","Fluid types"]}
 ];
 
-export function getScionXbTroubleshooting(query:string){const q=query.trim().toLowerCase();if(!q)return SCION_XB_TROUBLESHOOTING;return SCION_XB_TROUBLESHOOTING.filter(p=>[p.symptom,p.system,...p.triggers,...p.likelyCauses].join(" ").toLowerCase().includes(q));}
+export type ScionXbManualLink={label:string;url:string;note?:string};
+export type ScionXbDtcCard={code:string;title:string;severity:"GREEN"|"YELLOW"|"ORANGE"|"RED";driveability:string;likelyCauses:string[];firstChecks:string[];wiring:string[];specs:string[];manual:ScionXbManualLink[]};
+export type ScionXbServiceCard={system:string;fluid?:string;service:string;interval?:string;specs:string[];manual:ScionXbManualLink[]};
+export type ScionXbConnectorCard={connector:string;poles:string;color:string;area:string;connectsTo:string;use:string;manual:ScionXbManualLink[]};
+export type ScionXbMaintenanceCard={item:string;interval:string;action:"Replace"|"Inspect"|"Perform";notes?:string;manual:ScionXbManualLink[]};
+
+const SXB_ROOT="https://www.sucross.com/";
+const sxb=(label:string,url:string,note?:string):ScionXbManualLink=>({label,url,note});
+const SXB_MANUAL=sxb("Scion xB repair manual","https://www.toyota-tech.eu/"); 
+const SXB_DTC=sxb("SFI / DTC reference","https://www.toyota-tech.eu/");
+const SXB_WIRING=sxb("Engine wiring / connector reference","https://www.toyota-tech.eu/");
+const SXB_MAINT=sxb("Maintenance reference","https://www.toyota-tech.eu/");
+
+export const SCION_XB_DTC_CARDS:ScionXbDtcCard[]=[
+ {code:"P0300",title:"Random / multiple cylinder misfire",severity:"RED",driveability:"Stop hard driving if the MIL is flashing or the engine is shaking; continued misfire can damage the catalyst.",likelyCauses:["Ignition coil / spark plug","Injector / fuel delivery","Air/fuel control","Compression or mechanical timing"],firstChecks:["Read DTCs and freeze-frame data.","Identify whether one cylinder or multiple cylinders are affected.","Check spark, injector operation, fuel pressure and compression before replacing components."],wiring:["Inspect ignition and injector connectors and harnesses before condemning coils or injectors."],specs:["Spark plug gap: 0.7–0.8 mm.","Spark plug torque: 18 N·m (13 ft-lbf)."],manual:[SXB_DTC,SXB_WIRING]},
+ {code:"P0116",title:"Engine coolant temperature range / performance",severity:"ORANGE",driveability:"Generally driveable if temperature remains controlled; overheating changes the priority to immediate cooling-system diagnosis.",likelyCauses:["Thermostat","ECT sensor","ECT sensor circuit","Cooling-system condition"],firstChecks:["Compare scan-tool coolant temperature to actual engine temperature.","Check thermostat operation before replacing the ECT sensor.","Inspect ECT connector and wiring."],wiring:["ECT connector and harness should be checked for open/short/poor connection."],specs:["Thermostat opening temperature: 80–84°C (176–183°F)."],manual:[SXB_DTC,SXB_WIRING]},
+ {code:"P0171",title:"System too lean",severity:"ORANGE",driveability:"Reduced power, hesitation or misfire may occur; avoid replacing the A/F sensor until intake and fuel-delivery checks are complete.",likelyCauses:["Vacuum/intake leak","MAF contamination or circuit","Fuel pressure/delivery","Injector","A/F feedback issue"],firstChecks:["Preserve freeze-frame and fuel-trim data.","Inspect intake tract and vacuum hoses.","Verify MAF behavior and fuel delivery before sensor replacement."],wiring:["Inspect MAF/A/F sensor connectors and grounds."],specs:["Warm-idle MAF reference: 1.4–2.3 g/sec for the existing Scion data set."],manual:[SXB_DTC,SXB_WIRING]},
+ {code:"P0420",title:"Catalyst efficiency below threshold",severity:"YELLOW",driveability:"Usually driveable, but diagnose misfire, exhaust leaks and mixture faults before replacing the catalyst.",likelyCauses:["Exhaust leak","Misfire / rich or lean operation","Rear O2/A/F sensor issue","Catalyst degradation"],firstChecks:["Check for current or pending misfire/fuel-trim DTCs.","Inspect exhaust for leaks.","Verify front/rear oxygen-sensor behavior before condemning the catalyst."],wiring:["Inspect rear oxygen-sensor connector/harness."],specs:["Use the catalyst-monitor drive conditions from the applicable factory procedure."],manual:[SXB_DTC,SXB_WIRING]},
+ {code:"P0442",title:"EVAP system small leak",severity:"GREEN",driveability:"Generally driveable; emissions fault should still be isolated before replacing EVAP components.",likelyCauses:["Fuel-cap seal","EVAP hose/connection","Purge/VSV valve","Canister-side leak"],firstChecks:["Verify fuel-cap installation and seal.","Inspect EVAP hoses and connections.","Perform leak testing if the basic inspection does not isolate the fault."],wiring:["Inspect purge/VSV connectors and harness."],specs:[],manual:[SXB_DTC,SXB_WIRING]}
+];
+
+export const SCION_XB_SERVICE_CARDS:ScionXbServiceCard[]=[
+ {system:"Engine",fluid:"0W-20 / applicable factory engine oil",service:"Oil and filter service",interval:"Follow the applicable maintenance schedule.",specs:["Confirm exact year/engine before using a capacity or torque value."],manual:[SXB_MAINT]},
+ {system:"Automatic transaxle",fluid:"ATF Type T-IV",service:"Drain/refill and shift-control diagnosis",interval:"Service interval depends on vehicle/year/usage.",specs:["Existing factory data: 2.9 L drain/refill; 6.8 L dry fill.","ATF test temperature: 50–80°C.","Line-pressure and shift-time-lag tests are diagnostic, not replacement triggers."],manual:[SXB_MANUAL]},
+ {system:"Brake system",fluid:"SAE J1703 / FMVSS No. 116 DOT 3",service:"Inspection, bleeding and brake component service",interval:"Inspect according to maintenance schedule.",specs:["Brake actuator assembly with bracket to body: 19 N·m (14 ft-lbf)."],manual:[SXB_MANUAL,SXB_MAINT]},
+ {system:"Power steering",fluid:"ATF Dexron II or III",service:"Fluid inspection / bleeding",interval:"Inspect for leaks and abnormal operation.",specs:["Total capacity: 0.7 L.","Bleed after service when air/foaming is present."],manual:[SXB_MANUAL]},
+ {system:"A/C",fluid:"HFC-134a (R134a)",service:"Refrigerant and cooling-system diagnosis",interval:"Inspect according to service condition.",specs:["Existing factory data: 460 ±30 g (16.2 ±1.1 oz).","Compressor oil: ND-OIL 8 or equivalent."],manual:[SXB_MANUAL]}
+];
+
+export const SCION_XB_CONNECTORS:ScionXbConnectorCard[]=[
+ {connector:"Injector harness",poles:"2",color:"Factory-specific",area:"Engine",connectsTo:"Fuel injectors",use:"Misfire / injector circuit diagnosis.",manual:[SXB_WIRING]},
+ {connector:"Ignition coil",poles:"Factory-specific",color:"Factory-specific",area:"Engine",connectsTo:"Ignition coil",use:"No-start / misfire diagnosis.",manual:[SXB_WIRING]},
+ {connector:"ECT",poles:"Factory-specific",color:"Factory-specific",area:"Cooling / cylinder head",connectsTo:"Engine coolant temperature sensor",use:"P0116 / temperature diagnosis.",manual:[SXB_WIRING,SXB_DTC]},
+ {connector:"MAF",poles:"Factory-specific",color:"Factory-specific",area:"Air intake",connectsTo:"Mass airflow sensor",use:"P0101/P0102/lean-condition diagnosis.",manual:[SXB_WIRING,SXB_DTC]},
+ {connector:"Rear O2",poles:"Factory-specific",color:"Factory-specific",area:"Exhaust",connectsTo:"Rear oxygen sensor",use:"P0137/P0141/P0420 diagnosis.",manual:[SXB_WIRING,SXB_DTC]},
+ {connector:"Purge VSV",poles:"Factory-specific",color:"Factory-specific",area:"EVAP",connectsTo:"Purge control valve",use:"P0442/P0455/P0456 diagnosis.",manual:[SXB_WIRING,SXB_DTC]}
+];
+
+export const SCION_XB_MAINTENANCE:ScionXbMaintenanceCard[]=[
+ {item:"Engine oil / filter",interval:"Scheduled maintenance interval",action:"Replace",manual:[SXB_MAINT]},
+ {item:"Spark plugs",interval:"Scheduled maintenance interval",action:"Replace",manual:[SXB_MAINT]},
+ {item:"Air cleaner",interval:"Scheduled maintenance interval",action:"Inspect",notes:"Replace more frequently in dusty service.",manual:[SXB_MAINT]},
+ {item:"Coolant",interval:"Scheduled maintenance interval",action:"Inspect",manual:[SXB_MAINT]},
+ {item:"Brake system",interval:"Scheduled maintenance interval",action:"Inspect",manual:[SXB_MAINT]},
+ {item:"Automatic transaxle fluid",interval:"Condition/usage dependent",action:"Inspect",manual:[SXB_MAINT]},
+ {item:"Steering / suspension",interval:"Scheduled maintenance interval",action:"Inspect",manual:[SXB_MAINT]},
+ {item:"Tires / alignment",interval:"Regular inspection",action:"Inspect",manual:[SXB_MAINT]},
+ {item:"A/C system",interval:"Condition dependent",action:"Inspect",manual:[SXB_MAINT]}
+];
+
+export const SCION_XB_MANUAL_SECTIONS=[SXB_MANUAL,SXB_DTC,SXB_WIRING,SXB_MAINT];
+
+export const SCION_XB_TORQUE_CARDS=[
+ {item:"Starter installation",torque:"37 N·m (27 ft-lbf)",notes:"Existing Scion xB factory data.",manual:SXB_MANUAL},
+ {item:"Spark plugs",torque:"18 N·m (13 ft-lbf)",notes:"Existing Scion xB factory data.",manual:SXB_MANUAL},
+ {item:"Wheel nuts",torque:"103 N·m (76 ft-lbf)",notes:"Existing Scion xB factory data.",manual:SXB_MANUAL},
+ {item:"Brake actuator assembly to body",torque:"19 N·m (14 ft-lbf)",notes:"Existing Scion xB factory data.",manual:SXB_MANUAL}
+];
+
+export const SCION_XB_DIAGNOSTIC_LINKS:Record<string,ScionXbManualLink[]>={
+ "engine-no-crank":[SXB_MANUAL,SXB_WIRING],
+ "engine-no-combustion":[SXB_MANUAL,SXB_WIRING],
+ "rough-idle":[SXB_MANUAL,SXB_WIRING],
+ "misfire":[SXB_DTC,SXB_WIRING],
+ "at-shift":[SXB_MANUAL],
+ "brake":[SXB_MANUAL],
+ "steering":[SXB_MANUAL],
+ "pull-shimmy":[SXB_MANUAL],
+ "ac-no-cool":[SXB_MANUAL],
+ "coolant-temp":[SXB_DTC,SXB_WIRING]
+};
+
+export function getScionXbTroubleshooting(query:string){
+ const q=query.trim().toLowerCase();
+ if(!q)return SCION_XB_TROUBLESHOOTING;
+ return SCION_XB_TROUBLESHOOTING.filter(p=>[p.symptom,p.system,...p.triggers,...p.likelyCauses].join(" ").toLowerCase().includes(q));
+}
