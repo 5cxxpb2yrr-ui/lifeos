@@ -346,3 +346,36 @@ select optgroup{
 .garage-guide-panel .garage-troubleshooting-head{position:sticky;top:-1rem;padding-top:1rem;background:linear-gradient(#0a101d 75%,transparent);z-index:2}
 .danger-action{border-color:rgba(255,107,107,.35);color:#ff7b7b}.danger-action:hover{border-color:rgba(255,107,107,.6);color:#ff9b9b;background:rgba(255,107,107,.06)}
 @media(max-width:560px){.garage-guide-modal{padding:calc(8px + env(safe-area-inset-top)) 8px calc(8px + env(safe-area-inset-bottom))}.garage-guide-panel{max-height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));border-radius:14px;padding:.75rem}.garage-guide-panel .garage-troubleshooting-head{top:-.75rem;padding-top:.75rem}.garage-guide-panel .garage-troubleshooting-list{max-height:220px}}
+
+/* Subaru Garage Assistant: touch-first diagnostic cards */
+.garage-assistant{display:grid;gap:.8rem}
+.garage-assistant-head{display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;padding:.8rem;border:1px solid rgba(106,0,255,.24);border-radius:14px;background:rgba(106,0,255,.05)}
+.garage-assistant-head h4{margin:.2rem 0 .25rem;font:700 1rem/1.25 Orbitron,sans-serif}
+.garage-assistant-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem}
+.garage-assistant-card{min-width:0;display:grid;gap:.38rem;padding:.8rem;text-align:left;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:rgba(255,255,255,.035);color:var(--text);min-height:112px}
+.garage-assistant-card:active{transform:scale(.985)}
+.garage-assistant-card.active{border-color:rgba(0,229,255,.42);background:rgba(0,229,255,.075);box-shadow:0 0 18px rgba(0,229,255,.06)}
+.garage-assistant-card strong{font:700 .8rem/1.3 Orbitron,sans-serif}
+.garage-assistant-card>span:last-child{font-size:.68rem;line-height:1.4;color:rgba(237,244,255,.68)}
+.garage-assistant-card-top,.garage-assistant-detail-head{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.garage-assistant-severity{display:inline-flex;align-items:center;border-radius:999px;padding:.22rem .42rem;font:700 .58rem Orbitron,sans-serif;letter-spacing:.04em;border:1px solid rgba(255,255,255,.12)}
+.severity-green{color:#72e6a1;background:rgba(65,200,120,.08);border-color:rgba(65,200,120,.28)}
+.severity-yellow{color:#ffd54f;background:rgba(255,213,79,.08);border-color:rgba(255,213,79,.28)}
+.severity-orange{color:#ff8a3d;background:rgba(255,106,0,.09);border-color:rgba(255,106,0,.3)}
+.severity-red{color:#ff7b7b;background:rgba(255,70,70,.09);border-color:rgba(255,70,70,.3)}
+.severity-blue{color:#6bdcff;background:rgba(0,229,255,.08);border-color:rgba(0,229,255,.28)}
+.severity-purple{color:#c58cff;background:rgba(106,0,255,.1);border-color:rgba(155,80,255,.3)}
+.garage-assistant-detail{padding:.9rem;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(255,255,255,.025)}
+.garage-assistant-detail h4{margin:.2rem 0;font:700 1rem/1.35 Orbitron,sans-serif}
+.garage-assistant-answer{display:grid;gap:.25rem;margin-top:.65rem;padding:.7rem;border-left:3px solid var(--orange);border-radius:0 10px 10px 0;background:rgba(255,106,0,.05)}
+.garage-assistant-answer strong{font:600 .62rem Orbitron,sans-serif;color:var(--orange);text-transform:uppercase;letter-spacing:.08em}
+.garage-assistant-answer span{font-size:.76rem;line-height:1.45}
+.garage-assistant .garage-guide-tabs{overflow:auto;flex-wrap:nowrap}
+@media(max-width:560px){
+  .garage-assistant-head{padding:.7rem}
+  .garage-assistant-grid{grid-template-columns:1fr 1fr}
+  .garage-assistant-card{min-height:122px;padding:.68rem}
+  .garage-assistant-card strong{font-size:.72rem}
+  .garage-assistant-card>span:last-child{font-size:.63rem}
+  .garage-assistant-detail{padding:.72rem}
+}
