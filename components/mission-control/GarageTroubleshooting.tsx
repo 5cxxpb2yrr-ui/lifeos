@@ -1,7 +1,16 @@
 "use client";
-import {useMemo,useState} from "react";
-import {SCION_XB_TROUBLESHOOTING,SCION_XB_DTC_CARDS,SCION_XB_SERVICE_CARDS,SCION_XB_CONNECTORS,SCION_XB_MAINTENANCE,SCION_XB_MANUAL_SECTIONS,SCION_XB_TORQUE_CARDS,SCION_XB_DIAGNOSTIC_LINKS,type GarageTroubleshootingPath, type ScionXbManualLink} from "@/domain/data/garage-troubleshooting";
-import {SUBARU_CROSSTREK_DTC_CARDS,SUBARU_CROSSTREK_DIAGNOSTIC_LINKS,SUBARU_CROSSTREK_TORQUE_CARDS, /* …rest unchanged… */} from "@/domain/data/subaru-crosstrek-service";import {SUBARU_CROSSTREK_DTC_CARDS,SUBARU_CROSSTREK_TORQUE_CARDS,SUBARU_CROSSTREK_FLUID_SERVICE,SUBARU_CROSSTREK_CONNECTORS,SUBARU_CROSSTREK_MAINTENANCE,SUBARU_CROSSTREK_MANUAL_SECTIONS,SUBARU_CROSSTREK_SERVICE_SOURCE_NOTE,type SubaruManualLink} from "@/domain/data/subaru-crosstrek-service";
+import {SUBARU_CROSSTREK_2019_PROFILE,SUBARU_CROSSTREK_TROUBLESHOOTING,SUBARU_CROSSTREK_QUICK_SPECS,SUBARU_CROSSTREK_TORQUES,SUBARU_CROSSTREK_OBD_CODES} from "@/domain/data/subaru-crosstrek-troubleshooting";
+import {
+  SUBARU_CROSSTREK_DTC_CARDS,
+  SUBARU_CROSSTREK_TORQUE_CARDS,
+  SUBARU_CROSSTREK_FLUID_SERVICE,
+  SUBARU_CROSSTREK_CONNECTORS,
+  SUBARU_CROSSTREK_MAINTENANCE,
+  SUBARU_CROSSTREK_MANUAL_SECTIONS,
+  SUBARU_CROSSTREK_SERVICE_SOURCE_NOTE,
+  SUBARU_CROSSTREK_DIAGNOSTIC_LINKS,
+  type SubaruManualLink
+} from "@/domain/data/subaru-crosstrek-service";
 
 type SubaruTab="diagnose"|"dtc"|"service"|"torque"|"wiring"|"maintenance"|"manual";
 const ManualLinks=({links}:{links:SubaruManualLink[]})=><div className="garage-chip-list">{links.map((l,i)=><a className="garage-chip" key={l.url+i} href={l.url} target="_blank" rel="noreferrer">{l.label} ↗</a>)}</div>;
