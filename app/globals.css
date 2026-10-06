@@ -170,3 +170,27 @@ textarea.command-input{resize:vertical}
  .universal-capture-footer{position:sticky;bottom:0;background:rgba(8,11,20,.98);margin:12px -14px -14px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));z-index:2}
  .universal-capture-footer .action{flex:1;min-height:46px}
 }
+
+
+.entity-row{width:100%;border:0;border-bottom:1px solid rgba(255,255,255,.06);border-radius:0;background:transparent;color:inherit;text-align:left;display:flex;align-items:center;gap:10px;padding:11px 9px;cursor:pointer;min-width:0}
+.entity-row:hover{background:rgba(255,255,255,.035)}
+.entity-row:active{transform:scale(.997)}
+.entity-row .row-main{flex:1;min-width:0}
+.entity-chevron{flex:0 0 auto;color:var(--muted);font-size:20px;line-height:1}
+.entity-detail-modal{width:min(560px,calc(100vw - 20px));max-width:calc(100vw - 20px);max-height:calc(100dvh - 20px);overflow:auto;box-sizing:border-box;background:#0d1220;border:1px solid var(--border);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.55);padding:16px}
+.entity-detail-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+.entity-detail-header h2{margin:3px 0 0;font-size:20px;line-height:1.15}
+.entity-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.entity-detail-grid>div{min-width:0;padding:11px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.025)}
+.entity-detail-grid .kicker{display:block;margin-bottom:5px}
+.entity-detail-grid strong{display:block;overflow-wrap:anywhere;font-size:12px}
+.entity-detail-description{margin:14px 0 0;padding:12px;border-radius:12px;background:rgba(255,255,255,.025);color:var(--muted);font-size:12px;line-height:1.45}
+.entity-detail-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+@media(max-width:560px){
+ .entity-detail-modal{width:calc(100vw - 16px);max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);padding:13px;border-radius:16px}
+ .entity-detail-grid{grid-template-columns:1fr 1fr;gap:7px}
+ .entity-detail-grid>div{padding:9px}
+ .entity-detail-footer{display:grid;grid-template-columns:1fr 1fr}
+ .entity-detail-footer .action{min-height:46px}
+ .entity-row{min-height:48px;padding:9px 6px}
+}
