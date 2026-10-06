@@ -19,11 +19,10 @@ import {
   SUBARU_CROSSTREK_MAINTENANCE,
   SUBARU_CROSSTREK_MANUAL_SECTIONS,
   SUBARU_CROSSTREK_SERVICE_SOURCE_NOTE,
-  SUBARU_CROSSTREK_DIAGNOSTIC_LINKS,
   type SubaruManualLink
 } from "@/domain/data/subaru-crosstrek-service";
 
-type SubaruTab = "diagnose" | "dtc" | "service" | "torque" | "wiring" | "maintenance" | "manual";
+type SubaruTab = "assistant" | "diagnose" | "dtc" | "service" | "torque" | "wiring" | "maintenance" | "manual";
 type ScionTab = "diagnose" | "dtc" | "service" | "torque" | "wiring" | "maintenance" | "manual";
 type ManualLink = SubaruManualLink | ScionXbManualLink;
 
@@ -48,7 +47,7 @@ export default function GarageTroubleshooting({ onClose }: { onClose?: () => voi
   const [vehicle, setVehicle] = useState<"scion" | "subaru">("scion");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(SCION_XB_TROUBLESHOOTING[0]?.id ?? "");
-  const [tab, setTab] = useState<SubaruTab>("diagnose");
+  const [tab, setTab] = useState<SubaruTab>("assistant");\n  const [selectedAssistantId, setSelectedAssistantId] = useState(SUBARU_ASSISTANT_CARDS[0]?.id ?? "");
   const [selectedDtc, setSelectedDtc] = useState(SUBARU_CROSSTREK_DTC_CARDS[0]?.code ?? "");
   const [selectedConnector, setSelectedConnector] = useState(SUBARU_CROSSTREK_CONNECTORS[0]?.connector ?? "");
   const [scionTab, setScionTab] = useState<ScionTab>("diagnose");
@@ -88,6 +87,13 @@ export default function GarageTroubleshooting({ onClose }: { onClose?: () => voi
     );
   }, [query]);
   const selectedConnectorCard = connectorMatches.find(x => x.connector === selectedConnector) ?? connectorMatches[0];
+  const assistantMatches = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return SUBARU_ASSISTANT_CARDS;
+    return SUBARU_ASSISTANT_CARDS.filter(x => SUBARU_ASSISTANT_SEARCH_FIELDS(x).includes(q));
+  }, [query]);
+  const selectedAssistantCard = assistantMatches.find(x => x.id === selectedAssistantId) ?? assistantMatches[0];
+
   const scionDtcMatches = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return SCION_XB_DTC_CARDS;
@@ -128,9 +134,48 @@ export default function GarageTroubleshooting({ onClose }: { onClose?: () => voi
     <button type="button" className="action garage-guide-trigger" onClick={() => setOpen(true)}>🧭 Factory Diagnostic Guide <span>{paths.length}</span></button>
     {open && <div className="garage-guide-modal" role="dialog" aria-modal="true" aria-labelledby="garage-guide-title" onMouseDown={() => setOpen(false)}>
       <section className="garage-troubleshooting garage-guide-panel" onMouseDown={e => e.stopPropagation()}>
-        <div className="garage-troubleshooting-head"><div><div className="kicker">Factory Diagnostic Guide</div><h3 id="garage-guide-title">{vehicle === "subaru" ? "2019 Subaru Crosstrek · FB20 / CVT" : "Symptom → Diagnostic Path"}</h3><p className="row-meta">{vehicle === "subaru" ? SUBARU_CROSSTREK_2019_PROFILE.year + " " + SUBARU_CROSSTREK_2019_PROFILE.make + " " + SUBARU_CROSSTREK_2019_PROFILE.model + " · " + SUBARU_CROSSTREK_2019_PROFILE.engine + " · " + SUBARU_CROSSTREK_2019_PROFILE.transmission : "2006 Scion xB · 1NZ-FE · factory repair-manual references"}</p></div><div className="row-actions"><span className="badge">{vehicle === "subaru" ? SUBARU_CROSSTREK_DTC_CARDS.length + " DTCs" : paths.length}</span><button type="button" className="mini-action" onClick={() => { setOpen(false); onClose?.(); }}>Close</button></div></div>
+        <div className="garage-troubleshooting-head"><div><div className="kicker">Factory Diagnostic Guide</div><h3 id="garage-guide-title">{vehicle === "subaru" ? "2019 Subaru Crosstrek · FB20 / CVT" : "Symptom → Diagnostic Path"}</h3><p className="row-meta">{vehicle === "subaru" ? SUBARU_CROSSTREK_2019_PROFILE.year + " " + SUBARU_CROSSTREK_2019_PROFILE.make + " " + SUBARU_CROSSTREK_2019_PROFILE.model + " · " + SUBARU_CROSSTREK_2019_PROFILE.engine + " · " + SUBARU_CROSSTREK_2019_PROFILE.transmission : "2006 Scion xB · 1NZ-FE · factory repair-manual references"}</p></div><div className="row-actions"><span className="badge">{vehicle === "subaru" ? SUBARU_ASSISTANT_CARDS.length + " Assistant cards" : paths.length}</span><button type="button" className="mini-action" onClick={() => { setOpen(false); onClose?.(); }}>Close</button></div></div>
         <div className="garage-guide-tabs"><button type="button" className={"mini-action " + (vehicle === "scion" ? "active" : "")} onClick={() => switchVehicle("scion")}>Scion xB</button><button type="button" className={"mini-action " + (vehicle === "subaru" ? "active" : "")} onClick={() => switchVehicle("subaru")}>2019 Subaru Crosstrek</button></div>
-        {vehicle === "subaru" && <div className="garage-guide-tabs" role="tablist" aria-label="Subaru service knowledge"><button className={"mini-action " + (tab === "diagnose" ? "active" : "")} onClick={() => subaruNav("diagnose")}>Diagnose</button><button className={"mini-action " + (tab === "dtc" ? "active" : "")} onClick={() => subaruNav("dtc")}>DTC Cards · {SUBARU_CROSSTREK_DTC_CARDS.length}</button><button className={"mini-action " + (tab === "service" ? "active" : "")} onClick={() => subaruNav("service")}>Fluids / Service</button><button className={"mini-action " + (tab === "torque" ? "active" : "")} onClick={() => subaruNav("torque")}>Torque</button><button className={"mini-action " + (tab === "wiring" ? "active" : "")} onClick={() => subaruNav("wiring")}>Wiring</button><button className={"mini-action " + (tab === "maintenance" ? "active" : "")} onClick={() => subaruNav("maintenance")}>Maintenance</button><button className={"mini-action " + (tab === "manual" ? "active" : "")} onClick={() => subaruNav("manual")}>Manual</button></div>}
+        {vehicle === "subaru" && <div className="garage-guide-tabs" role="tablist" aria-label="Subaru service knowledge"><button className={"mini-action " + (tab === "assistant" ? "active" : "")} onClick={() => subaruNav("assistant")}>Assistant</button><button className={"mini-action " + (tab === "diagnose" ? "active" : "")} onClick={() => subaruNav("diagnose")}>Diagnose</button><button className={"mini-action " + (tab === "dtc" ? "active" : "")} onClick={() => subaruNav("dtc")}>DTC Cards · {SUBARU_CROSSTREK_DTC_CARDS.length}</button><button className={"mini-action " + (tab === "service" ? "active" : "")} onClick={() => subaruNav("service")}>Fluids / Service</button><button className={"mini-action " + (tab === "torque" ? "active" : "")} onClick={() => subaruNav("torque")}>Torque</button><button className={"mini-action " + (tab === "wiring" ? "active" : "")} onClick={() => subaruNav("wiring")}>Wiring</button><button className={"mini-action " + (tab === "maintenance" ? "active" : "")} onClick={() => subaruNav("maintenance")}>Maintenance</button><button className={"mini-action " + (tab === "manual" ? "active" : "")} onClick={() => subaruNav("manual")}>Manual</button></div>}
+        {vehicle === "subaru" && tab === "assistant" && <div className="garage-assistant">
+          <div className="garage-assistant-head">
+            <div>
+              <div className="kicker">Subaru Diagnostic Intelligence</div>
+              <h4>Garage Assistant · 2019 Crosstrek</h4>
+              <p className="row-meta">Search codes, symptoms, torque, maintenance, specifications, rules, and driveability in one touch-first library.</p>
+            </div>
+            <span className="badge">{assistantMatches.length} cards</span>
+          </div>
+          <div className="garage-guide-tabs" role="toolbar" aria-label="Subaru quick actions">
+            <button type="button" className="mini-action" onClick={() => { setQuery(""); setSelectedAssistantId("no-crank"); }}>Start Diagnosis</button>
+            <button type="button" className="mini-action" onClick={() => { setQuery("P"); }}>Scan Code</button>
+            <button type="button" className="mini-action" onClick={() => { setQuery("torque"); }}>Lookup Torque</button>
+            <button type="button" className="mini-action" onClick={() => { setQuery("fluid"); }}>Lookup Fluid</button>
+            <button type="button" className="mini-action" onClick={() => subaruNav("maintenance")}>Maintenance</button>
+          </div>
+          <div className="garage-assistant-grid">
+            {assistantMatches.map(card => <button type="button" key={card.id} className={"garage-assistant-card " + (selectedAssistantCard?.id === card.id ? "active" : "")} onClick={() => setSelectedAssistantId(card.id)}>
+              <div className="garage-assistant-card-top"><span className={"garage-assistant-severity severity-" + (card.severity ?? "BLUE").toLowerCase()}>{card.severity ?? "BLUE"}</span><span className="row-meta">{card.type.replace("_"," ")}</span></div>
+              <strong>{card.title}</strong>
+              {card.quickAnswer && <span>{card.quickAnswer}</span>}
+              {card.description && <span className="row-meta">{card.description}</span>}
+            </button>)}
+          </div>
+          {selectedAssistantCard && <div className="garage-assistant-detail">
+            <div className="garage-assistant-detail-head"><div><div className="kicker">{selectedAssistantCard.type.replace("_"," ")} · {selectedAssistantCard.severity ?? "BLUE"}</div><h4>{selectedAssistantCard.title}</h4></div><span className={"garage-assistant-severity severity-" + (selectedAssistantCard.severity ?? "BLUE").toLowerCase()}>{selectedAssistantCard.message ?? selectedAssistantCard.canDrive ?? "REFERENCE"}</span></div>
+            {selectedAssistantCard.quickAnswer && <div className="garage-assistant-answer"><strong>Quick Answer</strong><span>{selectedAssistantCard.quickAnswer}</span></div>}
+            {selectedAssistantCard.workflow?.length ? <div className="garage-troubleshooting-block"><div className="field-label">Action Steps</div><ol>{selectedAssistantCard.workflow.map((x,i)=><li key={i}>{x}</li>)}</ol></div> : null}
+            {selectedAssistantCard.actionSteps?.length ? <div className="garage-troubleshooting-block"><div className="field-label">Actions</div><div className="garage-chip-list">{selectedAssistantCard.actionSteps.map((x,i)=><button type="button" className="garage-chip" key={i} onClick={() => setQuery(x)}>{x}</button>)}</div></div> : null}
+            {selectedAssistantCard.commonCauses?.length ? <div className="garage-troubleshooting-block"><div className="field-label">Common Causes</div><div className="garage-chip-list">{selectedAssistantCard.commonCauses.map((x,i)=><span className="garage-chip" key={i}>{x}</span>)}</div></div> : null}
+            {selectedAssistantCard.reasons?.length ? <div className="garage-troubleshooting-block"><div className="field-label">Why This Matters</div><ol>{selectedAssistantCard.reasons.map((x,i)=><li key={i}>{x}</li>)}</ol></div> : null}
+            {selectedAssistantCard.specifications && <div className="garage-troubleshooting-block"><div className="field-label">Specifications</div><div className="garage-spec-list">{Object.entries(selectedAssistantCard.specifications).map(([k,v])=><div className="garage-spec" key={k}><strong>{k}</strong><span>{v}</span></div>)}</div></div>}
+            {selectedAssistantCard.relatedDiagnostics?.length ? <div className="garage-troubleshooting-block"><div className="field-label">Related Diagnostics</div><div className="garage-chip-list">{selectedAssistantCard.relatedDiagnostics.map((x,i)=><button type="button" className="garage-chip" key={i} onClick={() => setQuery(x)}>{x}</button>)}</div></div> : null}
+            {selectedAssistantCard.interval && <div className="garage-spec"><strong>Interval</strong><span>{selectedAssistantCard.interval}</span></div>}
+            {selectedAssistantCard.notes?.length ? <div className="garage-troubleshooting-block"><div className="field-label">Notes</div><ul>{selectedAssistantCard.notes.map((x,i)=><li key={i}>{x}</li>)}</ul></div> : null}
+            {selectedAssistantCard.manual?.length ? <div className="garage-troubleshooting-block"><div className="field-label">Factory Manual</div><ManualLinks links={selectedAssistantCard.manual} /></div> : null}
+          </div>}
+        </div>}
+
         {vehicle === "subaru" && tab === "diagnose" && <div className="garage-quick-reference"><div><div className="field-label">Quick specifications</div>{SUBARU_CROSSTREK_QUICK_SPECS.map((x, i) => <span className="garage-chip" key={i}>{x}</span>)}</div><div><div className="field-label">Torque reference</div>{SUBARU_CROSSTREK_TORQUES.map((x, i) => <span className="garage-chip" key={i}>{x}</span>)}</div><div><div className="field-label">OBD / severity reference</div>{SUBARU_CROSSTREK_OBD_CODES.map(([code, desc, severity]) => <button type="button" className="garage-chip" key={code} onClick={() => { setSelectedDtc(code); setTab("dtc"); }}>{code} · {severity} · {desc}</button>)}</div></div>}
         {vehicle === "subaru" && tab !== "manual" && <input className="command-input garage-troubleshooting-search" value={query} onChange={e => setQuery(e.target.value)} placeholder="Search this service library…" aria-label="Search Subaru service library" />}
 
