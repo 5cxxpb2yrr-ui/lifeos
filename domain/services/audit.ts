@@ -2,6 +2,10 @@ import type {AuditEntry,BaseEntity,LifeOSDatabase} from "@/domain/contracts/data
 
 const id=(p:string)=>p+"-"+crypto.randomUUID();
 
+function toRecord(value: BaseEntity): Record<string, unknown> {
+ return Object.fromEntries(Object.entries(value));
+}
+
 export function appendAudit(
  db:LifeOSDatabase,
  target:BaseEntity,
@@ -19,8 +23,8 @@ export function appendAudit(
   targetId:target.id,
   targetType:target.entityType,
   timestamp:t,
-  before:before?{...before}:undefined,
-  after:{...target},
+  before:before?toRecord(before):undefined,
+  after:toRecord(target),
   source
  };
  return {...db,auditEntries:[...db.auditEntries,entry],metadata:{...db.metadata,updatedAt:t}};
