@@ -1,4 +1,4 @@
-import type {Event,EventStatus,LifeOSDatabase,OpenLoop} from "@/domain/contracts/database";
+import type {Event,EventStatus,LifeOSDatabase,OpenLoop,Person} from "@/domain/contracts/database";
 import {appendAudit} from "@/domain/services/audit";
 const now=()=>new Date().toISOString(); const id=(p:string)=>p+"-"+crypto.randomUUID();
 export function createEvent(db:LifeOSDatabase,input:Pick<Event,"title"|"eventType"|"status"> & Partial<Event>):LifeOSDatabase{
@@ -26,4 +26,10 @@ export function updateEvent(db:LifeOSDatabase,eventId:string,changes:EventUpdate
  const t=now();
  const target:Event={...before,...changes,updatedAt:t,completedAt:changes.status ? (changes.status==="completed" ? t : undefined) : before.completedAt};
  return appendAudit({...db,events:db.events.map(e=>e.id===eventId?target:e)},target,"update","event-engine",before);
+}
+
+export function createPerson(db:LifeOSDatabase,input:{displayName:string;notes?:string;metadata?:Record<string,unknown>}):LifeOSDatabase{
+ const t=now(); const parts=input.displayName.trim().split(/\\s+/); const firstName=parts.shift()??input.displayName.trim(); const lastName=parts.length?parts.join(" "):undefined;
+ const person:Person={id:id("person"),entityType:"person",createdAt:t,updatedAt:t,firstName,lastName,displayName:input.displayName.trim(),notes:input.notes,metadata:input.metadata};
+ return appendAudit({...db,people:[...db.people,person]},person,"create","universal-capture");
 }
