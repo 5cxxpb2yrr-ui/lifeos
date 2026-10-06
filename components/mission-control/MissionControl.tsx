@@ -106,7 +106,7 @@ function DataView({view,db,onEvent,onEntity,onGraph,onNavigateView}:{view:"event
   <div className="section-title"><div><div className="kicker">LifeOS / {title}</div><h2>{title}</h2></div><span className="badge">{rows.length}</span></div>
   {tabs&&<div className="data-tabs" role="tablist" aria-label={title+" sections"}>{tabs.map(([key,label])=><button type="button" role="tab" aria-selected={tab===key} className={"data-tab "+(tab===key?"active":"")} key={key} onClick={()=>setTab(key)}>{label}</button>)}</div>}
   {view==="vehicles"&&<div className="context-tabs"><button type="button" onClick={()=>{onNavigateView("assets")}}>Assets</button><span>› Vehicles</span><button type="button" onClick={()=>{onNavigateView("properties")}}>Properties</button></div>}
-  {view==="properties"&&<div className="context-tabs"><button type="button" onClick={()=>{window.dispatchEvent(new CustomEvent("lifeos:navigate",{detail:{kind:"graph",id:"__view_assets__",type:"assets_view"}}))}}>Assets</button><span>› Properties</span><button type="button" onClick={()=>{onNavigateView("vehicles")}}>Vehicles</button></div>}
+  {view==="properties"&&<div className="context-tabs"><button type="button" onClick={()=>onNavigateView("assets")}>Assets</button><span>› Properties</span><button type="button" onClick={()=>{onNavigateView("vehicles")}}>Vehicles</button></div>}
   <div className="list">{rows.length?rows.map(row=><button type="button" className="row entity-row" key={row.id} onClick={row.action}><div className="row-main"><div className="row-title">{row.title}</div><div className="row-meta">{row.meta}</div></div><span className="queue-count">›</span></button>):<Empty text={"No "+title.toLowerCase()+" records in this view."}/>}</div>
  </section>;
 }
