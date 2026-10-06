@@ -119,7 +119,7 @@ export default function GarageTroubleshooting({ onClose }: { onClose?: () => voi
   const switchVehicle = (next: "scion" | "subaru") => {
     setVehicle(next);
     setQuery("");
-    setTab("diagnose");
+    setTab(next === "subaru" ? "assistant" : "diagnose");
     setSelectedId((next === "subaru" ? SUBARU_CROSSTREK_TROUBLESHOOTING : SCION_XB_TROUBLESHOOTING)[0]?.id ?? "");
   };
   const subaruNav = (next: SubaruTab) => {
