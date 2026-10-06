@@ -4,6 +4,7 @@ import {useState} from "react";
 import type {Event,EventType,EventStatus,LifeOSDatabase} from "@/domain/contracts/database";
 import {resolveAttentionDetailed} from "@/domain/resolvers/attention";
 import {updateEvent} from "@/domain/services/operations";
+import {resolveGraph} from "@/domain/resolvers/graph";
 
 export const EVENT_TYPES:EventType[]=["task","meeting","conversation","appointment","purchase","payment","income","expense","transfer","maintenance","repair","inspection","travel","decision","observation","milestone","document","communication","workout","learning","other"];
 export const EVENT_STATUS:EventStatus[]=["planned","scheduled","in_progress","completed","cancelled","skipped","failed"];
@@ -17,7 +18,7 @@ function toInput(value?:string){
 }
 function fromInput(value:string){return value?new Date(value).toISOString():undefined;}
 
-export default function EventPanel({db,eventId,onPersist,onClose,onContext}:{db:LifeOSDatabase;eventId:string;onPersist:(next:LifeOSDatabase,message:string)=>void;onClose:()=>void;onContext:(kind:"person"|"asset"|"project"|"goal"|"loop"|"decision"|"transaction"|"document"|"graph",id:string)=>void}){
+export default function EventPanel({db,eventId,onPersist,onClose,onContext}:{db:LifeOSDatabase;eventId:string;onPersist:(next:LifeOSDatabase,message:string)=>void;onClose:()=>void;onContext:(kind:"person"|"asset"|"project"|"goal"|"loop"|"decision"|"transaction"|"document"|"graph",id:string)=>void;graph?:ReturnType<typeof resolveGraph>}){
  const event=db.events.find(e=>e.id===eventId);
  const [draft,setDraft]=useState<Event | null>(()=>event ? {...event} : null);
  if(!event || !draft)return null;
@@ -59,7 +60,7 @@ export default function EventPanel({db,eventId,onPersist,onClose,onContext}:{db:
       {relatedGraph.map(x=><button className="context-chip context-chip-button" key={"rel-"+x.id+"-"+x.type} onClick={()=>onContext("graph",x.id)}>Graph · {x.type} · {x.label}</button>)}
     </div>}
    </section>
-   <section className="event-edit-section">
+   {graph&&<section className="selected-graph"><div className="section-title"><div><div className="kicker">Graph Neighborhood</div><span className="row-meta">{graph.center?.label??"Selected event"}</span></div><span className="badge">{graph.edges.length}</span></div>{graph.edges.length?<div className="selected-graph-list">{graph.edges.map((edge,i)=><div className="selected-graph-row" key={edge.from.id+edge.to.id+edge.relationship+i}><span className="graph-node-label">{edge.from.label}</span><span className="graph-relationship">→ {edge.relationship.replaceAll("_"," ")} →</span><span className="graph-node-label">{edge.to.label}</span></div>)}</div>:<div className="row-meta">No direct relationships for this event.</div>}</section>}<section className="event-edit-section">
     <div className="event-edit-section-heading"><span className="kicker">Core</span><span className="row-meta">What happened</span></div>
     <label className="field-label">Title<input className="command-input" value={draft.title} onChange={e=>setDraft({...draft,title:e.target.value})}/></label>
     <label className="field-label">Description<textarea className="command-input" value={draft.description??""} onChange={e=>setDraft({...draft,description:e.target.value})}/></label>
