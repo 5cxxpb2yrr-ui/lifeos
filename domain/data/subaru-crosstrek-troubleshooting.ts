@@ -77,3 +77,23 @@ export const SUBARU_CROSSTREK_OBD_CODES=[
  ["C0057","Wheel speed sensor","ORANGE"],
  ["C0071","Steering angle sensor","YELLOW"]
 ] as const;
+
+
+type SubaruDiagnosticLink={label:string;url:string;note?:string};
+const subaruLink=(label:string,url:string,note?:string):SubaruDiagnosticLink=>({label,url,note});
+
+export const SUBARU_CROSSTREK_DIAGNOSTIC_LINKS:Record<string,SubaruDiagnosticLink[]>={
+ "subaru-no-crank":[subaruLink("Full Subaru Crosstrek service manual","https://www.sucross.com/subaru_crosstrek_service_manual-728.html"),subaruLink("Engine wiring / transmission cord locations","https://www.sucross.com/engine_wiring_harness_and_transmission_cord_location-4212.html")],
+ "subaru-crank-no-start":[subaruLink("Engine diagnostics index","https://www.sucross.com/engine_diagnostics_h4do_-1771.html"),subaruLink("Engine wiring / transmission cord locations","https://www.sucross.com/engine_wiring_harness_and_transmission_cord_location-4212.html")],
+ "subaru-battery-drain":[subaruLink("Full Subaru Crosstrek service manual","https://www.sucross.com/subaru_crosstrek_service_manual-728.html"),subaruLink("Engine wiring / transmission cord locations","https://www.sucross.com/engine_wiring_harness_and_transmission_cord_location-4212.html")],
+ "subaru-overheat":[subaruLink("Full Subaru Crosstrek service manual","https://www.sucross.com/subaru_crosstrek_service_manual-728.html"),subaruLink("Maintenance schedule","https://www.sucross.com/schedule_maintenance_schedule-3417.html")],
+ "subaru-no-heat":[subaruLink("Full Subaru Crosstrek service manual","https://www.sucross.com/subaru_crosstrek_service_manual-728.html"),subaruLink("Maintenance schedule","https://www.sucross.com/schedule_maintenance_schedule-3417.html")],
+ "subaru-no-ac":[subaruLink("Full Subaru Crosstrek service manual","https://www.sucross.com/subaru_crosstrek_service_manual-728.html"),subaruLink("Maintenance schedule","https://www.sucross.com/schedule_maintenance_schedule-3417.html")],
+ "subaru-brake-noise":[subaruLink("Full Subaru Crosstrek service manual","https://www.sucross.com/subaru_crosstrek_service_manual-728.html"),subaruLink("Maintenance schedule","https://www.sucross.com/schedule_maintenance_schedule-3417.html")],
+ "subaru-awd":[subaruLink("Full Subaru Crosstrek service manual","https://www.sucross.com/subaru_crosstrek_service_manual-728.html"),subaruLink("Engine wiring / transmission cord locations","https://www.sucross.com/engine_wiring_harness_and_transmission_cord_location-4212.html")],
+ "subaru-cvt":[subaruLink("CVT electrical component locations","https://www.sucross.com/electrical_component_location_location-1279.html"),subaruLink("CVTF adjustment","https://www.sucross.com/adjustment-1306.html"),subaruLink("CVTF replacement","https://www.sucross.com/replacement-1309.html"),subaruLink("CVT drive cycles","https://www.sucross.com/drive_cycle_procedure-1278.html")],
+ "subaru-misfire":[subaruLink("P0300 factory diagnostic","https://www.sucross.com/dtc_p0300_random_multiple_cylinder_misfire_detected-1847.html"),subaruLink("Engine wiring / transmission cord locations","https://www.sucross.com/engine_wiring_harness_and_transmission_cord_location-4212.html"),subaruLink("Engine drive cycles","https://www.sucross.com/drive_cycle_procedure-1968.html")],
+ "subaru-avcs":[subaruLink("P0011 factory diagnostic","https://www.sucross.com/dtc_p0011_a_camshaft_position_timing_over_advanced_or_system_performance_bank_1-1789.html"),subaruLink("Engine diagnostics index","https://www.sucross.com/engine_diagnostics_h4do_-1771.html"),subaruLink("Engine drive cycles","https://www.sucross.com/drive_cycle_procedure-1968.html")],
+ "subaru-evap":[subaruLink("P0456 factory diagnostic","https://www.sucross.com/dtc_p0456_evap_system_cpc_leak_detected_very_small_leak_-1874.html"),subaruLink("Engine diagnostics index","https://www.sucross.com/engine_diagnostics_h4do_-1771.html"),subaruLink("Engine drive cycles","https://www.sucross.com/drive_cycle_procedure-1968.html")],
+ "subaru-p0420":[subaruLink("P0420 factory diagnostic","https://www.sucross.com/dtc_p0420_catalyst_system_efficiency_below_threshold_bank_1-1868.html"),subaruLink("Engine wiring / transmission cord locations","https://www.sucross.com/engine_wiring_harness_and_transmission_cord_location-4212.html"),subaruLink("Engine drive cycles","https://www.sucross.com/drive_cycle_procedure-1968.html")]
+};
