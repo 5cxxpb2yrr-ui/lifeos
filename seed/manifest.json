@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "1.0.0",
+  "seedId": "full-life-control",
+  "seedVersion": "1.0.0",
+  "status": "immutable",
+  "sourceFile": "seed/full-life-control-seed-backup.json",
+  "format": "FLC-v5",
+  "architecture": "LifeOS Core: Events + Graph + Resolver-owned Views",
+  "byteLength": 59563,
+  "gitBlobSha": "f4444b6d2f851ec4e8733c7a5ca2422fe0de5e09",
+  "immutablePolicy": [
+    "Do not modify, regenerate, normalize, migrate, or replace this seed in place.",
+    "Operational state and backups may evolve independently.",
+    "A new seed requires explicit user authorization and a new seedVersion.",
+    "All future LifeOS builds must preserve this seed as the baseline."
+  ]
+}
