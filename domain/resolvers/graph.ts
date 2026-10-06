@@ -2,28 +2,29 @@ import type {BaseEntity,LifeOSDatabase,Relationship} from "@/domain/contracts/da
 export interface GraphNode{id:string;type:string;label:string}
 export interface GraphEdge{from:GraphNode;to:GraphNode;relationship:Relationship["relationshipType"]}
 function label(entity:BaseEntity):string{
+ const e=entity as BaseEntity & Record<string,unknown>;
  switch(entity.entityType){
-  case "event": return entity.title;
-  case "open_loop": return entity.title;
-  case "person": return entity.displayName;
-  case "asset": return entity.name;
-  case "financial_account": return entity.name;
-  case "financial_transaction": return entity.description??entity.merchant??entity.transactionDate;
-  case "loan": return entity.name;
-  case "loan_payment": return `Loan payment · ${entity.scheduledDate}`;
-  case "vehicle": return [entity.year,entity.make,entity.model].filter(Boolean).join(" ")||"Vehicle";
-  case "vehicle_maintenance": return entity.serviceType;
-  case "property": return entity.name;
-  case "room": return entity.name;
-  case "home_system": return entity.name;
-  case "electrical_device": return entity.name;
-  case "project": return entity.name;
-  case "goal": return entity.name;
-  case "decision": return entity.question;
-  case "document": return entity.name;
-  case "recurring_rule": return entity.name;
-  case "relationship": return `${entity.relationshipType.replaceAll("_"," ")} relationship`;
-  case "audit": return `${entity.action} · ${entity.targetType}`;
+  case "event": return typeof e.title==="string"?e.title:"Event";
+  case "open_loop": return typeof e.title==="string"?e.title:"Open loop";
+  case "person": return typeof e.displayName==="string"?e.displayName:"Person";
+  case "asset": return typeof e.name==="string"?e.name:"Asset";
+  case "financial_account": return typeof e.name==="string"?e.name:"Account";
+  case "financial_transaction": return typeof e.description==="string"?e.description:typeof e.merchant==="string"?e.merchant:typeof e.transactionDate==="string"?e.transactionDate:"Transaction";
+  case "loan": return typeof e.name==="string"?e.name:"Loan";
+  case "loan_payment": return typeof e.scheduledDate==="string"?`Loan payment · ${e.scheduledDate}`:"Loan payment";
+  case "vehicle": return [e.year,e.make,e.model].filter(x=>x!==undefined&&x!==null&&x!=="").join(" ")||"Vehicle";
+  case "vehicle_maintenance": return typeof e.serviceType==="string"?e.serviceType:"Vehicle maintenance";
+  case "property": return typeof e.name==="string"?e.name:"Property";
+  case "room": return typeof e.name==="string"?e.name:"Room";
+  case "home_system": return typeof e.name==="string"?e.name:"Home system";
+  case "electrical_device": return typeof e.name==="string"?e.name:"Electrical device";
+  case "project": return typeof e.name==="string"?e.name:"Project";
+  case "goal": return typeof e.name==="string"?e.name:"Goal";
+  case "decision": return typeof e.question==="string"?e.question:"Decision";
+  case "document": return typeof e.name==="string"?e.name:"Document";
+  case "recurring_rule": return typeof e.name==="string"?e.name:"Recurring rule";
+  case "relationship": return typeof e.relationshipType==="string"?`${e.relationshipType.replaceAll("_"," ")} relationship`:"Relationship";
+  case "audit": return typeof e.action==="string"?`${e.action} · ${typeof e.targetType==="string"?e.targetType:"record"}`:"Audit entry";
   default: return entity.entityType.replaceAll("_"," ");
  }
 }
