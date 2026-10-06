@@ -277,3 +277,20 @@ textarea.command-input{resize:vertical}
  .selected-graph-row{grid-template-columns:1fr;gap:3px}
  .graph-relationship{text-align:left}
 }
+
+/* Dark native form controls */
+select,
+select:focus,
+select:hover{
+  appearance:none;
+  -webkit-appearance:none;
+  background-color:#080b14 !important;
+  color:var(--text) !important;
+  color-scheme:dark;
+  border-color:var(--border);
+}
+select option,
+select optgroup{
+  background-color:#080b14 !important;
+  color:var(--text) !important;
+}
