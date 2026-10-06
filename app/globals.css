@@ -120,3 +120,22 @@ textarea.command-input{resize:vertical}
 .context-return{display:flex;align-items:center;gap:8px;margin:10px 0;padding:8px 10px;border:1px solid var(--border);border-radius:12px;background:var(--glass);font-size:10px;color:var(--muted)}
 .context-return-button{appearance:none;border:0;background:transparent;color:var(--cyan);font:700 10px Orbitron,sans-serif;padding:5px 2px;cursor:pointer}
 @media(max-width:560px){.context-return{margin:8px 0;padding:7px 8px;font-size:9px}.context-return-button{font-size:9px}}
+
+.event-edit-section{min-width:0;margin:10px 0;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08)}
+.event-edit-section:last-child{border-bottom:0}
+.event-edit-section-heading{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:5px}
+.event-edit-section-heading .row-meta{font-size:9px}
+.event-edit-advanced{padding:10px 0}
+.event-edit-advanced>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:8px;cursor:pointer}
+.event-edit-advanced>summary::-webkit-details-marker{display:none}
+.event-edit-advanced>summary>span:first-child{display:flex;flex-direction:column;gap:2px}
+.event-edit-advanced[open]>summary>span:last-child{transform:rotate(180deg)}
+@media(max-width:560px){
+ .event-edit-section{margin:7px 0;padding:8px 0}
+ .event-edit-section-heading{margin-bottom:3px}
+ .event-panel .event-status-line{margin-bottom:4px}
+ .event-panel .event-context{margin-bottom:4px}
+ .event-panel textarea.command-input{min-height:76px}
+ .event-panel .field-grid{grid-template-columns:minmax(0,1fr)}
+ .event-panel .event-modal-footer .action{min-height:48px}
+}
