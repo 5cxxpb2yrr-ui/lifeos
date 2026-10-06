@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
+import {useEffect,useMemo,useRef,useState} from "react";
 import type {LifeOSDatabase} from "@/domain/contracts/database";
 import {addAttachment,attachmentKind,attachmentsForEntity,createAttachmentRecord} from "@/domain/services/attachments";
 import {browserSessionAttachmentAdapter,externalUrlAttachmentAdapter} from "@/storage/attachments/adapter";
@@ -12,7 +12,9 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
  const [name,setName]=useState("");
  const [category,setCategory]=useState<"manual"|"service_record"|"receipt"|"photo"|"other">("manual");
  const [previewUrls,setPreviewUrls]=useState<Record<string,string>>({});
- useEffect(()=>{return()=>{Object.values(previewUrls).forEach(browserSessionAttachmentAdapter.revokePreview)}},[previewUrls]);
+ const previewUrlsRef=useRef<Record<string,string>>({});
+ useEffect(()=>{previewUrlsRef.current=previewUrls},[previewUrls]);
+ useEffect(()=>()=>{Object.values(previewUrlsRef.current).forEach(browserSessionAttachmentAdapter.revokePreview)},[]);
  const add=()=>{
   if(!file&&!url.trim())return;
   const title=name.trim()||file?.name||"Vehicle document";
