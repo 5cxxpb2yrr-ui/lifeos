@@ -6,7 +6,7 @@ import {updateEntityRecord} from "@/domain/services/operations";
 
 type Editable={key:string;value:unknown;original:unknown};
 
-function findRecord(db:LifeOSDatabase,type:string,id:string):BaseEntity|undefined{
+function findRecord(db:LifeOSDatabase,type:string,id:string):BaseEntity|undefined{\n const aliases:Record<string,string>={account:"financial_account",transaction:"financial_transaction",maintenance:"vehicle_maintenance"}; type=aliases[type]??type;
  const collections=["events","openLoops","people","assets","accounts","transactions","loans","loanPayments","vehicles","vehicleMaintenance","properties","rooms","homeSystems","electricalDevices","projects","goals","decisions","documents","recurringRules","relationships"] as const;
  for(const name of collections){const item=(db[name] as BaseEntity[]).find(x=>x.id===id);if(item&&(type==="record"||item.entityType===type||name===type))return item}
  const attachment=db.attachments?.find(x=>x.id===id); if(attachment&&(!type||type==="attachment"))return attachment;
@@ -15,7 +15,7 @@ function findRecord(db:LifeOSDatabase,type:string,id:string):BaseEntity|undefine
 function formatLabel(key:string){return key.replace(/([a-z])([A-Z])/g,"$1 $2").replaceAll("_"," ").replace(/^./,x=>x.toUpperCase())}
 function parseValue(value:string,original:unknown){if(value==="")return undefined;if(typeof original==="number"){const n=Number(value);return Number.isFinite(n)?n:original}if(typeof original==="boolean")return value==="true";if(typeof original==="object"){try{return JSON.parse(value)}catch{return original}}return value}
 
-export default function EntityEditor({db,onPersist,onNotice}:{db:LifeOSDatabase;onPersist:(next:LifeOSDatabase,message:string)=>Promise<void>|void;onNotice:(message:string)=>void}){
+export default function EntityEditor({db,onPersist}:{db:LifeOSDatabase;onPersist:(next:LifeOSDatabase,message:string)=>Promise<void>|void;onNotice:(message:string)=>void}){
  const [target,setTarget]=useState<{type:string;id:string}|null>(null); const [draft,setDraft]=useState<Editable[]>([]);
  useEffect(()=>{const handler=(event:Event)=>{const detail=(event as CustomEvent).detail as {id:string;type?:string};if(!detail?.id)return;setTarget({id:detail.id,type:detail.type??"record"})};window.addEventListener("lifeos:edit",handler);return()=>window.removeEventListener("lifeos:edit",handler)},[]);
  const record=useMemo(()=>target?findRecord(db,target.type,target.id):undefined,[db,target]);
