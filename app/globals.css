@@ -362,3 +362,16 @@ select optgroup{
 .context-tabs button{appearance:none;-webkit-appearance:none;border:0;background:transparent!important;color:var(--gold)!important;padding:5px 0;font:700 9px Orbitron,sans-serif;letter-spacing:.05em;white-space:nowrap}
 .context-tabs span{color:rgba(255,213,79,.55);font:700 9px Orbitron,sans-serif;white-space:nowrap}
 @media(max-width:560px){.data-tabs{gap:3px;margin-bottom:10px}.data-tab{padding:7px 8px;font-size:9px}.context-tabs{gap:6px}.context-tabs button,.context-tabs span{font-size:8px}}
+
+/* Universal entity editor: every mutable graph node exposes its editable fields. */
+.entity-editor-backdrop{z-index:1200}
+.entity-editor-modal{width:min(720px,calc(100vw - 16px));max-height:calc(100dvh - 16px);overflow:auto;box-sizing:border-box;background:#0d1220;border:1px solid rgba(255,213,79,.22);border-radius:18px;padding:16px;box-shadow:0 28px 90px rgba(0,0,0,.62)}
+.entity-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.entity-editor-grid .field-label{min-width:0}
+.entity-editor-grid .field-label>span{display:flex;align-items:center;gap:6px}
+.entity-editor-grid .field-label strong{color:var(--gold);font-size:8px;letter-spacing:.08em}
+.entity-editor-textarea{min-height:90px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;line-height:1.4}
+.entity-editor-vin{grid-column:1/-1}
+.entity-editor-vin .command-input{border-color:rgba(255,213,79,.38);box-shadow:0 0 16px rgba(255,213,79,.06)}
+.entity-editor-footer{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
+@media(max-width:560px){.entity-editor-modal{padding:13px;border-radius:16px}.entity-editor-grid{grid-template-columns:1fr;gap:8px}.entity-editor-vin{grid-column:auto}.entity-editor-footer{grid-template-columns:1fr 1fr}.entity-editor-footer .row-meta{grid-column:1/-1}.entity-editor-footer .action{min-height:46px}}
