@@ -59,18 +59,30 @@ export default function EventPanel({db,eventId,onPersist,onClose,onContext}:{db:
       {relatedGraph.map(x=><button className="context-chip context-chip-button" key={"rel-"+x.id+"-"+x.type} onClick={()=>onContext("graph",x.id)}>Graph · {x.type} · {x.label}</button>)}
     </div>}
    </section>
-   <label className="field-label">Title<input className="command-input" value={draft.title} onChange={e=>setDraft({...draft,title:e.target.value})}/></label>
-   <label className="field-label">Description<textarea className="command-input" value={draft.description??""} onChange={e=>setDraft({...draft,description:e.target.value})}/></label>
-   <div className="field-grid">
-    <label className="field-label">Type<select className="command-input" value={draft.eventType} onChange={e=>setDraft({...draft,eventType:e.target.value as EventType})}>{EVENT_TYPES.map(x=><option key={x}>{x}</option>)}</select></label>
-    <label className="field-label">Status<select className="command-input" value={draft.status} onChange={e=>setDraft({...draft,status:e.target.value as EventStatus})}>{EVENT_STATUS.map(x=><option key={x}>{x}</option>)}</select></label>
-   </div>
-   <div className="field-grid">
-    <label className="field-label">Start<input className="command-input" type="datetime-local" value={toInput(draft.startAt)} onChange={e=>setDraft({...draft,startAt:fromInput(e.target.value)})}/></label>
-    <label className="field-label">Due<input className="command-input" type="datetime-local" value={toInput(draft.dueAt)} onChange={e=>setDraft({...draft,dueAt:fromInput(e.target.value)})}/></label>
-   </div>
-   <label className="field-label">Source<input className="command-input" value={draft.source??""} onChange={e=>setDraft({...draft,source:e.target.value||undefined})} placeholder="manual, import, email, system…"/></label>
-   <div className="row-meta">Created {new Date(event.createdAt).toLocaleString()} · Updated {new Date(event.updatedAt).toLocaleString()}</div>
+   <section className="event-edit-section">
+    <div className="event-edit-section-heading"><span className="kicker">Core</span><span className="row-meta">What happened</span></div>
+    <label className="field-label">Title<input className="command-input" value={draft.title} onChange={e=>setDraft({...draft,title:e.target.value})}/></label>
+    <label className="field-label">Description<textarea className="command-input" value={draft.description??""} onChange={e=>setDraft({...draft,description:e.target.value})}/></label>
+   </section>
+   <section className="event-edit-section">
+    <div className="event-edit-section-heading"><span className="kicker">Classification</span><span className="row-meta">How LifeOS treats it</span></div>
+    <div className="field-grid">
+     <label className="field-label">Type<select className="command-input" value={draft.eventType} onChange={e=>setDraft({...draft,eventType:e.target.value as EventType})}>{EVENT_TYPES.map(x=><option key={x}>{x}</option>)}</select></label>
+     <label className="field-label">Status<select className="command-input" value={draft.status} onChange={e=>setDraft({...draft,status:e.target.value as EventStatus})}>{EVENT_STATUS.map(x=><option key={x}>{x}</option>)}</select></label>
+    </div>
+   </section>
+   <section className="event-edit-section">
+    <div className="event-edit-section-heading"><span className="kicker">Timing</span><span className="row-meta">Local time</span></div>
+    <div className="field-grid">
+     <label className="field-label">Start<input className="command-input" type="datetime-local" value={toInput(draft.startAt)} onChange={e=>setDraft({...draft,startAt:fromInput(e.target.value)})}/></label>
+     <label className="field-label">Due<input className="command-input" type="datetime-local" value={toInput(draft.dueAt)} onChange={e=>setDraft({...draft,dueAt:fromInput(e.target.value)})}/></label>
+    </div>
+   </section>
+   <details className="event-edit-section event-edit-advanced">
+    <summary><span><span className="kicker">Metadata</span><span className="row-meta">Source + audit timestamps</span></span><span>⌄</span></summary>
+    <label className="field-label">Source<input className="command-input" value={draft.source??""} onChange={e=>setDraft({...draft,source:e.target.value||undefined})} placeholder="manual, import, email, system…"/></label>
+    <div className="row-meta">Created {new Date(event.createdAt).toLocaleString()} · Updated {new Date(event.updatedAt).toLocaleString()}</div>
+   </details>
    </div>
    <div className="event-modal-footer"><button className="action primary full" onClick={save}>Save event</button></div>
   </div>
