@@ -35,7 +35,7 @@ export function iCloudPathForAttachment(attachment:Attachment):string{
 }
 
 export function isICloudShareUrl(value?:string):boolean{
- return Boolean(value&&/^https?:\\/\\//i.test(value));
+ return Boolean(value && /^https?:\/\//i.test(value));
 }
 
 /**
