@@ -44,7 +44,7 @@ export function updateEntityRecord(db:LifeOSDatabase,entityType:string,entityId:
  const safeChanges={...changes}; delete safeChanges.id; delete safeChanges.entityType; delete safeChanges.createdAt; delete safeChanges.updatedAt;
  const target={...before,...safeChanges,updatedAt:now()} as BaseEntity;
  const next={...db};
- if(entityType==="attachment")next.attachments=source.map(item=>item.id===entityId?target:item) as LifeOSDatabase["attachments"];
+ if(entityType==="attachment")next.attachments=source.map(item=>item.id===entityId?target:item) as unknown as LifeOSDatabase["attachments"];
  else (next[collection as keyof LifeOSDatabase] as BaseEntity[])=source.map(item=>item.id===entityId?target:item);
  return appendAudit(next,target,"update","entity-editor",before);
 }
