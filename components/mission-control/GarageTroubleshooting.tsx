@@ -49,7 +49,8 @@ export default function GarageTroubleshooting({ onClose }: { onClose?: () => voi
   const [vehicle, setVehicle] = useState<"scion" | "subaru">("scion");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState(SCION_XB_TROUBLESHOOTING[0]?.id ?? "");
-  const [tab, setTab] = useState<SubaruTab>("assistant");\n  const [selectedAssistantId, setSelectedAssistantId] = useState(SUBARU_ASSISTANT_CARDS[0]?.id ?? "");
+  const [tab, setTab] = useState<SubaruTab>("assistant");
+  const [selectedAssistantId, setSelectedAssistantId] = useState(SUBARU_ASSISTANT_CARDS[0]?.id ?? "");
   const [selectedDtc, setSelectedDtc] = useState(SUBARU_CROSSTREK_DTC_CARDS[0]?.code ?? "");
   const [selectedConnector, setSelectedConnector] = useState(SUBARU_CROSSTREK_CONNECTORS[0]?.connector ?? "");
   const [scionTab, setScionTab] = useState<ScionTab>("assistant");
