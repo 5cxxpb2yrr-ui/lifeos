@@ -19,12 +19,12 @@ export type ScionXbServiceCard={system:string;fluid?:string;service:string;inter
 export type ScionXbConnectorCard={connector:string;poles:string;color:string;area:string;connectsTo:string;use:string;manual:ScionXbManualLink[]};
 export type ScionXbMaintenanceCard={item:string;interval:string;action:"Replace"|"Inspect"|"Perform";notes?:string;manual:ScionXbManualLink[]};
 
-const SXB_ROOT="https://www.sucross.com/";
+const SXB_ROOT="https://charm.li/Scion/2006/xB%20L4-1.5L%20%281NZ-FE%29/";
 const sxb=(label:string,url:string,note?:string):ScionXbManualLink=>({label,url,note});
-const SXB_MANUAL=sxb("Scion xB repair manual","https://www.toyota-tech.eu/"); 
-const SXB_DTC=sxb("SFI / DTC reference","https://www.toyota-tech.eu/");
-const SXB_WIRING=sxb("Engine wiring / connector reference","https://www.toyota-tech.eu/");
-const SXB_MAINT=sxb("Maintenance reference","https://www.toyota-tech.eu/");
+const SXB_MANUAL=sxb("2006 Scion xB factory service manual",SXB_ROOT,"Model-specific 1NZ-FE service information.");
+const SXB_DTC=sxb("SFI / DTC reference",SXB_ROOT+"Repair%20and%20Diagnosis/Powertrain%20Management/Diagrams/Diagnostic%20Aids/How%20to%20Troubleshoot%20ECU%20Controlled%20Systems/Diagnostic%20Trouble%20Code%20Chart/");
+const SXB_WIRING=sxb("Engine control / wiring reference",SXB_ROOT+"Repair%20and%20Diagnosis/Powertrain%20Management/");
+const SXB_MAINT=sxb("Maintenance reference",SXB_ROOT+"Repair%20and%20Diagnosis/Maintenance/");
 
 export const SCION_XB_DTC_CARDS:ScionXbDtcCard[]=[
  {code:"P0300",title:"Random / multiple cylinder misfire",severity:"RED",driveability:"Stop hard driving if the MIL is flashing or the engine is shaking; continued misfire can damage the catalyst.",likelyCauses:["Ignition coil / spark plug","Injector / fuel delivery","Air/fuel control","Compression or mechanical timing"],firstChecks:["Read DTCs and freeze-frame data.","Identify whether one cylinder or multiple cylinders are affected.","Check spark, injector operation, fuel pressure and compression before replacing components."],wiring:["Inspect ignition and injector connectors and harnesses before condemning coils or injectors."],specs:["Spark plug gap: 0.7–0.8 mm.","Spark plug torque: 18 N·m (13 ft-lbf)."],manual:[SXB_DTC,SXB_WIRING]},
