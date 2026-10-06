@@ -12,7 +12,7 @@ const collections=["events","openLoops","people","assets","accounts","transactio
 function makeBackup(db:LifeOSDatabase):LifeOSBackup{return{format:"lifeos-backup",formatVersion:"1.0",schemaVersion:db.schemaVersion,seedVersion:db.seedVersion,appVersion:db.appVersion,exportedAt:new Date().toISOString(),database:db}}
 
 function download(content:string,filename:string,type="application/json"){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
-function csvCell(value:unknown){if(value==null)return "";const text=typeof value==="string"?value:JSON.stringify(value);return "\""+text.replaceAll("\"",""\""\"")+"\""}
+function csvCell(value:unknown){if(value==null)return "";const text=typeof value==="string"?value:JSON.stringify(value);return JSON.stringify(text)}
 function collectionCsv(db:LifeOSDatabase,name:CollectionName){const rows=(db[name] as unknown as Record<string,unknown>[]);const keys=Array.from(new Set(rows.flatMap(r=>Object.keys(r))));return [keys.map(csvCell).join(","),...rows.map(r=>keys.map(k=>csvCell(r[k])).join(","))].join("\n")}
 
 export default function DataControlCenter({db,onPersist,onNotice}:Props){
