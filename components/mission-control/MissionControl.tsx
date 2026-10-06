@@ -13,7 +13,7 @@ import {resolveFinancialHealth} from "@/domain/resolvers/financial-health";
 import {validateDatabaseIntegrity} from "@/domain/resolvers/integrity";
 import {getBundledImmutableSeed} from "@/domain/services/bundled-seed";
 import HistoryPanel from "@/components/mission-control/HistoryPanel";
-import EventPanel from "@/components/mission-control/EventPanel";
+import EventPanel,{EVENT_TYPES,EVENT_STATUS} from "@/components/mission-control/EventPanel";
 
 export default function MissionControl(){
  const [db,setDb]=useState(createEmptyDatabase); const [query,setQuery]=useState(""); const [notice,setNotice]=useState(""); const [activeView,setActiveView]=useState("mission"); const [mobileFocus,setMobileFocus]=useState<"attention"|"loops"|"today"|null>(null); const [command,setCommand]=useState<"event"|"loop"|null>(null); const [captureOpen,setCaptureOpen]=useState(false); const [historyTarget,setHistoryTarget]=useState<string|null>(null); const [eventTarget,setEventTarget]=useState<string|null>(null); const [returnContext,setReturnContext]=useState<{eventId:string;label:string}|null>(null);
