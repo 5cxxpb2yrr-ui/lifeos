@@ -15,7 +15,7 @@ function findRecord(db:LifeOSDatabase,type:string,id:string):BaseEntity|undefine
 function formatLabel(key:string){return key.replace(/([a-z])([A-Z])/g,"$1 $2").replaceAll("_"," ").replace(/^./,x=>x.toUpperCase())}
 function parseValue(value:string,original:unknown){if(value==="")return undefined;if(typeof original==="number"){const n=Number(value);return Number.isFinite(n)?n:original}if(typeof original==="boolean")return value==="true";if(typeof original==="object"){try{return JSON.parse(value)}catch{return original}}return value}
 
-export default function EntityEditor({db,onPersist}:{db:LifeOSDatabase;onPersist:(next:LifeOSDatabase,message:string)=>Promise<void>|void;onNotice:(message:string)=>void}){
+export default function EntityEditor({db,onPersist}:{db:LifeOSDatabase;onPersist:(next:LifeOSDatabase,message:string)=>Promise<void>|void}){
  const [target,setTarget]=useState<{type:string;id:string}|null>(null); const [draft,setDraft]=useState<Editable[]>([]);
  useEffect(()=>{const handler=(event:Event)=>{const detail=(event as CustomEvent).detail as {id:string;type?:string};if(!detail?.id)return;setTarget({id:detail.id,type:detail.type??"record"})};window.addEventListener("lifeos:edit",handler);return()=>window.removeEventListener("lifeos:edit",handler)},[]);
  const record=useMemo(()=>target?findRecord(db,target.type,target.id):undefined,[db,target]);
