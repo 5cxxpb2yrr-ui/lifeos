@@ -29,7 +29,17 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
   onPersist(addAttachment(db,attachment),"Vehicle attachment added.");
   setFile(null);setUrl("");setName("");
  };
- const deleteAttachment=(attachmentId:string)=>{\n  const item=attachments.find(x=>x.id===attachmentId);\n  if(!item)return;\n  if(!window.confirm(`Delete “${item.name}” from LifeOS?`))return;\n  const preview=previewUrls[attachmentId];\n  if(preview)browserSessionAttachmentAdapter.revokePreview(preview);\n  setPreviewUrls(current=>{const next={...current};delete next[attachmentId];return next});\n  setSelected(null);\n  onPersist(removeAttachment(db,attachmentId),"Vehicle attachment deleted.");\n };\n const selectedAttachment=attachments.find(item=>item.id===selected);
+ const deleteAttachment=(attachmentId:string)=>{
+  const item=attachments.find(x=>x.id===attachmentId);
+  if(!item)return;
+  if(!window.confirm(`Delete “${item.name}” from LifeOS?`))return;
+  const preview=previewUrls[attachmentId];
+  if(preview)browserSessionAttachmentAdapter.revokePreview(preview);
+  setPreviewUrls(current=>{const next={...current};delete next[attachmentId];return next});
+  setSelected(null);
+  onPersist(removeAttachment(db,attachmentId),"Vehicle attachment deleted.");
+ };
+ const selectedAttachment=attachments.find(item=>item.id===selected);
  const selectedUrl=selectedAttachment?previewUrls[selectedAttachment.id]||externalUrlAttachmentAdapter.resolveUrl(selectedAttachment):null;
  return <section className="vehicle-attachments card">
   <div className="section-title"><div><div className="kicker">Vehicle Context</div><h3>Attachments</h3></div><span className="badge">{attachments.length}</span></div>
