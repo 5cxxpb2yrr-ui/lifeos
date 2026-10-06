@@ -3,9 +3,16 @@ import type {Attachment,AttachmentEntityType,LifeOSDatabase} from "@/domain/cont
 const now=()=>new Date().toISOString();
 const id=()=>`att-${crypto.randomUUID()}`;
 
+export function createAttachmentStoragePath(input:{attachmentId:string;entityType:AttachmentEntityType;entityId:string;name:string}):string{
+ const safeName=input.name.trim().replace(/[^a-zA-Z0-9._-]+/g,"-").replace(/^-+|-+$/g,"").slice(0,120)||"attachment";
+ return `Attachments/${input.entityType}/${input.entityId}/${input.attachmentId}-${safeName}`;
+}
+
 export function createAttachmentRecord(input:Omit<Attachment,"id"|"entityType"|"createdAt"|"updatedAt">):Attachment{
  const t=now();
- return { ...input,id:id(),entityType:"attachment",createdAt:t,updatedAt:t };
+ const attachmentId=id();
+ const primaryLink=input.linkedEntities[0];
+ return { ...input,id:attachmentId,entityType:"attachment",storagePath:input.storagePath??(primaryLink?createAttachmentStoragePath({attachmentId,entityType:primaryLink.entityType,entityId:primaryLink.entityId,name:input.name}):undefined),createdAt:t,updatedAt:t };
 }
 
 export function addAttachment(db:LifeOSDatabase,attachment:Attachment):LifeOSDatabase{
