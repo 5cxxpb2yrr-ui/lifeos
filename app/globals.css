@@ -238,3 +238,28 @@ textarea.command-input{resize:vertical}
  .mission-collapsible .collapsible-body{padding:0 8px 8px}
  .graph-explainer{font-size:9px}
 }
+
+
+/* Airtable-inspired card view controls: default list is capped at five; alternate views expose the full collection. */
+.section-title-actions{display:flex;align-items:center;gap:7px;min-width:0}
+.card-view-switch{display:flex;align-items:center;gap:2px;padding:2px;border:1px solid var(--border);border-radius:9px;background:rgba(255,255,255,.025)}
+.card-view-switch button{border:0;background:transparent;color:var(--muted);padding:4px 6px;border-radius:7px;font-size:9px;cursor:pointer}
+.card-view-switch button.active{background:rgba(0,229,255,.1);color:var(--cyan)}
+.card-view-carousel .list{display:flex;overflow-x:auto;gap:8px;scroll-snap-type:x mandatory;padding-bottom:5px}
+.card-view-carousel .list .row{flex:0 0 min(78%,300px);scroll-snap-align:start;min-height:72px}
+.card-view-grid .list{grid-template-columns:repeat(2,minmax(0,1fr));}
+.card-view-grid .list .row{min-width:0}
+.selected-graph{margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
+.selected-graph .section-title{margin-bottom:8px}
+.selected-graph-list{display:grid;gap:7px}
+.selected-graph-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:8px;padding:9px;border:1px solid rgba(255,255,255,.08);border-radius:11px;background:rgba(255,255,255,.025)}
+.graph-node-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;font-weight:650}
+.graph-relationship{color:var(--cyan);font-size:9px;text-transform:uppercase;letter-spacing:.05em;text-align:center}
+@media(max-width:560px){
+ .section-title-actions{gap:5px}
+ .card-view-switch button{font-size:8px;padding:4px 5px}
+ .card-view-carousel .list .row{flex-basis:84%;min-height:68px}
+ .card-view-grid .list{grid-template-columns:1fr}
+ .selected-graph-row{grid-template-columns:1fr;gap:3px}
+ .graph-relationship{text-align:left}
+}
