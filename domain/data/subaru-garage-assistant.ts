@@ -63,7 +63,7 @@ export const SUBARU_ASSISTANT_TORQUE:SubaruAssistantCard[]=[
 ];
 
 export const SUBARU_ASSISTANT_SPECS:SubaruAssistantCard[]=[
- {id:"engine-oil",type:"specification",title:"Engine Oil",severity:"BLUE",quickAnswer:"0W-20 full synthetic; supplied profile capacity 4.4 qt / 4.2 L.",specifications:{Oil:"0W-20 full synthetic","Capacity":"4.4 qt / 4.2 L","DrainPlug:"30.8 ft-lb / 41.7 N·m"},actionSteps:["Confirm VIN/application","Verify oil level","Record service"],relatedDiagnostics:["P0011","P000A"],manual:[manual("Maintenance schedule",MAINT)]},
+ {id:"engine-oil",type:"specification",title:"Engine Oil",severity:"BLUE",quickAnswer:"0W-20 full synthetic; supplied profile capacity 4.4 qt / 4.2 L.",specifications:{Oil:"0W-20 full synthetic","Capacity":"4.4 qt / 4.2 L",DrainPlug:"30.8 ft-lb / 41.7 N·m"},actionSteps:["Confirm VIN/application","Verify oil level","Record service"],relatedDiagnostics:["P0011","P000A"],manual:[manual("Maintenance schedule",MAINT)]},
  {id:"cvt-fluid",type:"specification",title:"CVT Fluid",severity:"BLUE",quickAnswer:"SUBARU CVT Fluid Lineartronic II.",specifications:{Fluid:"SUBARU CVT Fluid Lineartronic II","LevelTemperature":"35–45°C / 95–113°F"},actionSteps:["Confirm fluid application","Bring CVTF to specified temperature","Follow factory level procedure"],relatedDiagnostics:["P0841","P2763"],manual:[manual("CVTF adjustment",CVTF)]}
 ];
 
