@@ -3,7 +3,7 @@
 import {useState} from "react";
 import type {Event,EventType,EventStatus,LifeOSDatabase} from "@/domain/contracts/database";
 import {resolveAttentionDetailed} from "@/domain/resolvers/attention";
-import {updateEvent} from "@/domain/services/operations";
+import {createOpenLoopFromEvent,updateEvent} from "@/domain/services/operations";
 import {resolveGraph} from "@/domain/resolvers/graph";
 
 export const EVENT_TYPES:EventType[]=["task","meeting","conversation","appointment","purchase","payment","income","expense","transfer","maintenance","repair","inspection","travel","decision","observation","milestone","document","communication","workout","learning","other"];
@@ -18,7 +18,7 @@ function toInput(value?:string){
 }
 function fromInput(value:string){return value?new Date(value).toISOString():undefined;}
 
-export default function EventPanel({db,eventId,onPersist,onClose,onContext,graph}:{db:LifeOSDatabase;eventId:string;onPersist:(next:LifeOSDatabase,message:string)=>void;onClose:()=>void;onContext:(kind:"person"|"asset"|"project"|"goal"|"loop"|"decision"|"transaction"|"document"|"graph",id:string,type?:string)=>void;graph?:ReturnType<typeof resolveGraph>}){
+export default function EventPanel({db,eventId,onPersist,onClose,onContext,graph,onCreateLoop}:{db:LifeOSDatabase;eventId:string;onPersist:(next:LifeOSDatabase,message:string)=>void;onClose:()=>void;onContext:(kind:"person"|"asset"|"project"|"goal"|"loop"|"decision"|"transaction"|"document"|"graph",id:string,type?:string)=>void;graph?:ReturnType<typeof resolveGraph>; onCreateLoop?:(eventId:string)=>void}){
  const event=db.events.find(e=>e.id===eventId);
  const [draft,setDraft]=useState<Event | null>(()=>event ? {...event} : null);
  if(!event || !draft)return null;
@@ -85,7 +85,7 @@ export default function EventPanel({db,eventId,onPersist,onClose,onContext,graph
     <div className="row-meta">Created {new Date(event.createdAt).toLocaleString()} · Updated {new Date(event.updatedAt).toLocaleString()}</div>
    </details>
    </div>
-   <div className="event-modal-footer"><button className="action" onClick={()=>window.dispatchEvent(new CustomEvent("lifeos:edit",{detail:{id:event.id,type:"event"}}))}>Edit all fields</button><button className="action primary full" onClick={save}>Save event</button></div>
+   <div className="event-modal-footer"><button className="action" onClick={()=>window.dispatchEvent(new CustomEvent("lifeos:edit",{detail:{id:event.id,type:"event"}}))}>Edit all fields</button><button className="action" onClick={()=>onCreateLoop?.(event.id)}>Create open loop</button><button className="action primary full" onClick={save}>Save event</button></div>
   </div>
  </div>;
 }
