@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {createOpenLoopFromEvent,linkEventToOpenLoop} from "../domain/services/operations.ts";
+import {createOpenLoopFromEvent,linkEventToOpenLoop,resolveOpenLoop} from "../domain/services/operations.ts";
 import type {Event,LifeOSDatabase,OpenLoop} from "../domain/contracts/database.ts";
 
 function db():LifeOSDatabase{
@@ -25,4 +25,30 @@ test("linking an existing loop is idempotent",()=>{
  const twice=linkEventToOpenLoop(once,"evt-1","loop-1");
  assert.deepEqual(twice.events[0].openLoopIds,["loop-1"]);
  assert.deepEqual(twice.openLoops[0].relatedEventIds,["evt-1"]);
+});
+
+test("resolving a loop clears its operational attention without changing the linked event",()=>{
+ const base=db();
+ const linked=createOpenLoopFromEvent(base,"evt-1");
+ const loop=linked.openLoops[0];
+ const next=resolveOpenLoop(linked,loop.id);
+ assert.equal(next.openLoops[0].status,"resolved");
+ assert.ok(next.openLoops[0].resolvedAt);
+ assert.deepEqual(next.events[0],linked.events[0]);
+ const audit=next.auditEntries.at(-1);
+ assert.equal(audit?.targetId,loop.id);
+ assert.equal(audit?.targetType,"open_loop");
+ assert.equal(audit?.source,"open-loop-engine");
+ assert.equal(audit?.before?.status,"open");
+ assert.equal(audit?.after?.status,"resolved");
+});
+
+test("resolving an already closed loop is idempotent",()=>{
+ const base=db();
+ const linked=createOpenLoopFromEvent(base,"evt-1");
+ const loop=linked.openLoops[0];
+ const resolved=resolveOpenLoop(linked,loop.id);
+ const again=resolveOpenLoop(resolved,loop.id);
+ assert.equal(again.auditEntries.length,resolved.auditEntries.length);
+ assert.equal(again.openLoops[0].resolvedAt,resolved.openLoops[0].resolvedAt);
 });
