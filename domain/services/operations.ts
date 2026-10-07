@@ -18,3 +18,18 @@ export function updateEntityRecord(db:LifeOSDatabase,entityType:string,entityId:
  if(entityType==="attachment")next.attachments=source.map(item=>item.id===entityId?target:item) as unknown as LifeOSDatabase["attachments"];else(next[collection as keyof LifeOSDatabase] as BaseEntity[])=source.map(item=>item.id===entityId?target:item);
  return appendAudit(next,target,"update","entity-editor",before);
 }
+
+export function createOpenLoopFromEvent(db:LifeOSDatabase,eventId:string,input?:Partial<Pick<OpenLoop,"title"|"description"|"type"|"status"|"priority"|"dueAt">>):LifeOSDatabase{
+ const event=db.events.find(e=>e.id===eventId); if(!event)return db;
+ const t=now(); const loop:OpenLoop={id:id("loop"),entityType:"open_loop",createdAt:t,updatedAt:t,title:input?.title??event.title,description:input?.description??event.description,type:input?.type??"follow_up",status:input?.status??"open",priority:input?.priority??"normal",dueAt:input?.dueAt??event.dueAt,relatedEventIds:[event.id]};
+ const linkedEvent:Event={...event,openLoopIds:Array.from(new Set([...(event.openLoopIds??[]),loop.id])),updatedAt:t};
+ const next={...db,events:db.events.map(e=>e.id===event.id?linkedEvent:e),openLoops:[...db.openLoops,loop]};
+ return appendAudit(appendAudit(next,linkedEvent,"update","event-engine",event),loop,"create","event-engine");
+}
+export function linkEventToOpenLoop(db:LifeOSDatabase,eventId:string,loopId:string):LifeOSDatabase{
+ const event=db.events.find(e=>e.id===eventId), loop=db.openLoops.find(o=>o.id===loopId); if(!event||!loop)return db;
+ const t=now(); const linkedEvent:Event={...event,openLoopIds:Array.from(new Set([...(event.openLoopIds??[]),loop.id])),updatedAt:t};
+ const linkedLoop:OpenLoop={...loop,relatedEventIds:Array.from(new Set([...(loop.relatedEventIds??[]),event.id])),updatedAt:t};
+ let next={...db,events:db.events.map(e=>e.id===event.id?linkedEvent:e),openLoops:db.openLoops.map(o=>o.id===loop.id?linkedLoop:o)};
+ next=appendAudit(next,linkedEvent,"update","event-engine",event); return appendAudit(next,linkedLoop,"update","event-engine",loop);
+}
