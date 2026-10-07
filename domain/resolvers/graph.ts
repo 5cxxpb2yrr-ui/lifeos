@@ -26,6 +26,7 @@ function label(entity:BaseEntity):string{
   case "recurring_rule": return typeof e.name==="string"?e.name:"Recurring rule";
   case "relationship": return typeof e.relationshipType==="string"?`${e.relationshipType.replaceAll("_"," ")} relationship`:"Relationship";
   case "audit": return typeof e.action==="string"?`${e.action} · ${typeof e.targetType==="string"?e.targetType:"record"}`:"Audit entry";
+  case "entity": return e.legacyType==="inventory" ? String(e.name??e.partName??e.title??"Part") : String(e.name??e.title??entity.entityType.replaceAll("_"," "));
   default: return entity.entityType.replaceAll("_"," ");
  }
 }
