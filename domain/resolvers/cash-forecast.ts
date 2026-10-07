@@ -25,7 +25,6 @@ export interface CashForecastView{
 function day(date:Date):string{return date.toISOString().slice(0,10)}
 function addDays(date:Date,n:number):Date{const next=new Date(date);next.setUTCDate(next.getUTCDate()+n);return next}
 function addMonths(date:Date,n:number):Date{const next=new Date(date);next.setUTCMonth(next.getUTCMonth()+n);return next}
-function differenceInDays(from:Date,to:Date):number{return Math.floor((Date.UTC(to.getUTCFullYear(),to.getUTCMonth(),to.getUTCDate())-Date.UTC(from.getUTCFullYear(),from.getUTCMonth(),from.getUTCDate()))/86400000)}
 
 function recurringOccurrences(rule:RecurringRule,start:Date,end:Date):Map<string,number>{
  const amount=Number(rule.template.amountMinor??0);
