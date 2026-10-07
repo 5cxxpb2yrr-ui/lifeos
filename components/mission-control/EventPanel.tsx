@@ -18,7 +18,7 @@ function toInput(value?:string){
 }
 function fromInput(value:string){return value?new Date(value).toISOString():undefined;}
 
-export default function EventPanel({db,eventId,onPersist,onClose,onContext,graph}:{db:LifeOSDatabase;eventId:string;onPersist:(next:LifeOSDatabase,message:string)=>void;onClose:()=>void;onContext:(kind:"person"|"asset"|"project"|"goal"|"loop"|"decision"|"transaction"|"document"|"graph",id:string,type?:string)=>void;graph?:ReturnType<typeof resolveGraph>; onCreateLoop?:(eventId:string)=>void}){
+export default function EventPanel({db,eventId,onPersist,onClose,onContext,graph,onCreateLoop}:{db:LifeOSDatabase;eventId:string;onPersist:(next:LifeOSDatabase,message:string)=>void;onClose:()=>void;onContext:(kind:"person"|"asset"|"project"|"goal"|"loop"|"decision"|"transaction"|"document"|"graph",id:string,type?:string)=>void;graph?:ReturnType<typeof resolveGraph>; onCreateLoop?:(eventId:string)=>void}){
  const event=db.events.find(e=>e.id===eventId);
  const [draft,setDraft]=useState<Event | null>(()=>event ? {...event} : null);
  if(!event || !draft)return null;
