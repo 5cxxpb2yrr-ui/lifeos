@@ -86,7 +86,7 @@ export function resolveCashPressure(
 
  const attention:AttentionItem[]=[];
  if(state!=="healthy"){
-  const attentionState=state==="unresolved"?"unresolved":"at_risk";
+  const attentionState="at_risk";
   attention.push({
    id:`cash-pressure:${state}:${forecast.lowestBalanceDate}`,
    sourceType:"cash_pressure",
