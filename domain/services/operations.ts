@@ -26,6 +26,13 @@ export function createOpenLoopFromEvent(db:LifeOSDatabase,eventId:string,input?:
  const next={...db,events:db.events.map(e=>e.id===event.id?linkedEvent:e),openLoops:[...db.openLoops,loop]};
  return appendAudit(appendAudit(next,linkedEvent,"update","event-engine",event),loop,"create","event-engine");
 }
+export function resolveOpenLoop(db:LifeOSDatabase,loopId:string):LifeOSDatabase{
+ const before=db.openLoops.find(o=>o.id===loopId); if(!before)return db;
+ if(before.status==="resolved"||before.status==="cancelled")return db;
+ const t=now();
+ const target:OpenLoop={...before,status:"resolved",resolvedAt:t,updatedAt:t};
+ return appendAudit({...db,openLoops:db.openLoops.map(o=>o.id===loopId?target:o)},target,"update","open-loop-engine",before);
+}
 export function linkEventToOpenLoop(db:LifeOSDatabase,eventId:string,loopId:string):LifeOSDatabase{
  const event=db.events.find(e=>e.id===eventId), loop=db.openLoops.find(o=>o.id===loopId); if(!event||!loop)return db;
  const t=now(); const linkedEvent:Event={...event,openLoopIds:Array.from(new Set([...(event.openLoopIds??[]),loop.id])),updatedAt:t};
