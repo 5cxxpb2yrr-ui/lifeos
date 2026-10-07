@@ -22,9 +22,10 @@ export default function EntityEditor({db,onPersist}:{db:LifeOSDatabase;onPersist
  const record=useMemo(()=>target?findRecord(db,target.type,target.id):undefined,[db,target]);
  useEffect(()=>{if(!record){if(target)setTarget(null);return}setDraft(Object.entries(record).filter(([key])=>![ "id","entityType","createdAt","updatedAt","archivedAt"].includes(key)).map(([key,value])=>({key,value,original:value})))},[record]);
  if(!target||!record)return null;
+ const fields=record as unknown as Record<string,unknown>;
  const vehicle=record.entityType==="vehicle";
  const save=async()=>{const changes:Record<string,unknown>={};for(const field of draft)changes[field.key]=parseValue(String(field.value??""),field.original);const next=updateEntityRecord(db,record.entityType,record.id,changes);await onPersist(next,"Updated "+record.entityType.replaceAll("_"," ")+" and recorded the change.");setTarget(null)};
- const title=vehicle?String(record.year??"")+" "+String(record.make??"")+" "+String(record.model??""):String((record as Record<string,unknown>).name??(record as Record<string,unknown>).title??(record as Record<string,unknown>).displayName??record.entityType);
+ const title=vehicle?String(fields.year??"")+" "+String(fields.make??"")+" "+String(fields.model??""):String(fields.name??fields.title??fields.displayName??record.entityType);
  return <div className="modal-backdrop entity-editor-backdrop" onMouseDown={()=>setTarget(null)}>
   <div className="entity-editor-modal" onMouseDown={e=>e.stopPropagation()}>
    <div className="entity-detail-header"><div><div className="kicker">Edit Entity</div><h2>{title.trim()}</h2><div className="row-meta">{record.entityType.replaceAll("_"," ")} · {record.id}</div></div><button className="mini-action" onClick={()=>setTarget(null)}>Close</button></div>
