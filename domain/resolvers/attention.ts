@@ -49,8 +49,10 @@ export function resolveAttentionDetailed(item: Event | OpenLoop, now = new Date(
     return {state:"at_risk",priority:4,reason:"Critical open loop is at risk."};
   }
 
+  if (due.state === "none") return due;
+
   if ("status" in item && (item.status === "planned" || item.status === "scheduled" || item.status === "in_progress" || item.status === "open")) {
-    return {state:"unresolved",priority:1,reason:"Open work has no immediate deadline."};
+    return {state:"unresolved",priority:1,reason:"No due date is recorded."};
   }
 
   return {state:"none",priority:0,reason:"No attention required."};
