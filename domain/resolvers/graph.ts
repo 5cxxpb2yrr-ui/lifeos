@@ -1,6 +1,7 @@
-import type {BaseEntity,LifeOSDatabase,Relationship} from "@/domain/contracts/database";
+import type {BaseEntity,LifeOSDatabase,Relationship,RelationshipType} from "@/domain/contracts/database";
 export interface GraphNode{id:string;type:string;label:string}
-export interface GraphEdge{from:GraphNode;to:GraphNode;relationship:Relationship["relationshipType"]}
+export interface GraphEdge{from:GraphNode;to:GraphNode;relationship:Relationship["relationshipType"];derived?:boolean}
+
 function label(entity:BaseEntity):string{
  const e=entity as BaseEntity & Record<string,unknown>;
  switch(entity.entityType){
@@ -25,8 +26,29 @@ function label(entity:BaseEntity):string{
   case "recurring_rule": return typeof e.name==="string"?e.name:"Recurring rule";
   case "relationship": return typeof e.relationshipType==="string"?`${e.relationshipType.replaceAll("_"," ")} relationship`:"Relationship";
   case "audit": return typeof e.action==="string"?`${e.action} · ${typeof e.targetType==="string"?e.targetType:"record"}`:"Audit entry";
+  case "entity": return e.legacyType==="inventory" ? String(e.name??e.partName??e.title??"Part") : String(e.name??e.title??entity.entityType.replaceAll("_"," "));
   default: return entity.entityType.replaceAll("_"," ");
  }
 }
-function collect(db:LifeOSDatabase):Map<string,GraphNode>{const map=new Map<string,GraphNode>();const collections:BaseEntity[][]=[db.entities,db.relationships,db.events,db.openLoops,db.people,db.assets,db.accounts,db.transactions,db.loans,db.loanPayments,db.vehicles,db.vehicleMaintenance,db.properties,db.rooms,db.homeSystems,db.electricalDevices,db.projects,db.goals,db.decisions,db.documents,db.recurringRules,db.auditEntries];collections.flat().forEach(entity=>map.set(entity.id,{id:entity.id,type:entity.entityType,label:label(entity)}));return map}
-export function resolveGraph(db:LifeOSDatabase,centerId:string):{center:GraphNode|null;nodes:GraphNode[];edges:GraphEdge[]}{const all=collect(db);const rels=db.relationships.filter(r=>r.fromId===centerId||r.toId===centerId);const ids=new Set<string>([centerId]);rels.forEach(r=>{ids.add(r.fromId);ids.add(r.toId)});const nodes=[...ids].map(id=>all.get(id)).filter((x):x is GraphNode=>Boolean(x));const edges=rels.map(r=>{const from=all.get(r.fromId);const to=all.get(r.toId);return from&&to?{from,to,relationship:r.relationshipType}:null}).filter((x):x is GraphEdge=>Boolean(x));return{center:all.get(centerId)??null,nodes,edges}}
+
+function collections(db:LifeOSDatabase):BaseEntity[][]{return [db.entities,db.relationships,db.events,db.openLoops,db.people,db.assets,db.accounts,db.transactions,db.loans,db.loanPayments,db.vehicles,db.vehicleMaintenance,db.properties,db.rooms,db.homeSystems,db.electricalDevices,db.projects,db.goals,db.decisions,db.documents,db.recurringRules,db.auditEntries,...(db.attachments ? [db.attachments] : [])]}
+function collect(db:LifeOSDatabase):Map<string,GraphNode>{const map=new Map<string,GraphNode>();collections(db).flat().forEach(entity=>map.set(entity.id,{id:entity.id,type:entity.entityType,label:label(entity)}));return map}
+function findEntity(db:LifeOSDatabase,id:string):BaseEntity|undefined{for(const collection of collections(db)){const found=collection.find(x=>x.id===id);if(found)return found}return undefined}
+
+const RELATION_BY_KEY:Record<string,RelationshipType>={vehicleId:"maintenance_for",loanId:"payment_for",propertyId:"located_in",roomId:"located_in",eventId:"related_to",accountId:"paid_by",categoryId:"related_to",projectId:"part_of",goalId:"supports",personId:"assigned_to",personIds:"assigned_to",assetId:"owns",assetIds:"uses",openLoopIds:"related_to",projectIds:"part_of",goalIds:"supports",documentIds:"documents",decisionIds:"related_to",financialTransactionIds:"related_to",relatedEventIds:"related_to",relatedProjectIds:"part_of",relatedDecisionIds:"related_to"};
+
+function derivedEdges(db:LifeOSDatabase,centerId:string,all:Map<string,GraphNode>):GraphEdge[]{
+ const center=findEntity(db,centerId);if(!center)return [];
+ const candidates=collections(db).flat();const edges:GraphEdge[]=[];
+ const push=(from:BaseEntity,toId:string,key:string)=>{if(!toId||toId===from.id||!all.has(toId))return;const to=all.get(toId),fromNode=all.get(from.id);if(!to||!fromNode)return;edges.push({from:fromNode,to,relationship:RELATION_BY_KEY[key]??"related_to",derived:true})};
+ const inspect=(entity:BaseEntity)=>{const e=entity as BaseEntity & Record<string,unknown>;for(const [key,value] of Object.entries(e)){if(key==="metadata"||key==="id"||key==="entityType")continue;if(typeof value==="string"&&/Id$/.test(key)&&value===centerId)push(entity,value,key);else if(Array.isArray(value)&&/Ids$/.test(key)&&value.includes(centerId))push(entity,centerId,key)};if(entity.entityType==="vehicle_maintenance"){const legacy=(e.metadata as Record<string,unknown>|undefined)?.legacy as Record<string,unknown>|undefined;const record=legacy?.record as Record<string,unknown>|undefined;for(const key of ["partId","partIds"]){const value=record?.[key];if(typeof value==="string"&&value===centerId)push(entity,value,"partIds");if(Array.isArray(value)&&value.includes(centerId))push(entity,centerId,"partIds")}const parts=record?.parts;if(Array.isArray(parts))for(const part of parts){if(typeof part==="string"&&part===centerId)push(entity,part,"partIds");else if(part&&typeof part==="object"&&String((part as Record<string,unknown>).id??"")===centerId)push(entity,centerId,"partIds")}}};
+ const centerRecord=center as BaseEntity & Record<string,unknown>;const centerValues=centerRecord as Record<string,unknown>;
+ for(const [key,value] of Object.entries(centerValues)){if(key==="metadata"||key==="id"||key==="entityType")continue;if(typeof value==="string"&&/Id$/.test(key))push(center,value,key);else if(Array.isArray(value)&&/Ids$/.test(key))for(const id of value)if(typeof id==="string")push(center,id,key);}
+ if(center.entityType==="vehicle_maintenance"){const legacy=(centerRecord.metadata as Record<string,unknown>|undefined)?.legacy as Record<string,unknown>|undefined;const record=legacy?.record as Record<string,unknown>|undefined;for(const key of ["partId","partIds"]){const value=record?.[key];if(typeof value==="string")push(center,value,"partIds");else if(Array.isArray(value))for(const id of value)if(typeof id==="string")push(center,id,"partIds")}const parts=record?.parts;if(Array.isArray(parts))for(const part of parts){if(typeof part==="string")push(center,part,"partIds");else if(part&&typeof part==="object"){const id=(part as Record<string,unknown>).id;if(typeof id==="string")push(center,id,"partIds")}}}
+ for(const entity of candidates)inspect(entity);return edges;
+}
+
+export function resolveGraph(db:LifeOSDatabase,centerId:string):{center:GraphNode|null;nodes:GraphNode[];edges:GraphEdge[]}{
+ const all=collect(db);const explicit=db.relationships.filter(r=>r.fromId===centerId||r.toId===centerId);const explicitEdges:GraphEdge[]=[];for(const r of explicit){const from=all.get(r.fromId),to=all.get(r.toId);if(from&&to)explicitEdges.push({from,to,relationship:r.relationshipType,derived:false});}
+ const derived=derivedEdges(db,centerId,all);const seen=new Set<string>();const edges=[...explicitEdges,...derived].filter((edge):edge is GraphEdge=>{const key=`${edge.from.id}|${edge.to.id}|${edge.relationship}`;if(seen.has(key))return false;seen.add(key);return true});const ids=new Set<string>([centerId]);edges.forEach(edge=>{ids.add(edge.from.id);ids.add(edge.to.id)});const nodes=[...ids].map(id=>all.get(id)).filter((x):x is GraphNode=>Boolean(x));return{center:all.get(centerId)??null,nodes,edges};
+}
