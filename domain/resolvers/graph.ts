@@ -31,7 +31,7 @@ function label(entity:BaseEntity):string{
  }
 }
 
-function collections(db:LifeOSDatabase):BaseEntity[][]{return [db.entities,db.relationships,db.events,db.openLoops,db.people,db.assets,db.accounts,db.transactions,db.loans,db.loanPayments,db.vehicles,db.vehicleMaintenance,db.properties,db.rooms,db.homeSystems,db.electricalDevices,db.projects,db.goals,db.decisions,db.documents,db.recurringRules,db.auditEntries,...(db.attachments??[])]}
+function collections(db:LifeOSDatabase):BaseEntity[][]{return [db.entities,db.relationships,db.events,db.openLoops,db.people,db.assets,db.accounts,db.transactions,db.loans,db.loanPayments,db.vehicles,db.vehicleMaintenance,db.properties,db.rooms,db.homeSystems,db.electricalDevices,db.projects,db.goals,db.decisions,db.documents,db.recurringRules,db.auditEntries,...(db.attachments ? [db.attachments] : [])]}
 function collect(db:LifeOSDatabase):Map<string,GraphNode>{const map=new Map<string,GraphNode>();collections(db).flat().forEach(entity=>map.set(entity.id,{id:entity.id,type:entity.entityType,label:label(entity)}));return map}
 function findEntity(db:LifeOSDatabase,id:string):BaseEntity|undefined{for(const collection of collections(db)){const found=collection.find(x=>x.id===id);if(found)return found}return undefined}
 
@@ -46,6 +46,6 @@ function derivedEdges(db:LifeOSDatabase,centerId:string,all:Map<string,GraphNode
 }
 
 export function resolveGraph(db:LifeOSDatabase,centerId:string):{center:GraphNode|null;nodes:GraphNode[];edges:GraphEdge[]}{
- const all=collect(db);const explicit=db.relationships.filter(r=>r.fromId===centerId||r.toId===centerId);const explicitEdges=explicit.map(r=>{const from=all.get(r.fromId),to=all.get(r.toId);return from&&to?{from,to,relationship:r.relationshipType,derived:false}:null}).filter((x):x is GraphEdge=>Boolean(x));
- const derived=derivedEdges(db,centerId,all);const seen=new Set<string>();const edges=[...explicitEdges,...derived].filter(edge=>{const key=`${edge.from.id}|${edge.to.id}|${edge.relationship}`;if(seen.has(key))return false;seen.add(key);return true});const ids=new Set<string>([centerId]);edges.forEach(edge=>{ids.add(edge.from.id);ids.add(edge.to.id)});const nodes=[...ids].map(id=>all.get(id)).filter((x):x is GraphNode=>Boolean(x));return{center:all.get(centerId)??null,nodes,edges};
+ const all=collect(db);const explicit=db.relationships.filter(r=>r.fromId===centerId||r.toId===centerId);const explicitEdges:GraphEdge[]=[];for(const r of explicit){const from=all.get(r.fromId),to=all.get(r.toId);if(from&&to)explicitEdges.push({from,to,relationship:r.relationshipType,derived:false});}
+ const derived=derivedEdges(db,centerId,all);const seen=new Set<string>();const edges=[...explicitEdges,...derived].filter((edge):edge is GraphEdge=>{const key=`${edge.from.id}|${edge.to.id}|${edge.relationship}`;if(seen.has(key))return false;seen.add(key);return true});const ids=new Set<string>([centerId]);edges.forEach(edge=>{ids.add(edge.from.id);ids.add(edge.to.id)});const nodes=[...ids].map(id=>all.get(id)).filter((x):x is GraphNode=>Boolean(x));return{center:all.get(centerId)??null,nodes,edges};
 }
