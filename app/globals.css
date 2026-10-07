@@ -379,3 +379,22 @@ select optgroup{
   .garage-assistant-card>span:last-child{font-size:.63rem}
   .garage-assistant-detail{padding:.72rem}
 }
+
+
+/* Context navigation and universal editor */
+.context-stack{display:flex;align-items:center;gap:6px;overflow-x:auto;margin:0 0 12px;padding:7px 2px;border-bottom:1px solid rgba(255,213,79,.16);scrollbar-width:none}
+.context-stack::-webkit-scrollbar{display:none}
+.context-stack button{appearance:none;-webkit-appearance:none;border:0;background:transparent!important;color:var(--gold)!important;padding:5px 2px;font:700 9px Orbitron,sans-serif;letter-spacing:.05em;white-space:nowrap}
+.context-stack button:hover{text-shadow:0 0 10px rgba(255,213,79,.3)}
+.context-stack .context-separator{color:rgba(255,213,79,.42);font:700 9px Orbitron,sans-serif}
+.context-stack .context-current{color:var(--text);font:700 9px Orbitron,sans-serif;white-space:nowrap}
+.context-stack-back{margin-left:auto!important;border:1px solid rgba(255,213,79,.24)!important;border-radius:9px!important;padding:5px 8px!important}
+.entity-editor-backdrop{z-index:1200}
+.entity-editor-modal{width:min(720px,calc(100vw - 16px));max-height:calc(100dvh - 16px);overflow:auto;box-sizing:border-box;background:#0d1220;border:1px solid rgba(255,213,79,.22);border-radius:18px;padding:16px;box-shadow:0 28px 90px rgba(0,0,0,.62)}
+.entity-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.entity-editor-grid .field-label{min-width:0}.entity-editor-grid .field-label>span{display:flex;align-items:center;gap:6px}
+.entity-editor-grid .field-label strong{color:var(--gold);font-size:8px;letter-spacing:.08em}
+.entity-editor-textarea{min-height:90px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;line-height:1.4}
+.entity-editor-vin{grid-column:1/-1}.entity-editor-vin .command-input{border-color:rgba(255,213,79,.38);box-shadow:0 0 16px rgba(255,213,79,.06)}
+.entity-editor-footer{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
+@media(max-width:560px){.context-stack{margin-bottom:9px}.context-stack button,.context-stack .context-current,.context-stack .context-separator{font-size:8px}.entity-editor-modal{padding:13px;border-radius:16px}.entity-editor-grid{grid-template-columns:1fr;gap:8px}.entity-editor-vin{grid-column:auto}.entity-editor-footer{grid-template-columns:1fr 1fr}.entity-editor-footer .row-meta{grid-column:1/-1}.entity-editor-footer .action{min-height:46px}}
