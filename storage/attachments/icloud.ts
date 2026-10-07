@@ -8,6 +8,14 @@ import type {Attachment,AttachmentEntityType} from "@/domain/contracts/database"
  */
 export const ICLOUD_ATTACHMENT_ROOT="iCloud Drive/LifeOS/Attachments";
 
+/**
+ * User-provided shared LifeOS folder.
+ *
+ * This is operational configuration/provenance, not immutable seed data.
+ * The folder remains user-owned in iCloud; LifeOS stores only the share URL.
+ */
+export const ICLOUD_LIFEOS_ROOT_SHARE_URL="https://www.icloud.com/iclouddrive/0c9jS3GfMmtVhCgR6vEkbidOQ";
+
 export function createICloudAttachmentPath(input:{
  attachmentId:string;
  entityType:AttachmentEntityType;
@@ -35,7 +43,12 @@ export function iCloudPathForAttachment(attachment:Attachment):string{
 }
 
 export function isICloudShareUrl(value?:string):boolean{
- return Boolean(value && /^https?:\/\//i.test(value));
+ return Boolean(value && /^https?:\\/\\//i.test(value));
+}
+
+/** Returns the user-provided LifeOS folder share URL for UI/Shortcuts integrations. */
+export function iCloudLifeOSFolderShareUrl():string{
+ return ICLOUD_LIFEOS_ROOT_SHARE_URL;
 }
 
 /**
@@ -44,5 +57,5 @@ export function isICloudShareUrl(value?:string):boolean{
  */
 export function openICloudFiles():void{
  if(typeof window==="undefined")return;
- window.open("https://www.icloud.com/iclouddrive/","_blank","noopener,noreferrer");
+ window.open(ICLOUD_LIFEOS_ROOT_SHARE_URL,"_blank","noopener,noreferrer");
 }
