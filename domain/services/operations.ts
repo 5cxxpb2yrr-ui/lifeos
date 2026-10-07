@@ -1,4 +1,4 @@
-import type {Event,EventStatus,LifeOSDatabase,OpenLoop,Person} from "@/domain/contracts/database";
+import type {BaseEntity,Event,EventStatus,LifeOSDatabase,OpenLoop,Person} from "@/domain/contracts/database";
 import {appendAudit} from "@/domain/services/audit";
 const now=()=>new Date().toISOString(); const id=(p:string)=>p+"-"+crypto.randomUUID();
 export function createEvent(db:LifeOSDatabase,input:Pick<Event,"title"|"eventType"|"status"> & Partial<Event>):LifeOSDatabase{
@@ -32,4 +32,20 @@ export function createPerson(db:LifeOSDatabase,input:{displayName:string;notes?:
  const t=now(); const parts=input.displayName.trim().split(/\\s+/); const firstName=parts.shift()??input.displayName.trim(); const lastName=parts.length?parts.join(" "):undefined;
  const person:Person={id:id("person"),entityType:"person",createdAt:t,updatedAt:t,firstName,lastName,displayName:input.displayName.trim(),notes:input.notes,metadata:input.metadata};
  return appendAudit({...db,people:[...db.people,person]},person,"create","universal-capture");
+}
+
+
+export function updateEntityRecord(db:LifeOSDatabase,entityType:string,entityId:string,changes:Record<string,unknown>):LifeOSDatabase{
+ const collectionByType:Record<string,string>={event:"events",open_loop:"openLoops",person:"people",asset:"assets",financial_account:"accounts",financial_transaction:"transactions",loan:"loans",loan_payment:"loanPayments",vehicle:"vehicles",vehicle_maintenance:"vehicleMaintenance",property:"properties",room:"rooms",home_system:"homeSystems",electrical_device:"electricalDevices",project:"projects",goal:"goals",decision:"decisions",document:"documents",recurring_rule:"recurringRules",relationship:"relationships"};
+ if(entityType==="audit")return db;
+ const collection=collectionByType[entityType];
+ const source=(entityType==="attachment"?db.attachments:collection?db[collection as keyof LifeOSDatabase]:undefined) as BaseEntity[]|undefined;
+ if(!source)return db;
+ const before=source.find(item=>item.id===entityId); if(!before)return db;
+ const safeChanges={...changes}; delete safeChanges.id; delete safeChanges.entityType; delete safeChanges.createdAt; delete safeChanges.updatedAt; delete safeChanges.archivedAt;
+ const target={...before,...safeChanges,updatedAt:now()} as BaseEntity;
+ const next={...db};
+ if(entityType==="attachment")next.attachments=source.map(item=>item.id===entityId?target:item) as unknown as LifeOSDatabase["attachments"];
+ else (next[collection as keyof LifeOSDatabase] as BaseEntity[])=source.map(item=>item.id===entityId?target:item);
+ return appendAudit(next,target,"update","entity-editor",before);
 }
