@@ -85,7 +85,7 @@ export default function EventPanel({db,eventId,onPersist,onClose,onContext,graph
     <div className="row-meta">Created {new Date(event.createdAt).toLocaleString()} · Updated {new Date(event.updatedAt).toLocaleString()}</div>
    </details>
    </div>
-   <div className="event-modal-footer"><button className="action primary full" onClick={save}>Save event</button></div>
+   <div className="event-modal-footer"><button className="action" onClick={()=>window.dispatchEvent(new CustomEvent("lifeos:edit",{detail:{id:event.id,type:"event"}}))}>Edit all fields</button><button className="action primary full" onClick={save}>Save event</button></div>
   </div>
  </div>;
 }
