@@ -18,7 +18,7 @@ function toInput(value?:string){
 }
 function fromInput(value:string){return value?new Date(value).toISOString():undefined;}
 
-export default function EventPanel({db,eventId,onPersist,onClose,onContext,graph}:{db:LifeOSDatabase;eventId:string;onPersist:(next:LifeOSDatabase,message:string)=>void;onClose:()=>void;onContext:(kind:"person"|"asset"|"project"|"goal"|"loop"|"decision"|"transaction"|"document"|"graph",id:string)=>void;graph?:ReturnType<typeof resolveGraph>}){
+export default function EventPanel({db,eventId,onPersist,onClose,onContext,graph}:{db:LifeOSDatabase;eventId:string;onPersist:(next:LifeOSDatabase,message:string)=>void;onClose:()=>void;onContext:(kind:"person"|"asset"|"project"|"goal"|"loop"|"decision"|"transaction"|"document"|"graph",id:string,type?:string)=>void;graph?:ReturnType<typeof resolveGraph>}){
  const event=db.events.find(e=>e.id===eventId);
  const [draft,setDraft]=useState<Event | null>(()=>event ? {...event} : null);
  if(!event || !draft)return null;
@@ -57,7 +57,7 @@ export default function EventPanel({db,eventId,onPersist,onClose,onContext,graph
       {connectedDecisions.map(x=><button className="context-chip context-chip-button" key={"decision-"+x.id} onClick={()=>onContext("decision",x.id)}>Decision · {x.question}</button>)}
       {connectedTransactions.map(x=><button className="context-chip context-chip-button" key={"tx-"+x.id} onClick={()=>onContext("transaction",x.id)}>Transaction · {x.description??x.merchant??"Financial transaction"}</button>)}
       {connectedDocuments.map(x=><button className="context-chip context-chip-button" key={"doc-"+x.id} onClick={()=>onContext("document",x.id)}>Document · {x.name}</button>)}
-      {relatedGraph.map(x=><button className="context-chip context-chip-button" key={"rel-"+x.id+"-"+x.type} onClick={()=>onContext("graph",x.id)}>Graph · {x.type} · {x.label}</button>)}
+      {relatedGraph.map(x=><button className="context-chip context-chip-button" key={"rel-"+x.id+"-"+x.type} onClick={()=>onContext("graph",x.id,x.type)}>Graph · {x.type} · {x.label}</button>)}
     </div>}
    </section>
    {graph&&<section className="selected-graph"><div className="section-title"><div><div className="kicker">Graph Neighborhood</div><span className="row-meta">{graph.center?.label??"Selected event"}</span></div><span className="badge">{graph.edges.length}</span></div>{graph.edges.length?<div className="selected-graph-list">{graph.edges.map((edge,i)=><div className="selected-graph-row" key={edge.from.id+edge.to.id+edge.relationship+i}><span className="graph-node-label">{edge.from.label}</span><span className="graph-relationship">→ {edge.relationship.replaceAll("_"," ")} →</span><span className="graph-node-label">{edge.to.label}</span></div>)}</div>:<div className="row-meta">No direct relationships for this event.</div>}</section>}<section className="event-edit-section">
@@ -85,7 +85,7 @@ export default function EventPanel({db,eventId,onPersist,onClose,onContext,graph
     <div className="row-meta">Created {new Date(event.createdAt).toLocaleString()} · Updated {new Date(event.updatedAt).toLocaleString()}</div>
    </details>
    </div>
-   <div className="event-modal-footer"><button className="action primary full" onClick={save}>Save event</button></div>
+   <div className="event-modal-footer"><button className="action" onClick={()=>window.dispatchEvent(new CustomEvent("lifeos:edit",{detail:{id:event.id,type:"event"}}))}>Edit all fields</button><button className="action primary full" onClick={save}>Save event</button></div>
   </div>
  </div>;
 }
