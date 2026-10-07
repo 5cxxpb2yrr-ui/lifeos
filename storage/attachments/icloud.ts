@@ -1,20 +1,21 @@
 import type {Attachment,AttachmentEntityType} from "@/domain/contracts/database";
 
-/**
- * iCloud Drive is intentionally modeled as a user-owned storage provider.
- * Safari/Next.js cannot directly authenticate to or write arbitrary iCloud
- * Drive files, so LifeOS stores a deterministic destination path plus an
- * optional user/Shortcuts-provided share URL.
- */
 export const ICLOUD_ATTACHMENT_ROOT="iCloud Drive/LifeOS/Attachments";
+export const ICLOUD_LIFEOS_ROOT="iCloud Drive/LifeOS";
+export const ICLOUD_SHORTCUT_NAME="LifeOS iCloud Bridge";
+export const ICLOUD_BRIDGE_VERSION="1";
 
-/**
- * User-provided shared LifeOS folder.
- *
- * This is operational configuration/provenance, not immutable seed data.
- * The folder remains user-owned in iCloud; LifeOS stores only the share URL.
- */
-export const ICLOUD_LIFEOS_ROOT_SHARE_URL="https://www.icloud.com/iclouddrive/0c9jS3GfMmtVhCgR6vEkbidOQ";
+export type ICloudBridgeAction="open"|"store"|"retrieve";
+
+export interface ICloudBridgeRequest{
+ version:string;
+ provider:"icloud";
+ access:"private-user-owned";
+ action:ICloudBridgeAction;
+ rootPath:string;
+ path?:string;
+ attachmentId?:string;
+}
 
 export function createICloudAttachmentPath(input:{
  attachmentId:string;
@@ -42,20 +43,50 @@ export function iCloudPathForAttachment(attachment:Attachment):string{
   : `${ICLOUD_ATTACHMENT_ROOT}/other/${attachment.id}-${attachment.name}`;
 }
 
-export function isICloudShareUrl(value?:string):boolean{
- return Boolean(value && /^https?:\\/\\//i.test(value));
+export function createICloudBridgeRequest(input:{
+ action:ICloudBridgeAction;
+ path?:string;
+ attachmentId?:string;
+}):ICloudBridgeRequest{
+ return {
+  version:ICLOUD_BRIDGE_VERSION,
+  provider:"icloud",
+  access:"private-user-owned",
+  action:input.action,
+  rootPath:ICLOUD_LIFEOS_ROOT,
+  ...(input.path?{path:input.path}:{}),
+  ...(input.attachmentId?{attachmentId:input.attachmentId}:{}),
+ };
 }
 
-/** Returns the user-provided LifeOS folder share URL for UI/Shortcuts integrations. */
-export function iCloudLifeOSFolderShareUrl():string{
- return ICLOUD_LIFEOS_ROOT_SHARE_URL;
+export function isICloudBridgeRequest(value:unknown):value is ICloudBridgeRequest{
+ if(!value||typeof value!=="object")return false;
+ const request=value as Partial<ICloudBridgeRequest>;
+ return request.version===ICLOUD_BRIDGE_VERSION
+  && request.provider==="icloud"
+  && request.access==="private-user-owned"
+  && ["open","store","retrieve"].includes(request.action)
+  && request.rootPath===ICLOUD_LIFEOS_ROOT;
+}
+
+export function openICloudFiles(request=createICloudBridgeRequest({action:"open"})):void{
+ if(typeof window==="undefined")return;
+ const input=encodeURIComponent(JSON.stringify(request));
+ const shortcutUrl=`shortcuts://run-shortcut?name=${encodeURIComponent(ICLOUD_SHORTCUT_NAME)}&input=text&text=${input}`;
+ window.location.href=shortcutUrl;
 }
 
 /**
- * Opens the iCloud/Files ecosystem when the platform exposes the Files app.
- * This is best-effort only; no server-side iCloud authentication is implied.
+ * LifeOS never needs an iCloud share URL for private storage.
+ * The Apple Shortcut owns authentication/access to the user's iCloud Drive.
  */
-export function openICloudFiles():void{
- if(typeof window==="undefined")return;
- window.open(ICLOUD_LIFEOS_ROOT_SHARE_URL,"_blank","noopener,noreferrer");
+export function iCloudPrivateStorageConfig(){
+ return {
+  provider:"icloud" as const,
+  access:"private-user-owned" as const,
+  rootPath:ICLOUD_LIFEOS_ROOT,
+  attachmentRoot:ICLOUD_ATTACHMENT_ROOT,
+  shortcutName:ICLOUD_SHORTCUT_NAME,
+  bridgeVersion:ICLOUD_BRIDGE_VERSION,
+ };
 }
