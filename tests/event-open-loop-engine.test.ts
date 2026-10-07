@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {createOpenLoopFromEvent,linkEventToOpenLoop,resolveOpenLoop} from "../domain/services/operations.ts";
 import type {Event,LifeOSDatabase,OpenLoop} from "../domain/contracts/database.ts";
+import {resolveAttentionDetailed} from "../domain/resolvers/attention.ts";
 
 function db():LifeOSDatabase{
  const t="2026-10-06T12:00:00.000Z";
@@ -33,6 +34,7 @@ test("resolving a loop clears its operational attention without changing the lin
  const loop=linked.openLoops[0];
  const next=resolveOpenLoop(linked,loop.id);
  assert.equal(next.openLoops[0].status,"resolved");
+ assert.equal(resolveAttentionDetailed(next.openLoops[0],new Date("2026-10-07T12:00:00.000Z")).state,"none");
  assert.ok(next.openLoops[0].resolvedAt);
  assert.deepEqual(next.events[0],linked.events[0]);
  const audit=next.auditEntries.at(-1);
