@@ -8,7 +8,7 @@ import {resolveMissionControl} from "@/domain/resolvers/mission-control";
 import {resolveSearch} from "@/domain/resolvers/search";
 import {resolveGraph} from "@/domain/resolvers/graph";
 import {loadLocalDatabase,saveLocalDatabase} from "@/storage/indexeddb/database";
-import {createEvent,createOpenLoop,createOpenLoopFromEvent,createPerson,resolveOpenLoop,updateEventStatus,updateOpenLoopStatus} from "@/domain/services/operations";
+import {createEvent,createOpenLoop,createOpenLoopFromEvent,createPerson,resolveOpenLoop,updateEventStatus} from "@/domain/services/operations";
 import {resolveFinancialHealth} from "@/domain/resolvers/financial-health";
 import {validateDatabaseIntegrity} from "@/domain/resolvers/integrity";
 import {getBundledImmutableSeed} from "@/domain/services/bundled-seed";
