@@ -87,7 +87,7 @@ export function resolveCashForecast(
   if(!date||!Number.isFinite(rawAmount)||rawAmount===0)continue;
   const dateKey=day(new Date(date));
   if(dateKey<day(start)||dateKey>day(end))continue;
-  const signed=event.eventType==="income"||event.eventType==="refund"?Math.abs(rawAmount):-Math.abs(rawAmount);
+  const signed=event.eventType==="income"?Math.abs(rawAmount):-Math.abs(rawAmount);
   eventFlows.set(dateKey,(eventFlows.get(dateKey)??0)+signed);
  }
  const points:CashForecastPoint[]=[];
