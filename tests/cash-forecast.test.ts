@@ -18,6 +18,7 @@ test("cash forecast combines current cash, scheduled debt, recurring flows, and 
  assert.equal(view.points.find(p=>p.date==="2026-10-11")?.outflowMinor,120000);
  assert.equal(view.endingBalanceMinor,-20000);
  assert.equal(view.firstNegativeDate,"2026-10-11");
+ assert.equal(view.points.find(p=>p.date==="2026-10-11")?.entries.map(e=>e.title),["Large purchase"]);
 });
 
 test("cash forecast accepts a starting cash override and reports the first negative day",()=>{
@@ -28,4 +29,30 @@ test("cash forecast accepts a starting cash override and reports the first negat
  assert.equal(view.firstNegativeDate,"2026-10-08");
  assert.equal(view.lowestBalanceMinor,-10000);
  assert.equal(view.lowestBalanceDate,"2026-10-08");
+});
+
+test("cash forecast accepts source-aware external financial flows without changing the canonical database",()=>{
+ const db=createEmptyDatabase("2026-10-07T00:00:00.000Z");
+ const view=resolveCashForecast(db,{
+  startDate:"2026-10-07",
+  horizonDays:3,
+  startingCashMinor:28345,
+  externalFlows:[
+   {date:"2026-10-08",amountMinor:2500,direction:"outflow",sourceId:"affirm-1",title:"Affirm — Streaming Bundle"},
+   {date:"2026-10-09",amountMinor:341033,direction:"inflow",sourceId:"payroll-1",title:"KIA Georgia payroll"}
+  ]
+ });
+ assert.equal(view.points[1].outflowMinor,2500);
+ assert.equal(view.points[2].inflowMinor,341033);
+ assert.equal(view.points[2].closingBalanceMinor,366878);
+ assert.deepEqual(view.points[1].entries[0],{
+  date:"2026-10-08",
+  amountMinor:2500,
+  direction:"outflow",
+  sourceType:"external",
+  sourceId:"affirm-1",
+  title:"Affirm — Streaming Bundle"
+ });
+ assert.equal(db.events.length,0);
+ assert.equal(db.recurringRules.length,0);
 });
