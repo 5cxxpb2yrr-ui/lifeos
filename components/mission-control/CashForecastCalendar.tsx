@@ -45,7 +45,7 @@ export default function CashForecastCalendar({db}:{db:LifeOSDatabase}){
     {selectedDate===point.date&&point.sources.length>0&&<div className="cash-calendar-obligations">
       <div className="kicker">Underlying obligations</div>
       {point.sources.map(source=><button type="button" className="row entity-row" key={source.type+source.id} onClick={()=>{
-       if(source.type==="bill"||source.type==="loan_payment"){window.dispatchEvent(new CustomEvent("lifeos:edit",{detail:{id:source.id,type:source.type==="bill"?"recurring_rule":"loan_payment"}}));}else{window.dispatchEvent(new CustomEvent("lifeos:navigate",{detail:{kind:source.type==="income"?"event":"event",id:source.id}}));}
+       if(source.type==="bill"||source.type==="loan_payment"){window.dispatchEvent(new CustomEvent("lifeos:edit",{detail:{id:source.id,type:source.type==="bill"?"recurring_rule":"loan_payment",forecastDate:point.date,amountMinor:source.amountMinor}}));}else{window.dispatchEvent(new CustomEvent("lifeos:navigate",{detail:{kind:source.type==="income"?"event":"event",id:source.id}}));}
       }}>
        <div className="row-main"><div className="row-title">{source.label}</div><div className="row-meta">{source.type.replaceAll("_"," ")} · {money(source.amountMinor)}</div></div><span className="queue-count">›</span>
       </button>)}
