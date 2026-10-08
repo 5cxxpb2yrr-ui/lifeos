@@ -41,3 +41,15 @@ test("healthy cash pressure does not create a Mission Control attention item",()
  assert.equal(vm.attention.some(x=>x.sourceType==="cash_pressure"),false);
  assert.equal(vm.cashPressure.state,"healthy");
 });
+
+
+test("Mission Control forecast mode overlays temporary scenario flows without mutating canonical data",()=>{
+ const db=createEmptyDatabase("2026-10-07T00:00:00.000Z");
+ db.accounts.push({id:"acct-1",entityType:"financial_account",createdAt:"2026-01-01T00:00:00.000Z",updatedAt:"2026-01-01T00:00:00.000Z",name:"Checking",accountType:"checking",currency:"USD",openingBalanceMinor:100000});
+ const vm=resolveMissionControl(db,new Date("2026-10-07T12:00:00.000Z"),{startingCashMinor:50000,externalFlows:[{date:"2026-10-09",amountMinor:47500,direction:"outflow",sourceId:"scenario-bill",title:"Scenario mortgage"}]});
+ assert.equal(vm.cashForecast.startingBalanceMinor,50000);
+ assert.equal(vm.cashForecast.points.find(x=>x.date==="2026-10-09")?.closingBalanceMinor,2500);
+ assert.equal(vm.cashForecast.points.find(x=>x.date==="2026-10-09")?.entries[0]?.sourceType,"external");
+ assert.equal(vm.cashForecast.points.find(x=>x.date==="2026-10-09")?.entries[0]?.sourceId,"scenario-bill");
+ assert.equal(db.events.length,0);
+});
