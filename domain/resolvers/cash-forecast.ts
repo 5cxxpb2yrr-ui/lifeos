@@ -31,6 +31,7 @@ export interface CashForecastView{
  firstNegativeDate?:string;
  totalInflowsMinor:number;
  totalOutflowsMinor:number;
+ paydays:CashForecastPayday[];
  points:CashForecastPoint[];
 }
 
