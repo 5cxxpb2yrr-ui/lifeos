@@ -5,6 +5,7 @@ import type { LifeOSDatabase, BaseEntity } from "@/domain/contracts/database";
 import { deleteEntityRecord, updateEntityRecord } from "@/domain/services/operations";
 import EntityAttachments from "@/components/mission-control/EntityAttachments";
 import MultiSelectDropdown from "@/components/mission-control/MultiSelectDropdown";
+import { resolveCashForecast } from "@/domain/resolvers/cash-forecast";
 
 type Editable = { key: string; value: unknown; original: unknown };
 
@@ -102,20 +103,23 @@ export default function EntityEditor({
   const [jsonErrors, setJsonErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [forecastContext, setForecastContext] = useState<{ date: string; amountMinor?: number } | null>(null);
 
   const handleClose = useCallback(() => {
     setTarget(null);
     setJsonErrors({});
     setActionError(null);
     setIsSubmitting(false);
+    setForecastContext(null);
   }, []);
 
   // Listen for custom edit events
   useEffect(() => {
     const handler = (event: Event) => {
-      const detail = (event as CustomEvent).detail as { id?: string; type?: string };
+      const detail = (event as CustomEvent).detail as { id?: string; type?: string; forecastDate?: string; amountMinor?: number };
       if (!detail?.id) return;
       setTarget({ id: detail.id, type: detail.type ?? "record" });
+      setForecastContext(detail.forecastDate ? { date: detail.forecastDate, amountMinor: detail.amountMinor } : null);
     };
 
     window.addEventListener("lifeos:edit", handler);
@@ -155,6 +159,11 @@ export default function EntityEditor({
   }, [record]);
 
   if (!target || !record) return null;
+
+  const forecastImpact = useMemo(() => {
+    if (!forecastContext) return null;
+    return resolveCashForecast(db, { horizonDays: 30 }).points.find((point) => point.date === forecastContext.date) ?? null;
+  }, [db, forecastContext]);
 
   const fields = record as unknown as Record<string, unknown>;
   const entityTypeLabel = (record.entityType ?? "record").replaceAll("_", " ");
@@ -254,15 +263,26 @@ export default function EntityEditor({
               {entityTypeLabel} · {record.id}
             </div>
           </div>
-          <button
-            type="button"
-            className="mini-action"
-            onClick={handleClose}
-            disabled={isSubmitting}
-          >
-            Close
-          </button>
+          <div style={{display:"flex",gap:"8px",alignItems:"center"}}>
+            {forecastContext && <button type="button" className="mini-action" onClick={() => { handleClose(); window.dispatchEvent(new CustomEvent("lifeos:cash-forecast-day",{detail:{date:forecastContext.date}})); }} disabled={isSubmitting}>← Forecast Day</button>}
+            <button
+              type="button"
+              className="mini-action"
+              onClick={handleClose}
+              disabled={isSubmitting}
+            >
+              Close
+            </button>
+          </div>
         </div>
+
+        {forecastContext && forecastImpact && (
+          <div className="notice" style={{marginTop:"12px"}}>
+            <strong>Forecast impact</strong> · {new Date(forecastContext.date+"T12:00:00").toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})}
+            {" · "}projected closing cash { (forecastImpact.closingBalanceMinor/100).toLocaleString(undefined,{style:"currency",currency:"USD"}) }
+            {forecastContext.amountMinor != null ? <> · scheduled { (forecastContext.amountMinor/100).toLocaleString(undefined,{style:"currency",currency:"USD"}) }</> : null}
+          </div>
+        )}
 
         {actionError && (
           <div className="entity-editor-error-banner" style={{ padding: "8px 12px", color: "var(--danger, #d9383a)", background: "rgba(217, 56, 58, 0.1)", borderRadius: "4px", margin: "12px 0 0" }}>
