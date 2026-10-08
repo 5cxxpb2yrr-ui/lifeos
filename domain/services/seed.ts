@@ -1,5 +1,6 @@
 import type {LifeOSBackup,LifeOSDatabase} from "@/domain/contracts/database";
 import {validateDatabaseIntegrity} from "@/domain/resolvers/integrity";
+import {migrateDatabase} from "@/domain/services/migrations";
 export interface SeedCheck{valid:boolean;reason:string}
 function isRecord(value:unknown):value is Record<string,unknown>{return typeof value==="object"&&value!==null}
 export function validateLifeOSBackup(input:unknown):input is LifeOSBackup{
@@ -18,8 +19,8 @@ export function explainSeedValidation(input:unknown):SeedCheck{
 export function explainBackupValidation(input:unknown):SeedCheck{
  return validateLifeOSBackup(input)?{valid:true,reason:"Valid LifeOS backup."}:{valid:false,reason:"The selected file is not a valid LifeOS backup."}
 }
-export function importSeed(input:LifeOSBackup):LifeOSDatabase{return structuredClone(input.database)}
-export function restoreBackup(input:LifeOSBackup):LifeOSDatabase{return structuredClone(input.database)}
+export function importSeed(input:LifeOSBackup):LifeOSDatabase{return migrateDatabase(structuredClone(input.database)).db}
+export function restoreBackup(input:LifeOSBackup):LifeOSDatabase{return migrateDatabase(structuredClone(input.database)).db}
 
 export function isPlaceholderSeedVersion(version:string):boolean{
  return version==="UNSET-REAL-SEED"||version==="NO_REAL_SEED_LOADED";

@@ -1,0 +1,5 @@
+export interface StorageStatus{supported:boolean;persisted:boolean;usageBytes?:number;quotaBytes?:number}
+function manager():StorageManager|undefined{return typeof navigator!=="undefined"?navigator.storage:undefined}
+async function read(store:StorageManager,persisted:boolean):Promise<StorageStatus>{let usageBytes:number|undefined;let quotaBytes:number|undefined;try{const estimate=await store.estimate();usageBytes=estimate.usage;quotaBytes=estimate.quota}catch{}return {supported:true,persisted,usageBytes,quotaBytes}}
+export async function getStorageStatus():Promise<StorageStatus>{const store=manager();if(!store||typeof store.persisted!=="function")return {supported:false,persisted:false};try{return await read(store,await store.persisted())}catch{return {supported:false,persisted:false}}}
+export async function requestPersistentStorage():Promise<StorageStatus>{const store=manager();if(!store||typeof store.persist!=="function"||typeof store.persisted!=="function")return {supported:false,persisted:false};try{const already=await store.persisted();return await read(store,already?true:await store.persist())}catch{return {supported:false,persisted:false}}}
