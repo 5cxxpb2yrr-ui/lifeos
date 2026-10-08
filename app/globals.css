@@ -398,3 +398,34 @@ select optgroup{
 .entity-editor-vin{grid-column:1/-1}.entity-editor-vin .command-input{border-color:rgba(255,213,79,.38);box-shadow:0 0 16px rgba(255,213,79,.06)}
 .entity-editor-footer{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
 @media(max-width:560px){.context-stack{margin-bottom:9px}.context-stack button,.context-stack .context-current,.context-stack .context-separator{font-size:8px}.entity-editor-modal{padding:13px;border-radius:16px}.entity-editor-grid{grid-template-columns:1fr;gap:8px}.entity-editor-vin{grid-column:auto}.entity-editor-footer{grid-template-columns:1fr 1fr}.entity-editor-footer .row-meta{grid-column:1/-1}.entity-editor-footer .action{min-height:46px}}
+
+/* Mission Control: daily cash calendar */
+.cash-calendar{overflow:hidden}
+.cash-calendar-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.cash-calendar-summary>div{padding:.65rem .7rem;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.025);min-width:0}
+.cash-calendar-summary span{display:block;font:600 .55rem Orbitron,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:rgba(237,244,255,.52)}
+.cash-calendar-summary strong{display:block;margin-top:.25rem;font:700 .78rem Orbitron,sans-serif;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cash-calendar-alert{display:flex;align-items:center;gap:.7rem;width:100%;margin:0 0 12px;padding:.7rem .8rem;text-align:left;border:1px solid rgba(255,106,0,.3);border-radius:12px;background:rgba(255,106,0,.055);color:var(--text)}
+.cash-calendar-alert>span{font-size:1rem;color:var(--orange)}
+.cash-calendar-alert>div{display:grid;gap:2px;min-width:0;flex:1}
+.cash-calendar-alert strong{font:700 .65rem Orbitron,sans-serif;color:var(--orange)}
+.cash-calendar-alert small{font-size:.65rem;color:rgba(237,244,255,.65);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cash-calendar-alert>b{font-size:1rem;color:rgba(237,244,255,.5)}
+.cash-calendar-strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(82px,1fr);gap:7px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity;scrollbar-width:thin}
+.cash-day{scroll-snap-align:start;display:grid;gap:4px;min-height:118px;padding:.65rem .55rem;text-align:left;border:1px solid rgba(255,255,255,.08);border-radius:13px;background:rgba(255,255,255,.025);color:var(--text)}
+.cash-day:hover{border-color:rgba(0,229,255,.3);background:rgba(0,229,255,.035)}
+.cash-day.selected{border-color:rgba(0,229,255,.58);box-shadow:0 0 18px rgba(0,229,255,.08);background:rgba(0,229,255,.055)}
+.cash-day.lowest{box-shadow:inset 0 -2px 0 var(--gold)}
+.cash-day-date{font:600 .53rem Orbitron,sans-serif;text-transform:uppercase;color:rgba(237,244,255,.48)}
+.cash-day>strong{font:700 1rem Orbitron,sans-serif}
+.cash-day-balance{font:700 .68rem Orbitron,sans-serif;white-space:nowrap}
+.cash-day-flow,.cash-day-sources{font-size:.53rem;line-height:1.25;color:rgba(237,244,255,.56);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cash-day.healthy .cash-day-balance{color:var(--cyan)}
+.cash-day.watch .cash-day-balance{color:var(--gold)}
+.cash-day.constrained .cash-day-balance{color:var(--orange)}
+.cash-day.negative .cash-day-balance{color:#ff7b7b}
+.cash-calendar-key{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,.07)}
+.cash-calendar-key span{display:inline-flex;align-items:center;gap:5px;font-size:.55rem;color:rgba(237,244,255,.55)}
+.cash-calendar-key i{width:7px;height:7px;border-radius:50%;display:inline-block;border:1px solid rgba(255,255,255,.15)}
+.cash-calendar-key .healthy{background:var(--cyan)}.cash-calendar-key .watch{background:var(--gold)}.cash-calendar-key .constrained{background:var(--orange)}.cash-calendar-key .negative{background:#ff7b7b}
+@media(max-width:560px){.cash-calendar-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.cash-calendar-strip{grid-auto-columns:86px}.cash-day{min-height:112px}.cash-calendar-key{gap:.55rem}}
