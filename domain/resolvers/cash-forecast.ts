@@ -19,7 +19,7 @@ export interface CashForecastPoint{
  entries:CashForecastEntry[];
 }
 
-export interface CashForecastView{
+export interface CashForecastPayday{date:string;amountMinor:number;sourceType:"recurring_rule"|"event";sourceId:string;title:string;}\n\nexport interface CashForecastView{
  startDate:string;
  endDate:string;
  startingBalanceMinor:number;
@@ -104,7 +104,7 @@ export function resolveCashForecast(
   scheduledEntries.set(date,[...(scheduledEntries.get(date)??[]),entry]);
  }
  const recurring=new Map<string,number>();
- const recurringEntries=new Map<string,CashForecastEntry[]>();
+ const recurringEntries=new Map<string,CashForecastEntry[]>();\n const paydays:CashForecastPayday[]=[];
  for(const rule of db.recurringRules.filter(x=>x.enabled)){
   for(const [date,amount] of recurringOccurrences(rule,start,end)){
    recurring.set(date,(recurring.get(date)??0)+amount);
@@ -165,6 +165,6 @@ export function resolveCashForecast(
  return{
   startDate:day(start),endDate:day(end),startingBalanceMinor:points[0]?.openingBalanceMinor??balance,
   endingBalanceMinor:balance,lowestBalanceMinor:lowest,lowestBalanceDate:lowestDate,firstNegativeDate,
-  totalInflowsMinor:totalInflows,totalOutflowsMinor:totalOutflows,points
+  totalInflowsMinor:totalInflows,totalOutflowsMinor:totalOutflows,\n  paydays:paydays.sort((a,b)=>a.date.localeCompare(b.date)),points
  };
 }
