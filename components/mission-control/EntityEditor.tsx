@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import type { LifeOSDatabase, BaseEntity } from "@/domain/contracts/database";
 import { deleteEntityRecord, updateEntityRecord } from "@/domain/services/operations";
 import EntityAttachments from "@/components/mission-control/EntityAttachments";
+import MultiSelectDropdown from "@/components/mission-control/MultiSelectDropdown";
 
 type Editable = { key: string; value: unknown; original: unknown };
 
@@ -291,16 +292,12 @@ export default function EntityEditor({
                 </span>
 
                 {isArray && arrayOptions.every((x) => typeof x === "string") ? (
-                  <select
-                    className="command-input"
-                    multiple
-                    size={Math.min(Math.max(arrayOptions.length, 2), 5)}
+                  <MultiSelectDropdown
                     value={Array.isArray(field.value) ? field.value.map(String) : []}
-                    onChange={(e) => setDraft((v) => v.map((x) => x.key === field.key ? { ...x, value: Array.from(e.target.selectedOptions, (o) => o.value) } : x))}
+                    options={arrayOptions}
+                    onChange={(value) => setDraft((v) => v.map((x) => x.key === field.key ? { ...x, value } : x))}
                     disabled={isSubmitting}
-                  >
-                    {arrayOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                  </select>
+                  />
                 ) : complex ? (
                   <>
                     <textarea
