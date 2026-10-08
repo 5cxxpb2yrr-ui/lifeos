@@ -399,7 +399,7 @@ select optgroup{
 .entity-editor-footer{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
 @media(max-width:560px){.context-stack{margin-bottom:9px}.context-stack button,.context-stack .context-current,.context-stack .context-separator{font-size:8px}.entity-editor-modal{padding:13px;border-radius:16px}.entity-editor-grid{grid-template-columns:1fr;gap:8px}.entity-editor-vin{grid-column:auto}.entity-editor-footer{grid-template-columns:1fr 1fr}.entity-editor-footer .row-meta{grid-column:1/-1}.entity-editor-footer .action{min-height:46px}}
 
-/* Mission Control: daily cash calendar */
+.finance-forecast-stack{display:grid;gap:12px}.finance-forecast-stack>.card{margin:0}.forecast-badge-healthy{border-color:rgba(0,229,255,.3);color:var(--cyan)}.forecast-badge-watch{border-color:rgba(255,213,79,.3);color:var(--gold)}.forecast-badge-danger{border-color:rgba(255,106,0,.35);color:var(--orange)}\n\n/* Mission Control: daily cash calendar */
 .cash-calendar{overflow:hidden}
 .cash-calendar-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
 .cash-calendar-summary>div{padding:.65rem .7rem;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.025);min-width:0}
