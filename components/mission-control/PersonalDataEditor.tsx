@@ -84,13 +84,13 @@ export default function PersonalDataEditor({db,onPersist,onNotice}:Props){
  const [query,setQuery]=useState("");
  const [draft,setDraft]=useState<Record<string,unknown>|null>(null);
  const [showAdvanced,setShowAdvanced]=useState(false);
- const [adding,setAdding]=useState(false);
+ const [adding,setAdding]=useState(false); const [deleteError,setDeleteError]=useState("");
  const rows=useMemo(()=>((db[collection] as unknown as Record<string,unknown>[])||[]).filter(r=>!query.trim()||JSON.stringify(r).toLowerCase().includes(query.toLowerCase())).slice().reverse(),[db,collection,query]);
  const selected=useMemo(()=>selectedId?((db[collection] as unknown as Record<string,unknown>[]).find(r=>String(r.id)===selectedId)??null):null,[db,collection,selectedId]);
  const fields=useMemo(()=>{const source=draft??selected??{};const keys=Array.from(new Set([...standardFields[collection],...Object.keys(source)]));return keys.filter(k=>!["id","entityType","createdAt","updatedAt"].includes(k));},[draft,selected,collection]);
- const begin=(row:Record<string,unknown>)=>{setSelectedId(String(row.id));setDraft(structuredClone(row));setAdding(false);setShowAdvanced(false)};
- const beginAdd=()=>{const row=defaultRecord(collection);setSelectedId(String(row.id));setDraft(row);setAdding(true);setShowAdvanced(false)};
- const cancel=()=>{setDraft(null);setSelectedId(null);setAdding(false)};
+ const begin=(row:Record<string,unknown>)=>{setSelectedId(String(row.id));setDraft(structuredClone(row));setAdding(false);setShowAdvanced(false);setDeleteError("")};
+ const beginAdd=()=>{const row=defaultRecord(collection);setSelectedId(String(row.id));setDraft(row);setAdding(true);setShowAdvanced(false);setDeleteError("")};
+ const cancel=()=>{setDraft(null);setSelectedId(null);setAdding(false);setDeleteError("")};
  const update=(key:string,text:string)=>setDraft(prev=>prev?{...prev,[key]:parseValue(text,prev[key])}:prev);
  async function save(){
   if(!draft)return;
@@ -112,8 +112,9 @@ export default function PersonalDataEditor({db,onPersist,onNotice}:Props){
  async function remove(){
   if(!draft||adding)return;
   if(!window.confirm("Delete this record from your local LifeOS database? This can affect linked graph records."))return;
+  setDeleteError("");
   const result=deleteEntityRecord(db,String(draft.entityType),String(draft.id),"personal-data-editor");
-  if(!result.deleted){onNotice(result.reason??"Record could not be deleted.");return}
+  if(!result.deleted){const reason=result.reason??"Record could not be deleted.";setDeleteError(reason);onNotice(reason);return}
   const saved=await onPersist(result.db,"Deleted "+collectionLabels[collection].replace(/s$/,"")+".");
   if(saved!==false){
    setDraft(null);
@@ -121,7 +122,7 @@ export default function PersonalDataEditor({db,onPersist,onNotice}:Props){
    setAdding(false);
    onNotice("Record deleted.");
   }else{
-   onNotice("Delete was not saved. The record is still present.");
+   const reason="Delete was not saved. The record is still present. Check the record links and try again.";setDeleteError(reason);onNotice(reason);
   }
  }
  return <section className="card personal-data-editor">
@@ -142,6 +143,7 @@ export default function PersonalDataEditor({db,onPersist,onNotice}:Props){
       <div className="pde-form-head"><div><div className="kicker">{adding?"New record":"Edit record"}</div><h3 id="pde-modal-title">{String(draft.displayName??draft.name??draft.title??draft.question??draft.serviceType??"Untitled")}</h3></div><button type="button" className="mini-action" onClick={cancel}>Close</button></div>
       <div className="pde-fields">{fields.map(key=>{const original=draft[key];const options=enumOptions[key]??(key==="status"?(enumOptions.status):undefined);const isLong=Array.isArray(original)||typeof original==="object"||["description","notes","context","outcome","purchaseDescription"].includes(key);return <label className={"field-label pde-field "+(isLong?"wide":"")} key={key}><span>{label(key)}{["id","entityType"].includes(key)&&<strong>SYSTEM</strong>}</span>{options?<select className="command-input" value={String(original??"")} onChange={e=>update(key,e.target.value)}>{options.map(x=><option key={x} value={x}>{label(x)}</option>)}</select>:isLong?<textarea className="command-input pde-input pde-textarea" value={valueText(original)} onChange={e=>update(key,e.target.value)} spellCheck={false}/>:<input className="command-input pde-input" value={valueText(original)} onChange={e=>update(key,e.target.value)}/>}</label>})}</div>
       <button type="button" className="pde-advanced-toggle" onClick={()=>setShowAdvanced(v=>!v)}>{showAdvanced?"Hide":"Show"} system details</button>
+      {deleteError&&<div className="pde-delete-error" role="alert"><strong>Delete blocked</strong><span>{deleteError}</span></div>}
       {showAdvanced&&<div className="pde-system-box"><div><span>ID</span><code>{String(draft.id)}</code></div><div><span>Type</span><code>{String(draft.entityType)}</code></div><div><span>Created</span><code>{String(draft.createdAt)}</code></div><div><span>Updated</span><code>{String(draft.updatedAt)}</code></div></div>}
       <div className="pde-footer"><button type="button" className="danger-action mini-action" onClick={remove} disabled={adding}>Delete</button><span className="row-meta">{adding?"New record is not saved until you tap Save.":"Changes are local-first and saved immediately when you tap Save."}</span><button type="button" className="action" onClick={cancel}>Cancel</button><button type="button" className="action primary" onClick={save}>Save</button></div>
     </div>
