@@ -11,6 +11,7 @@ export interface ForecastScenarioFlow{
  sourceType?:string;
  sourceId?:string;
  priority?:number;
+ delayDays?:number;
 }
 
 export default function CashForecastControls({
@@ -44,7 +45,7 @@ export default function CashForecastControls({
   const baseDate=selected?.date??date;
   if(!baseDate||!title.trim()||!Number.isFinite(dollars)||dollars<=0)return;
   const shifted=new Date(baseDate+"T00:00:00.000Z"); shifted.setUTCDate(shifted.getUTCDate()+delayDays);
-  const flow:ForecastScenarioFlow={id:"scenario-"+Date.now(),date:shifted.toISOString().slice(0,10),amountMinor:Math.round(dollars*100),direction,title:title.trim(),sourceType:selected?.sourceType,sourceId:selected?.sourceId,priority};
+  const flow:ForecastScenarioFlow={id:"scenario-"+Date.now(),date:shifted.toISOString().slice(0,10),amountMinor:Math.round(dollars*100),direction,title:title.trim(),sourceType:selected?.sourceType,sourceId:selected?.sourceId,priority,delayDays};
   onFlowsChange([...flows,flow]);
   setAmount("");setDate("");setTitle("");setObligationId("");setDelayDays(0);setPriority(3);
  }
