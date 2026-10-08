@@ -79,7 +79,7 @@ function DataView({view,db,onEvent,onEntity,onGraph,onNavigateView,onPersist}:{v
  const initialTab=view==="finance"?"overview":view==="assets"?"overview":view;
  const [tab,setTab]=useState<string>(initialTab);
  useEffect(()=>{setTab(initialTab)},[initialTab]);
- const title=view==="events"?"Events":view==="finance"?"Finance":view==="vehicles"?"Vehicles":view==="properties"?"Properties":view==="assets"?"Assets":view==="personal"?"Personal Data":"Relationships";
+ const title=view==="events"?"Events":view==="finance"?"Finance":view==="vehicles"?"Vehicles":view==="properties"?"Properties":view==="assets"?"Assets":"Relationships";
  const financeTabs=[["overview","Overview"],["accounts","Accounts"],["loans","Loans"],["payments","Payment Schedule"],["transactions","Transactions"]] as const;
  const assetTabs=[["overview","Overview"],["vehicles","Vehicles"],["properties","Properties"],["other","Other Assets"]] as const;
  const tabs=view==="finance"?financeTabs:view==="assets"?assetTabs:null;
@@ -115,8 +115,6 @@ function DataView({view,db,onEvent,onEntity,onGraph,onNavigateView,onPersist}:{v
      ? db.vehicles.map(v=>({id:"vehicle:"+v.id,title:[v.year??"",v.make,v.model].filter(Boolean).join(" "),meta:"Vehicle · "+v.status+(v.currentMileage!=null?" · "+v.currentMileage.toLocaleString()+" "+v.mileageUnit:""),action:()=>onEntity("vehicle",v.id)}))
     : view==="properties"
      ? db.properties.map(p=>({id:"property:"+p.id,title:p.name,meta:"Property · "+p.propertyType+" · "+p.status,action:()=>onEntity("property",p.id)}))
-    : view==="personal"
-     ? db.people.map(p=>({id:"person:"+p.id,title:p.displayName,meta:"Person"+(p.email?" · "+p.email:"")+(p.phone?" · "+p.phone:""),action:()=>onGraph(p.id,"person")}))
     : db.relationships.map(r=>({id:r.id,title:r.relationshipType.replaceAll("_"," "),meta:r.fromType+" → "+r.toType,action:()=>onGraph(r.id,"relationship")}));
  return <section className="card data-view">
   <div className="section-title"><div><div className="kicker">LifeOS / {title}</div><h2>{title}</h2></div><span className="badge">{rows.length}</span></div>
