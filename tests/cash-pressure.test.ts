@@ -6,7 +6,7 @@ import type {CashForecastView} from "../domain/resolvers/cash-forecast.ts";
 const forecast=(lowest:number,lowestDate="2026-10-12",firstNegativeDate?:string):CashForecastView=>({
  startDate:"2026-10-07",endDate:"2026-10-20",startingBalanceMinor:50000,endingBalanceMinor:lowest,
  lowestBalanceMinor:lowest,lowestBalanceDate:lowestDate,firstNegativeDate,
- totalInflowsMinor:100000,totalOutflowsMinor:100000,points:[]
+ totalInflowsMinor:100000,totalOutflowsMinor:100000,paydays:[],points:[]
 });
 
 test("healthy stays out of attention",()=>{
