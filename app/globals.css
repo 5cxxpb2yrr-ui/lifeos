@@ -419,6 +419,7 @@ select optgroup{
 .cash-day-date{font:600 .53rem Orbitron,sans-serif;text-transform:uppercase;color:rgba(237,244,255,.48)}
 .cash-day>strong{font:700 1rem Orbitron,sans-serif}
 .cash-day-balance{font:700 .68rem Orbitron,sans-serif;white-space:nowrap}
+.cash-day-payday{display:inline-block;width:max-content;max-width:100%;padding:2px 4px;border:1px solid rgba(0,229,255,.25);border-radius:5px;color:var(--cyan);background:rgba(0,229,255,.06);font:700 .44rem Orbitron,sans-serif;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cash-day-flow,.cash-day-sources{font-size:.53rem;line-height:1.25;color:rgba(237,244,255,.56);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cash-day.healthy .cash-day-balance{color:var(--cyan)}
 .cash-day.watch .cash-day-balance{color:var(--gold)}
@@ -427,5 +428,5 @@ select optgroup{
 .cash-calendar-key{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,.07)}
 .cash-calendar-key span{display:inline-flex;align-items:center;gap:5px;font-size:.55rem;color:rgba(237,244,255,.55)}
 .cash-calendar-key i{width:7px;height:7px;border-radius:50%;display:inline-block;border:1px solid rgba(255,255,255,.15)}
-.cash-calendar-key .healthy{background:var(--cyan)}.cash-calendar-key .watch{background:var(--gold)}.cash-calendar-key .constrained{background:var(--orange)}.cash-calendar-key .negative{background:#ff7b7b}
+.cash-calendar-key .payday{background:var(--cyan)}.cash-calendar-key .healthy{background:var(--cyan)}.cash-calendar-key .watch{background:var(--gold)}.cash-calendar-key .constrained{background:var(--orange)}.cash-calendar-key .negative{background:#ff7b7b}
 @media(max-width:560px){.cash-calendar-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.cash-calendar-strip{grid-auto-columns:86px}.cash-day{min-height:112px}.cash-calendar-key{gap:.55rem}}
