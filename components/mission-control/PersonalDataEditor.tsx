@@ -116,7 +116,7 @@ export default function PersonalDataEditor({db,onPersist,onNotice}:Props){
   const id=String(draft.id);
   const remaining=list.filter(record=>String(record.id)!==id);
   if(remaining.length===list.length){onNotice("Record no longer exists.");return}
-  next[collection]=remaining as never;
+  list.splice(0,list.length,...remaining);
   const saved=await onPersist(next,"Deleted "+collectionLabels[collection].replace(/s$/,"")+".");
   if(saved!==false){
    setDraft(null);
