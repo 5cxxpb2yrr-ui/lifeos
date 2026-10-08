@@ -8,6 +8,7 @@ function dateLabel(date:string){return new Date(date+"T12:00:00").toLocaleDateSt
 
 export default function CashForecastCalendar({db}:{db:LifeOSDatabase}){
  const [selectedDate,setSelectedDate]=useState<string|null>(null);
+ const [baseline,setBaseline]=useState<{date:string;closingBalanceMinor:number}|null>(null);
  const dayRefs=useRef<Record<string,HTMLDivElement|null>>({});
  const forecast=useMemo(()=>resolveCashForecast(db,{horizonDays:30}),[db]);
  useEffect(()=>{
@@ -17,8 +18,18 @@ export default function CashForecastCalendar({db}:{db:LifeOSDatabase}){
    setSelectedDate(detail.date);
    setTimeout(()=>dayRefs.current[detail.date!]?.scrollIntoView({behavior:"smooth",block:"center"}),50);
   };
+  const baselineHandler=(event:Event)=>{
+   const detail=(event as CustomEvent).detail as {date?:string};
+   if(!detail?.date)return;
+   const point=resolveCashForecast(db,{horizonDays:30}).points.find(p=>p.date===detail.date);
+   if(point)setBaseline({date:detail.date,closingBalanceMinor:point.closingBalanceMinor});
+  };
   window.addEventListener("lifeos:cash-forecast-day",handler);
-  return()=>window.removeEventListener("lifeos:cash-forecast-day",handler);
+  window.addEventListener("lifeos:cash-forecast-baseline",baselineHandler);
+  return()=>{
+   window.removeEventListener("lifeos:cash-forecast-day",handler);
+   window.removeEventListener("lifeos:cash-forecast-baseline",baselineHandler);
+  };
  },[]);
  const selected=forecast.points.find(point=>point.date===selectedDate);
  return <section className="card cash-forecast-calendar">
@@ -29,10 +40,10 @@ export default function CashForecastCalendar({db}:{db:LifeOSDatabase}){
    <div><span className="kicker">Lowest</span><strong>{money(forecast.lowestBalanceMinor)}</strong><small>{dateLabel(forecast.lowestBalanceDate)}</small></div>
    <div><span className="kicker">Ending</span><strong>{money(forecast.endingBalanceMinor)}</strong></div>
   </div>
-  {selected&&<div className="notice"><strong>{dateLabel(selected.date)}</strong> · closing {money(selected.closingBalanceMinor)}{selected.sources.length?" · "+selected.sources[0].label:""}</div>}
+  {selected&&<div className="notice"><strong>{dateLabel(selected.date)}</strong> · closing {money(selected.closingBalanceMinor)}{selected.sources.length?" · "+selected.sources[0].label:""}{baseline?.date===selected.date ? <>{" · "}change since edit {money(selected.closingBalanceMinor-baseline.closingBalanceMinor)}</> : null}</div>}
   <div className="cash-calendar-list">
    {forecast.points.map(point=><div key={point.date} ref={el=>{dayRefs.current[point.date]=el}} className={"cash-calendar-day "+(selectedDate===point.date?"selected ":"")+(point.closingBalanceMinor<0?"negative":"")}>
-    <button type="button" className="cash-calendar-day-head" onClick={()=>setSelectedDate(point.date)}>
+    <button type="button" className="cash-calendar-day-head" onClick={()=>{setSelectedDate(point.date);if(baseline?.date!==point.date)setBaseline(null);}}>
      <div><strong>{dateLabel(point.date)}</strong><span>Opening {money(point.openingBalanceMinor)}</span></div>
      <div><span>Closing</span><strong>{money(point.closingBalanceMinor)}</strong></div>
     </button>
