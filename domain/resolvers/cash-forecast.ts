@@ -139,7 +139,7 @@ export function resolveCashForecast(
   totalInflows+=inflow; totalOutflows+=outflow;
   if(balance<lowest){lowest=balance;lowestDate=dateKey}
   if(balance<0&&!firstNegativeDate)firstNegativeDate=dateKey;
-  points.push({date:dateKey,openingBalanceMinor:opening,incomeMinor,billMinor,loanPaymentMinor,otherExpenseMinor,inflowMinor:inflow,outflowMinor,closingBalanceMinor:balance,sources});
+  points.push({date:dateKey,openingBalanceMinor:opening,incomeMinor,billMinor,loanPaymentMinor,otherExpenseMinor,inflowMinor:inflow,outflowMinor:outflow,closingBalanceMinor:balance,sources});
  }
  return{
   startDate:day(start),endDate:day(end),startingBalanceMinor:points[0]?.openingBalanceMinor??balance,
