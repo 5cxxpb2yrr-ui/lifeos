@@ -8,6 +8,7 @@ export interface CashForecastEntry{
  sourceType:"loan_payment"|"recurring_rule"|"event"|"external";
  sourceId:string;
  title:string;
+ priority?:number;
 }
 
 export interface CashForecastPoint{
@@ -45,6 +46,7 @@ export interface CashForecastOptions{
   direction:"inflow"|"outflow";
   sourceId?:string;
   title?:string;
+  priority?:number;
  }>;
 }
 
@@ -103,7 +105,7 @@ export function resolveCashForecast(
   if(!remaining)continue;
   scheduled.set(date,(scheduled.get(date)??0)+remaining);
   const loan=db.loans.find(x=>x.id===payment.loanId);
-  const entry:CashForecastEntry={date,amountMinor:remaining,direction:"outflow",sourceType:"loan_payment",sourceId:payment.id,title:loan?.name??`Loan payment ${payment.loanId}`};
+  const entry:CashForecastEntry={date,amountMinor:remaining,direction:"outflow",sourceType:"loan_payment",sourceId:payment.id,title:loan?.name??`Loan payment ${payment.loanId}`,priority:typeof loan?.metadata?.priority === "number" ? Math.max(1,Math.min(5,Math.round(Number(loan.metadata.priority)))) : 4};
   scheduledEntries.set(date,[...(scheduledEntries.get(date)??[]),entry]);
  }
  const recurring=new Map<string,number>();
@@ -112,7 +114,7 @@ export function resolveCashForecast(
  for(const rule of db.recurringRules.filter(x=>x.enabled)){
   for(const [date,amount] of recurringOccurrences(rule,start,end)){
    recurring.set(date,(recurring.get(date)??0)+amount);
-   const entry:CashForecastEntry={date,amountMinor:Math.abs(amount),direction:amount>=0?"inflow":"outflow",sourceType:"recurring_rule",sourceId:rule.id,title:rule.name};
+   const entry:CashForecastEntry={date,amountMinor:Math.abs(amount),direction:amount>=0?"inflow":"outflow",sourceType:"recurring_rule",sourceId:rule.id,title:rule.name,priority:typeof rule.template.priority === "number" ? Math.max(1,Math.min(5,Math.round(Number(rule.template.priority)))) : undefined};
    recurringEntries.set(date,[...(recurringEntries.get(date)??[]),entry]);
    if(rule.eventType==="income"&&amount>0){paydays.push({date,amountMinor:amount,sourceType:"recurring_rule",sourceId:rule.id,title:rule.name});}
   }
@@ -128,7 +130,7 @@ export function resolveCashForecast(
   if(dateKey<day(start)||dateKey>day(end))continue;
   const signed=event.eventType==="income"?Math.abs(rawAmount):-Math.abs(rawAmount);
   eventFlows.set(dateKey,(eventFlows.get(dateKey)??0)+signed);
-  const entry:CashForecastEntry={date:dateKey,amountMinor:Math.abs(signed),direction:signed>=0?"inflow":"outflow",sourceType:"event",sourceId:event.id,title:event.title};
+  const entry:CashForecastEntry={date:dateKey,amountMinor:Math.abs(signed),direction:signed>=0?"inflow":"outflow",sourceType:"event",sourceId:event.id,title:event.title,priority:typeof event.metadata?.priority === "number" ? Math.max(1,Math.min(5,Math.round(Number(event.metadata.priority)))) : undefined};
   eventEntries.set(dateKey,[...(eventEntries.get(dateKey)??[]),entry]);
   if(event.eventType==="income"&&signed>0){paydays.push({date:dateKey,amountMinor:signed,sourceType:"event",sourceId:event.id,title:event.title});}
  }
@@ -137,7 +139,7 @@ export function resolveCashForecast(
   if(flow.date<day(start)||flow.date>day(end)||!Number.isFinite(flow.amountMinor)||flow.amountMinor<=0)continue;
   const entry:CashForecastEntry={
    date:flow.date,amountMinor:Math.abs(flow.amountMinor),direction:flow.direction,sourceType:"external",
-   sourceId:flow.sourceId??`external:${flow.date}:${flow.title??"flow"}`,title:flow.title??"External financial flow"
+   sourceId:flow.sourceId??`external:${flow.date}:${flow.title??"flow"}`,title:flow.title??"External financial flow",priority:typeof flow.priority === "number" ? Math.max(1,Math.min(5,Math.round(Number(flow.priority)))) : undefined
   };
   externalFlows.set(flow.date,[...(externalFlows.get(flow.date)??[]),entry]);
  }
