@@ -16,6 +16,8 @@ test("cash forecast combines current cash, scheduled debt, recurring flows, and 
  assert.equal(view.points.find(p=>p.date==="2026-10-09")?.outflowMinor,60000);
  assert.equal(view.points.find(p=>p.date==="2026-10-10")?.outflowMinor,10000);
  assert.equal(view.points.find(p=>p.date==="2026-10-11")?.outflowMinor,120000);
+ assert.equal(view.points.find(p=>p.date==="2026-10-10")?.billMinor,10000);
+ assert.equal(view.points.find(p=>p.date==="2026-10-09")?.loanPaymentMinor,60000);
  assert.equal(view.endingBalanceMinor,-20000);
  assert.equal(view.firstNegativeDate,"2026-10-11");
 });
