@@ -42,7 +42,7 @@ export default function PersonalDataView({db,onPersist}:{db:LifeOSDatabase;onPer
  const personGoals=useMemo(()=>person?db.goals.filter(e=>linkedToPerson(e,person.id)):[],[db,person]);
  const personDecisions=useMemo(()=>person?db.decisions.filter(e=>linkedToPerson(e,person.id)):[],[db,person]);
  const personDocs=useMemo(()=>person?db.documents.filter(e=>linkedToPerson(e,person.id)):[],[db,person]);
- const personAttachments=useMemo(()=>person?attachmentsForEntity(db,person.id,person.entityType):[],[db,person]);
+ const personAttachments=useMemo(()=>person?attachmentsForEntity(db,person.id):[],[db,person]);
  const relationships=useMemo(()=>person?db.relationships.filter(r=>r.fromId===person.id||r.toId===person.id):db.relationships,[db,person]);
  const people=useMemo(()=>db.people.filter(p=>!filter||p.displayName.toLowerCase().includes(filter.toLowerCase())||p.email?.some(x=>x.toLowerCase().includes(filter.toLowerCase()))||p.phone?.some(x=>x.includes(filter))),[db,filter]);
  const allEvents=useMemo(()=>db.events.slice().sort((a,b)=>(b.startAt??b.updatedAt).localeCompare(a.startAt??a.updatedAt)),[db]);
