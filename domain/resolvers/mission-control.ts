@@ -42,13 +42,19 @@ function cashPressureAttention(forecast:CashForecastView,pressure:CashPressureVi
   sourceId:pressure.sourceId,
   title:pressure.state==="negative"?"Cash shortfall forecast":pressure.state==="constrained"?"Cash cushion is constrained":"Cash position needs watching"
  });
+ const underlyingEntries=point?.entries??[];
+ const topObligation=underlyingEntries.filter(entry=>entry.direction==="outflow").sort((a,b)=>(b.priority??0)-(a.priority??0))[0];
  return{
   ...base,
+  priority:Math.max(base.priority??0,topObligation?.priority??0),
+  reason:topObligation?.title ? base.reason+" Highest-priority obligation: "+topObligation.title+"." : base.reason,
   context:{
    ...(base.context??{}),
    forecastDate,
    forecastPoint:point,
-   underlyingEntries:point?.entries??[]
+   underlyingEntries,
+   highestPriorityObligation:topObligation,
+   obligationPriority:topObligation?.priority
   }
  };
 }
