@@ -1,6 +1,6 @@
 import type {Event,OpenLoop,LifeOSDatabase} from "@/domain/contracts/database";
 import {resolveAttentionDetailed} from "./attention";
-import {resolveCashForecast,type CashForecastView} from "./cash-forecast";
+import {resolveCashForecast,type CashForecastOptions,type CashForecastView} from "./cash-forecast";
 import {resolveCashPressureAttention,type CashPressureView,resolveCashPressure} from "./cash-pressure";
 
 export interface AttentionItem {
@@ -52,9 +52,9 @@ function cashPressureAttention(forecast:CashForecastView,pressure:CashPressureVi
   }
  };
 }
-export function resolveMissionControl(db:LifeOSDatabase,now=new Date()):MissionControlViewModel {
+export function resolveMissionControl(db:LifeOSDatabase,now=new Date(),forecastOptions:Pick<CashForecastOptions,"startingCashMinor"|"externalFlows">={}):MissionControlViewModel {
  const startDate=localDay(now);
- const cashForecast=resolveCashForecast(db,{startDate,horizonDays:30});
+ const cashForecast=resolveCashForecast(db,{startDate,horizonDays:30,...forecastOptions});
  const cashPressure=resolveCashPressure(cashForecast,{sourceId:"household-cash",title:"Cash pressure"});
  const cashAttention=cashPressureAttention(cashForecast,cashPressure);
  const attention:AttentionItem[]=[
