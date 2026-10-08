@@ -207,7 +207,17 @@ export default function EntityEditor({
 
       const next = updateEntityRecord(db, record.entityType, record.id, changes);
       await onPersist(next, `Updated ${entityTypeLabel} and recorded the change.`);
+      const returnToForecastDate = forecastContext?.date;
       handleClose();
+      if (returnToForecastDate) {
+        setTimeout(() => {
+          window.dispatchEvent(
+            new CustomEvent("lifeos:cash-forecast-day", {
+              detail: { date: returnToForecastDate }
+            })
+          );
+        }, 0);
+      }
     } catch (err) {
       setActionError((err as Error).message || "Failed to save changes.");
     } finally {
