@@ -86,7 +86,8 @@ export function resolveCashPressure(
 
  const attention:AttentionItem[]=[];
  const lowestPoint=forecast.points.find(point=>point.date===forecast.lowestBalanceDate);
- const highestPriorityObligation=lowestPoint?.sources.find(source=>source.type==="loan_payment"||source.type==="bill"||source.type==="other_expense");
+ const obligations=(lowestPoint?.sources??[]).filter(source=>source.type!=="income");
+ const highestPriorityObligation=obligations[0];
  if(state!=="healthy"){
   const attentionState="at_risk";
   attention.push({
@@ -104,6 +105,12 @@ export function resolveCashPressure(
     lowestBalanceDate:forecast.lowestBalanceDate,
     firstNegativeDate:forecast.firstNegativeDate,
     forecastDate:forecast.lowestBalanceDate,
+    obligations:obligations.map(obligation=>({
+     type:obligation.type==="loan_payment"?"loan_payment":obligation.type==="other_expense"?"event":"recurring_rule",
+     id:obligation.id,
+     label:obligation.label,
+     amountMinor:obligation.amountMinor
+    })),
     highestPriorityObligation:highestPriorityObligation?{
      type:highestPriorityObligation.type==="loan_payment"?"loan_payment":highestPriorityObligation.type==="other_expense"?"event":"recurring_rule",
      id:highestPriorityObligation.id,
