@@ -56,3 +56,14 @@ test("cash forecast accepts source-aware external financial flows without changi
  assert.equal(db.events.length,0);
  assert.equal(db.recurringRules.length,0);
 });
+
+
+test("cash forecast carries canonical obligation priority into source-aware entries",()=>{
+ const db=createEmptyDatabase("2026-10-07T00:00:00.000Z");
+ db.events.push({id:"evt-priority",entityType:"event",createdAt:"2026-01-01T00:00:00.000Z",updatedAt:"2026-01-01T00:00:00.000Z",eventType:"expense",title:"Mortgage",status:"planned",dueAt:"2026-10-08T12:00:00.000Z",metadata:{amountMinor:50000,priority:5}});
+ const view=resolveCashForecast(db,{startDate:"2026-10-07",horizonDays:2,startingCashMinor:100000});
+ const entry=view.points.find(p=>p.date==="2026-10-08")?.entries[0];
+ assert.equal(entry?.sourceType,"event");
+ assert.equal(entry?.sourceId,"evt-priority");
+ assert.equal(entry?.priority,5);
+});
