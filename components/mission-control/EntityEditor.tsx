@@ -325,8 +325,8 @@ export default function EntityEditor({
         {forecastContext && forecastImpact && (
           <div className="notice" style={{marginTop:"12px"}}>
             <strong>Unsaved forecast preview</strong> · {new Date(forecastImpact.previewDate+"T12:00:00").toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})}
-            {" · "}projected closing cash { (forecastImpact.closingBalanceMinor/100).toLocaleString(undefined,{style:"currency",currency:"USD"}) }
-            {forecastImpact.currentClosingBalanceMinor != null ? <>{" · "}change { ((forecastImpact.closingBalanceMinor-forecastImpact.currentClosingBalanceMinor)/100).toLocaleString(undefined,{style:"currency",currency:"USD"}) }</> : null}
+            {" · "}projected closing cash { typeof forecastImpact.closingBalanceMinor === "number" ? (forecastImpact.closingBalanceMinor/100).toLocaleString(undefined,{style:"currency",currency:"USD"}) : "—" }
+            {typeof forecastImpact.closingBalanceMinor === "number" && forecastImpact.currentClosingBalanceMinor != null ? <>{" · "}change { ((forecastImpact.closingBalanceMinor-forecastImpact.currentClosingBalanceMinor)/100).toLocaleString(undefined,{style:"currency",currency:"USD"}) }</> : null}
             {" · "}changes are preview only until you tap Save Changes.
           </div>
         )}
