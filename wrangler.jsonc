@@ -4,5 +4,11 @@
   "pages_build_output_dir": "./out",
   "compatibility_date": "2026-10-01",
   "compatibility_flags": ["nodejs_compat"],
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+  "r2_buckets": [
+    {
+      "binding": "LIFEOS_SEED_VAULT",
+      "bucket_name": "lifeos-immutable-seed"
+    }
+  ]
 }
