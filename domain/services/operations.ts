@@ -19,6 +19,27 @@ export function updateEntityRecord(db:LifeOSDatabase,entityType:string,entityId:
  return appendAudit(next,target,"update","entity-editor",before);
 }
 
+export function deleteEntityRecord(db:LifeOSDatabase,entityType:string,entityId:string):LifeOSDatabase{
+ const collectionByType:Record<string,string>={entity:"entities",event:"events",open_loop:"openLoops",person:"people",asset:"assets",financial_account:"accounts",financial_transaction:"transactions",loan:"loans",loan_payment:"loanPayments",vehicle:"vehicles",vehicle_maintenance:"vehicleMaintenance",property:"properties",room:"rooms",home_system:"homeSystems",electrical_device:"electricalDevices",project:"projects",goal:"goals",decision:"decisions",document:"documents",recurring_rule:"recurringRules",relationship:"relationships"};
+ if(entityType==="audit")return db;
+ const collection=collectionByType[entityType];
+ const source=(entityType==="attachment"?db.attachments:collection?db[collection as keyof LifeOSDatabase]:undefined) as BaseEntity[]|undefined;
+ if(!source)return db;
+ const before=source.find(item=>item.id===entityId); if(!before)return db;
+ const next={...db};
+ if(entityType==="attachment") next.attachments=source.filter(item=>item.id!==entityId) as unknown as LifeOSDatabase["attachments"];
+ else (next[collection as keyof LifeOSDatabase] as BaseEntity[])=source.filter(item=>item.id!==entityId);
+ next.relationships=next.relationships.filter(r=>r.fromId!==entityId&&r.toId!==entityId);
+ next.events=next.events.map(e=>({...e,personIds:e.personIds?.filter(id=>id!==entityId),assetIds:e.assetIds?.filter(id=>id!==entityId),projectIds:e.projectIds?.filter(id=>id!==entityId),goalIds:e.goalIds?.filter(id=>id!==entityId),openLoopIds:e.openLoopIds?.filter(id=>id!==entityId),decisionIds:e.decisionIds?.filter(id=>id!==entityId),financialTransactionIds:e.financialTransactionIds?.filter(id=>id!==entityId),documentIds:e.documentIds?.filter(id=>id!==entityId)}));
+ next.openLoops=next.openLoops.map(o=>({...o,relatedEventIds:o.relatedEventIds?.filter(id=>id!==entityId),relatedProjectIds:o.relatedProjectIds?.filter(id=>id!==entityId),relatedDecisionIds:o.relatedDecisionIds?.filter(id=>id!==entityId)}));
+ next.decisions=next.decisions.map(d=>({...d,personIds:d.personIds?.filter(id=>id!==entityId),eventIds:d.eventIds?.filter(id=>id!==entityId),projectIds:d.projectIds?.filter(id=>id!==entityId)}));
+ if(entityType==="loan")next.loanPayments=next.loanPayments.filter(p=>p.loanId!==entityId);
+ if(entityType==="financial_account")next.transactions=next.transactions.filter(t=>t.accountId!==entityId&&t.counterpartyAccountId!==entityId);
+ if(entityType==="vehicle")next.vehicleMaintenance=next.vehicleMaintenance.filter(v=>v.vehicleId!==entityId);
+ if(entityType==="property"){next.rooms=next.rooms.filter(r=>r.propertyId!==entityId);next.homeSystems=next.homeSystems.filter(s=>s.propertyId!==entityId);next.electricalDevices=next.electricalDevices.filter(d=>d.propertyId!==entityId);}
+ return appendAudit(next,before,"delete","entity-editor",before);
+}
+
 export function createOpenLoopFromEvent(db:LifeOSDatabase,eventId:string,input?:Partial<Pick<OpenLoop,"title"|"description"|"type"|"status"|"priority"|"dueAt">>):LifeOSDatabase{
  const event=db.events.find(e=>e.id===eventId); if(!event)return db;
  const t=now(); const loop:OpenLoop={id:id("loop"),entityType:"open_loop",createdAt:t,updatedAt:t,title:input?.title??event.title,description:input?.description??event.description,type:input?.type??"follow_up",status:input?.status??"open",priority:input?.priority??"normal",dueAt:input?.dueAt??event.dueAt,relatedEventIds:[event.id]};
