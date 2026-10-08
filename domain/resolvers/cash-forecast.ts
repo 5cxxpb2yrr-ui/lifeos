@@ -19,7 +19,9 @@ export interface CashForecastPoint{
  entries:CashForecastEntry[];
 }
 
-export interface CashForecastPayday{date:string;amountMinor:number;sourceType:"recurring_rule"|"event";sourceId:string;title:string;}\n\nexport interface CashForecastView{
+export interface CashForecastPayday{date:string;amountMinor:number;sourceType:"recurring_rule"|"event";sourceId:string;title:string;}
+
+export interface CashForecastView{
  startDate:string;
  endDate:string;
  startingBalanceMinor:number;
@@ -104,12 +106,14 @@ export function resolveCashForecast(
   scheduledEntries.set(date,[...(scheduledEntries.get(date)??[]),entry]);
  }
  const recurring=new Map<string,number>();
- const recurringEntries=new Map<string,CashForecastEntry[]>();\n const paydays:CashForecastPayday[]=[];
+ const recurringEntries=new Map<string,CashForecastEntry[]>();
+ const paydays:CashForecastPayday[]=[];
  for(const rule of db.recurringRules.filter(x=>x.enabled)){
   for(const [date,amount] of recurringOccurrences(rule,start,end)){
    recurring.set(date,(recurring.get(date)??0)+amount);
    const entry:CashForecastEntry={date,amountMinor:Math.abs(amount),direction:amount>=0?"inflow":"outflow",sourceType:"recurring_rule",sourceId:rule.id,title:rule.name};
    recurringEntries.set(date,[...(recurringEntries.get(date)??[]),entry]);
+   if(rule.eventType==="income"&&amount>0){paydays.push({date,amountMinor:amount,sourceType:"recurring_rule",sourceId:rule.id,title:rule.name});}
   }
  }
  const eventFlows=new Map<string,number>();
@@ -125,6 +129,7 @@ export function resolveCashForecast(
   eventFlows.set(dateKey,(eventFlows.get(dateKey)??0)+signed);
   const entry:CashForecastEntry={date:dateKey,amountMinor:Math.abs(signed),direction:signed>=0?"inflow":"outflow",sourceType:"event",sourceId:event.id,title:event.title};
   eventEntries.set(dateKey,[...(eventEntries.get(dateKey)??[]),entry]);
+  if(event.eventType==="income"&&signed>0){paydays.push({date:dateKey,amountMinor:signed,sourceType:"event",sourceId:event.id,title:event.title});}
  }
  const externalFlows=new Map<string,CashForecastEntry[]>();
  for(const flow of options.externalFlows??[]){
@@ -165,6 +170,7 @@ export function resolveCashForecast(
  return{
   startDate:day(start),endDate:day(end),startingBalanceMinor:points[0]?.openingBalanceMinor??balance,
   endingBalanceMinor:balance,lowestBalanceMinor:lowest,lowestBalanceDate:lowestDate,firstNegativeDate,
-  totalInflowsMinor:totalInflows,totalOutflowsMinor:totalOutflows,\n  paydays:paydays.sort((a,b)=>a.date.localeCompare(b.date)),points
+  totalInflowsMinor:totalInflows,totalOutflowsMinor:totalOutflows,
+  paydays:paydays.sort((a,b)=>a.date.localeCompare(b.date)),points
  };
 }
