@@ -2,7 +2,7 @@
 import {useEffect,useMemo,useRef,useState} from "react";
 import type {ReactNode} from "react";
 import type {LifeOSBackup,LifeOSDatabase} from "@/domain/contracts/database";
-import type {CashForecastPoint} from "@/domain/resolvers/cash-forecast";
+import type {CashForecastPoint,CashForecastView} from "@/domain/resolvers/cash-forecast";
 import type {CashPressureView} from "@/domain/resolvers/cash-pressure";
 import {createEmptyDatabase} from "@/domain/services/empty-database";
 import {importSeed,restoreBackup,validateLifeOSBackup,validateSeedBackup,explainSeedValidation,explainBackupValidation,validateSeedContinuity,isPlaceholderSeedVersion} from "@/domain/services/seed";
