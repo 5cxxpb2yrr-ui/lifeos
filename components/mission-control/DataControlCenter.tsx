@@ -5,6 +5,7 @@ import {importSeed,restoreBackup,validateLifeOSBackup,validateSeedBackup,explain
 import {validateDatabaseIntegrity} from "@/domain/resolvers/integrity";
 import {parseSeedInput} from "@/domain/services/seed-file";
 import {makeBackup,stampBackup} from "@/domain/services/backup";
+import StoragePanel from "@/components/mission-control/StoragePanel";
 
 type Props={db:LifeOSDatabase;onPersist:(db:LifeOSDatabase,message:string)=>Promise<void>|void;onNotice:(message:string)=>void};
 
@@ -49,6 +50,7 @@ export default function DataControlCenter({db,onPersist,onNotice}:Props){
  function chooseSeedFile(){seedRef.current?.click()}
 
  return <section className="data-control-center card">
+  <StoragePanel db={db} onBackup={exportFull}/>
   <div className="section-title"><div><div className="kicker">LifeOS / Data</div><h2>Data Control Center</h2><div className="row-meta">Controlled movement of the graph in and out of LifeOS.</div></div><span className="badge">{totalRecords} records</span></div>
   <div className="data-control-tabs"><button className={mode==="import"?"active":""} onClick={()=>setMode("import")}>Import</button><button className={mode==="export"?"active":""} onClick={()=>setMode("export")}>Export</button><button className={mode==="integrity"?"active":""} onClick={()=>setMode("integrity")}>Integrity</button><button className={mode==="seed"?"active":""} onClick={()=>setMode("seed")}>Seed</button><button className={mode==="audit"?"active":""} onClick={()=>setMode("audit")}>Audit</button></div>
   {mode==="import"&&<div className="data-control-panel"><div className="data-control-grid"><button className="data-control-action" onClick={()=>inputRef.current?.click()}><strong>Restore LifeOS backup</strong><span>Load a validated .json backup and review it before commit.</span></button><button className="data-control-action" onClick={chooseSeedFile}><strong>Import immutable seed</strong><span>Choose the original Full Life Control seed file. It is verified against the pinned SHA-256 and never bundled.</span></button></div><input ref={inputRef} hidden type="file" accept=".json,application/json" onChange={e=>{const f=e.target.files?.[0];if(f)readFile(f,"restore");e.currentTarget.value=""}}/><input ref={seedRef} hidden type="file" accept=".json,application/json" onChange={e=>{const f=e.target.files?.[0];if(f)readFile(f,"seed");e.currentTarget.value=""}}/>{preview&&<div className="data-preview"><div className="section-title"><div><div className="kicker">Preview</div><h3>{fileName}</h3></div><span className="badge">{previewKind}</span></div><p className="row-meta">Candidate contains {collections.reduce((n,k)=>n+(preview[k] as unknown[]).length,0)} records. The current database has not been changed.</p><div className="data-preview-actions"><button className="action" onClick={()=>{setPreview(null);setPreviewKind(null)}}>Discard</button><button className="action primary" onClick={commitPreview}>Commit import</button></div></div>}</div>}
