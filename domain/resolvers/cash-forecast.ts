@@ -1,12 +1,25 @@
 import type {LifeOSDatabase,RecurringRule} from "@/domain/contracts/database";
 import {resolveFinancialHealth} from "./financial-health";
 
+export type CashForecastSourceType="income"|"bill"|"loan_payment"|"other_expense";
+export interface CashForecastSource{
+ id:string;
+ type:CashForecastSourceType;
+ label:string;
+ amountMinor:number;
+ sourceType?:string;
+}
 export interface CashForecastPoint{
  date:string;
  openingBalanceMinor:number;
+ incomeMinor:number;
+ billMinor:number;
+ loanPaymentMinor:number;
+ otherExpenseMinor:number;
  inflowMinor:number;
  outflowMinor:number;
  closingBalanceMinor:number;
+ sources:CashForecastSource[];
 }
 
 export interface CashForecastView{
@@ -68,18 +81,30 @@ export function resolveCashForecast(
  const end=addDays(start,horizon-1);
  let balance=options.startingCashMinor??resolveFinancialHealth(db).cashMinor;
  const scheduled=new Map<string,number>();
+ const scheduledSources=new Map<string,CashForecastSource[]>();
  for(const payment of db.loanPayments){
   if(payment.status!=="scheduled"&&payment.status!=="partial")continue;
   const date=payment.scheduledDate;
   if(date<day(start)||date>day(end))continue;
   const remaining=Math.max(0,payment.scheduledAmountMinor-(payment.paidAmountMinor??0));
   scheduled.set(date,(scheduled.get(date)??0)+remaining);
+  const loanName=db.loans.find(x=>x.id===payment.loanId)?.name??"Loan payment";
+  const list=scheduledSources.get(date)??[];
+  list.push({id:payment.id,type:"loan_payment",label:loanName,amountMinor:remaining,sourceType:"loan_payment"});
+  scheduledSources.set(date,list);
  }
  const recurring=new Map<string,number>();
+ const recurringSources=new Map<string,CashForecastSource[]>();
  for(const rule of db.recurringRules.filter(x=>x.enabled)){
-  for(const [date,amount] of recurringOccurrences(rule,start,end))recurring.set(date,(recurring.get(date)??0)+amount);
+  for(const [date,amount] of recurringOccurrences(rule,start,end)){
+   recurring.set(date,(recurring.get(date)??0)+amount);
+   const list=recurringSources.get(date)??[];
+   list.push({id:rule.id,type:amount>0?"income":"bill",label:rule.name,amountMinor:Math.abs(amount),sourceType:"recurring_rule"});
+   recurringSources.set(date,list);
+  }
  }
  const eventFlows=new Map<string,number>();
+ const eventSources=new Map<string,CashForecastSource[]>();
  for(const event of db.events){
   if(event.status==="completed"||event.status==="cancelled"||event.status==="skipped")continue;
   const date=event.dueAt??event.startAt;
@@ -89,6 +114,9 @@ export function resolveCashForecast(
   if(dateKey<day(start)||dateKey>day(end))continue;
   const signed=event.eventType==="income"?Math.abs(rawAmount):-Math.abs(rawAmount);
   eventFlows.set(dateKey,(eventFlows.get(dateKey)??0)+signed);
+  const list=eventSources.get(dateKey)??[];
+  list.push({id:event.id,type:event.eventType==="income"?"income":"other_expense",label:event.title,amountMinor:Math.abs(rawAmount),sourceType:"event"});
+  eventSources.set(dateKey,list);
  }
  const points:CashForecastPoint[]=[];
  let lowest=balance;
@@ -98,15 +126,20 @@ export function resolveCashForecast(
  for(let i=0;i<horizon;i++){
   const dateKey=day(addDays(start,i));
   const opening=balance;
-  const inflow=Math.max(0,recurring.get(dateKey)??0)+Math.max(0,eventFlows.get(dateKey)??0);
-  const recurringOutflow=Math.max(0,-(recurring.get(dateKey)??0));
-  const eventOutflow=Math.max(0,-(eventFlows.get(dateKey)??0));
-  const outflow=(scheduled.get(dateKey)??0)+recurringOutflow+eventOutflow;
+  const recurringValue=recurring.get(dateKey)??0;
+  const eventValue=eventFlows.get(dateKey)??0;
+  const incomeMinor=Math.max(0,recurringValue)+Math.max(0,eventValue);
+  const billMinor=(recurringSources.get(dateKey)??[]).filter(x=>x.type==="bill").reduce((sum,x)=>sum+x.amountMinor,0);
+  const loanPaymentMinor=scheduled.get(dateKey)??0;
+  const otherExpenseMinor=(eventSources.get(dateKey)??[]).filter(x=>x.type==="other_expense").reduce((sum,x)=>sum+x.amountMinor,0);
+  const inflow=incomeMinor;
+  const outflow=loanPaymentMinor+billMinor+otherExpenseMinor;
+  const sources=[...(recurringSources.get(dateKey)??[]),...(scheduledSources.get(dateKey)??[]),...(eventSources.get(dateKey)??[])].sort((a,b)=>b.amountMinor-a.amountMinor);
   balance=opening+inflow-outflow;
   totalInflows+=inflow; totalOutflows+=outflow;
   if(balance<lowest){lowest=balance;lowestDate=dateKey}
   if(balance<0&&!firstNegativeDate)firstNegativeDate=dateKey;
-  points.push({date:dateKey,openingBalanceMinor:opening,inflowMinor:inflow,outflowMinor:outflow,closingBalanceMinor:balance});
+  points.push({date:dateKey,openingBalanceMinor:opening,incomeMinor,billMinor,loanPaymentMinor,otherExpenseMinor,inflowMinor:inflow,outflowMinor,closingBalanceMinor:balance,sources});
  }
  return{
   startDate:day(start),endDate:day(end),startingBalanceMinor:points[0]?.openingBalanceMinor??balance,
