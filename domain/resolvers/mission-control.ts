@@ -29,10 +29,10 @@ function paymentAttention(scheduledDate:string,now:Date):{state:string;priority:
  return{state:"none",priority:0,reason:""};
 }
 export function resolveMissionControl(db:LifeOSDatabase,now=new Date()):MissionControlViewModel {
- const today = localDay(now);
+ const currentDay = localDay(now);
  const availableCashMinor = db.accounts.reduce((sum,a)=>sum+(a.openingBalanceMinor??0),0) +
   db.transactions.reduce((sum,t)=>{
-   if(t.transactionDate>today)return sum;
+   if(t.transactionDate>currentDay)return sum;
    const sign = t.transactionType==="expense" || t.transactionType==="payment" ? -1 : t.transactionType==="income" || t.transactionType==="refund" ? 1 : 0;
    return sum + sign * t.amountMinor;
   },0);
@@ -72,7 +72,7 @@ export function resolveMissionControl(db:LifeOSDatabase,now=new Date()):MissionC
    return [{id:"financial-payment:"+p.id,sourceType:"financial_payment",sourceId:p.id,title:"Payment due · "+(loan?.name??"Loan"),attention:r.state,dueAt:p.scheduledDate+"T23:59:59",priority:r.priority,reason:r.reason+" "+amount+" remaining."}];
   })
  ].filter(x=>x.attention!=="none").sort((a,b)=>(b.priority??0)-(a.priority??0)||((a.dueAt??"").localeCompare(b.dueAt??"")));
- const today=db.events.filter(e=>eventDay(e)===localDay(now));
+ const today=db.events.filter(e=>eventDay(e)===currentDay);
  return{
   attention,
   today,
