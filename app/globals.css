@@ -419,7 +419,7 @@ select optgroup{
 .cash-day-date{font:600 .53rem Orbitron,sans-serif;text-transform:uppercase;color:rgba(237,244,255,.48)}
 .cash-day>strong{font:700 1rem Orbitron,sans-serif}
 .cash-day-balance{font:700 .68rem Orbitron,sans-serif;white-space:nowrap}
-.cash-day-payday{display:inline-block;width:max-content;max-width:100%;padding:2px 4px;border:1px solid rgba(0,229,255,.25);border-radius:5px;color:var(--cyan);background:rgba(0,229,255,.06);font:700 .44rem Orbitron,sans-serif;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.forecast-controls{margin-bottom:12px}.forecast-controls .row-meta{margin:0 0 12px}.forecast-scenario-form{display:grid;gap:10px;margin-top:10px}.forecast-scenario-total{display:block;margin-top:6px;font:700 1.05rem Orbitron,sans-serif;color:var(--cyan)}@media(min-width:720px){.forecast-scenario-form{grid-template-columns:repeat(4,minmax(0,1fr));align-items:end}.forecast-scenario-form .action{min-height:42px}}.cash-day-payday{display:inline-block;width:max-content;max-width:100%;padding:2px 4px;border:1px solid rgba(0,229,255,.25);border-radius:5px;color:var(--cyan);background:rgba(0,229,255,.06);font:700 .44rem Orbitron,sans-serif;letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cash-day-flow,.cash-day-sources{font-size:.53rem;line-height:1.25;color:rgba(237,244,255,.56);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cash-day.healthy .cash-day-balance{color:var(--cyan)}
 .cash-day.watch .cash-day-balance{color:var(--gold)}
