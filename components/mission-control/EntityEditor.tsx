@@ -278,7 +278,9 @@ export default function EntityEditor({
                 : JSON.stringify(field.value ?? null, null, 2)
               : String(field.value ?? "");
 
-            const isArray = Array.isArray(field.original);\n            const arrayOptions = isArray ? Array.from(new Set([...(field.original as unknown[]).map(String), ...(Array.isArray(field.value) ? (field.value as unknown[]).map(String) : [])])) : [];\n            const isVin = vehicle && field.key === "vin";
+            const isArray = Array.isArray(field.original);
+            const arrayOptions = isArray ? Array.from(new Set([...(field.original as unknown[]).map(String), ...(Array.isArray(field.value) ? (field.value as unknown[]).map(String) : [])])) : [];
+            const isVin = vehicle && field.key === "vin";
             const jsonError = jsonErrors[field.key];
 
             return (
@@ -288,7 +290,18 @@ export default function EntityEditor({
                   {isVin && <strong> EDITABLE</strong>}
                 </span>
 
-                {isArray && arrayOptions.every((x) => typeof x === "string") ? (\n                  <select\n                    className="command-input"\n                    multiple\n                    size={Math.min(Math.max(arrayOptions.length, 2), 5)}\n                    value={Array.isArray(field.value) ? field.value.map(String) : []}\n                    onChange={(e) => setDraft((v) => v.map((x) => x.key === field.key ? { ...x, value: Array.from(e.target.selectedOptions, (o) => o.value) } : x))}\n                    disabled={isSubmitting}\n                  >\n                    {arrayOptions.map((option) => <option key={option} value={option}>{option}</option>)}\n                  </select>\n                ) : complex ? (
+                {isArray && arrayOptions.every((x) => typeof x === "string") ? (
+                  <select
+                    className="command-input"
+                    multiple
+                    size={Math.min(Math.max(arrayOptions.length, 2), 5)}
+                    value={Array.isArray(field.value) ? field.value.map(String) : []}
+                    onChange={(e) => setDraft((v) => v.map((x) => x.key === field.key ? { ...x, value: Array.from(e.target.selectedOptions, (o) => o.value) } : x))}
+                    disabled={isSubmitting}
+                  >
+                    {arrayOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                  </select>
+                ) : complex ? (
                   <>
                     <textarea
                       className={`command-input entity-editor-textarea ${jsonError ? "input-error" : ""}`}
