@@ -120,6 +120,11 @@ export default function EntityEditor({
       if (!detail?.id) return;
       setTarget({ id: detail.id, type: detail.type ?? "record" });
       setForecastContext(detail.forecastDate ? { date: detail.forecastDate, amountMinor: detail.amountMinor } : null);
+      if (detail.forecastDate) {
+        window.dispatchEvent(new CustomEvent("lifeos:cash-forecast-baseline", {
+          detail: { date: detail.forecastDate }
+        }));
+      }
     };
 
     window.addEventListener("lifeos:edit", handler);
