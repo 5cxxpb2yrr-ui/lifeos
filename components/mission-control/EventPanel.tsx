@@ -5,6 +5,7 @@ import type {Event,EventType,EventStatus,LifeOSDatabase} from "@/domain/contract
 import {resolveAttentionDetailed} from "@/domain/resolvers/attention";
 import {createOpenLoopFromEvent,updateEvent} from "@/domain/services/operations";
 import {resolveGraph} from "@/domain/resolvers/graph";
+import EntityAttachments from "@/components/mission-control/EntityAttachments";
 
 export const EVENT_TYPES:EventType[]=["task","meeting","conversation","appointment","purchase","payment","income","expense","transfer","maintenance","repair","inspection","travel","decision","observation","milestone","document","communication","workout","learning","other"];
 export const EVENT_STATUS:EventStatus[]=["planned","scheduled","in_progress","completed","cancelled","skipped","failed"];
@@ -79,7 +80,8 @@ export default function EventPanel({db,eventId,onPersist,onClose,onContext,graph
      <label className="field-label">Due<input className="command-input" type="datetime-local" value={toInput(draft.dueAt)} onChange={e=>setDraft({...draft,dueAt:fromInput(e.target.value)})}/></label>
     </div>
    </section>
-   <details className="event-edit-section event-edit-advanced">
+   <EntityAttachments db={db} entity={event} onPersist={onPersist} />
+      <details className="event-edit-section event-edit-advanced">
     <summary><span><span className="kicker">Metadata</span><span className="row-meta">Source + audit timestamps</span></span><span>⌄</span></summary>
     <label className="field-label">Source<input className="command-input" value={draft.source??""} onChange={e=>setDraft({...draft,source:e.target.value||undefined})} placeholder="manual, import, email, system…"/></label>
     <div className="row-meta">Created {new Date(event.createdAt).toLocaleString()} · Updated {new Date(event.updatedAt).toLocaleString()}</div>
