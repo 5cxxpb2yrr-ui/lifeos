@@ -4,7 +4,7 @@ import {useMemo,useState} from "react";
 import type {LifeOSDatabase,CollectionName} from "@/domain/contracts/database";
 
 type EditableCollection=Exclude<CollectionName,"entities"|"auditEntries">;
-type Props={db:LifeOSDatabase;onPersist:(db:LifeOSDatabase,message:string)=>Promise<void>|void;onNotice:(message:string)=>void};
+type Props={db:LifeOSDatabase;onPersist:(db:LifeOSDatabase,message:string)=>Promise<boolean>|boolean;onNotice:(message:string)=>void};
 
 const collectionLabels:Record<EditableCollection,string>={
  events:"Events",openLoops:"Open Loops",people:"People",assets:"Assets",accounts:"Accounts",transactions:"Transactions",
@@ -96,15 +96,34 @@ export default function PersonalDataEditor({db,onPersist,onNotice}:Props){
   const next=structuredClone(db);
   const list=next[collection] as unknown as Record<string,unknown>[];
   draft.updatedAt=now();
-  if(adding){list.push(draft);await onPersist(next,"Added "+collectionLabels[collection].slice(0,-1)+".")}
-  else{const i=list.findIndex(r=>String(r.id)===String(draft.id));if(i<0){onNotice("Record no longer exists.");return}list[i]=draft;await onPersist(next,"Updated "+collectionLabels[collection].slice(0,-1)+".")}
-  cancel();
+  if(adding){
+   list.push(draft);
+   const saved=await onPersist(next,"Added "+collectionLabels[collection].replace(/s$/,"")+".");
+   if(saved!==false)cancel();
+  }else{
+   const i=list.findIndex(r=>String(r.id)===String(draft.id));
+   if(i<0){onNotice("Record no longer exists.");return}
+   list[i]=draft;
+   const saved=await onPersist(next,"Updated "+collectionLabels[collection].replace(/s$/,"")+".");
+   if(saved!==false)cancel();
+  }
  }
  async function remove(){
   if(!draft||adding)return;
   if(!window.confirm("Delete this record from your local LifeOS database? This can affect linked graph records."))return;
-  const next=structuredClone(db);const list=next[collection] as unknown as Record<string,unknown>[];const i=list.findIndex(r=>String(r.id)===String(draft.id));if(i<0)return;
-  list.splice(i,1);await onPersist(next,"Deleted "+collectionLabels[collection].slice(0,-1)+".");cancel();
+  const next=structuredClone(db);
+  const list=next[collection] as unknown as Record<string,unknown>[];
+  const id=String(draft.id);
+  const remaining=list.filter(record=>String(record.id)!==id);
+  if(remaining.length===list.length){onNotice("Record no longer exists.");return}
+  next[collection]=remaining as never;
+  const saved=await onPersist(next,"Deleted "+collectionLabels[collection].replace(/s$/,"")+".");
+  if(saved!==false){
+   setDraft(null);
+   setSelectedId(null);
+   setAdding(false);
+   onNotice("Record deleted.");
+  }
  }
  return <section className="card personal-data-editor">
   <div className="section-title"><div><div className="kicker">LifeOS / Personal Data</div><h2>Personal Data Survey</h2><div className="row-meta">Review every record, replace placeholders, add missing information, or remove records you don't want LifeOS to use.</div></div><span className="badge">{rows.length}</span></div>
@@ -116,14 +135,18 @@ export default function PersonalDataEditor({db,onPersist,onNotice}:Props){
    <div className="pde-main">
     <div className="pde-toolbar"><div><div className="kicker">{collectionLabels[collection]}</div><strong>Tap a record to edit</strong></div><button type="button" className="action primary" onClick={beginAdd}>＋ Add</button></div>
     <div className="pde-record-list">{rows.map(row=><button type="button" key={String(row.id)} className={"pde-record "+(selectedId===row.id?"active":"")} onClick={()=>begin(row)}><span><strong>{String(row.displayName??row.name??row.title??row.question??row.serviceType??row.id)}</strong><small>{String(row.status??row.eventType??row.relationshipType??"Record")}</small></span><b>›</b></button>)}{!rows.length&&<div className="row-meta pde-empty">No records match. Add one to start.</div>}</div>
-    {draft&&<div className="pde-form">
-      <div className="pde-form-head"><div><div className="kicker">{adding?"New record":"Edit record"}</div><h3>{String(draft.displayName??draft.name??draft.title??draft.question??draft.serviceType??"Untitled")}</h3></div><button type="button" className="mini-action" onClick={cancel}>Close</button></div>
+   </div>
+  </div>
+  {draft&&<div className="pde-modal-backdrop" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)cancel()}}>
+   <div className="pde-modal" role="dialog" aria-modal="true" aria-labelledby="pde-modal-title" onMouseDown={event=>event.stopPropagation()}>
+    <div className="pde-form">
+      <div className="pde-form-head"><div><div className="kicker">{adding?"New record":"Edit record"}</div><h3 id="pde-modal-title">{String(draft.displayName??draft.name??draft.title??draft.question??draft.serviceType??"Untitled")}</h3></div><button type="button" className="mini-action" onClick={cancel}>Close</button></div>
       <div className="pde-fields">{fields.map(key=>{const original=draft[key];const options=enumOptions[key]??(key==="status"?(enumOptions.status):undefined);const isLong=Array.isArray(original)||typeof original==="object"||["description","notes","context","outcome","purchaseDescription"].includes(key);return <label className={"field-label pde-field "+(isLong?"wide":"")} key={key}><span>{label(key)}{["id","entityType"].includes(key)&&<strong>SYSTEM</strong>}</span>{options?<select className="command-input" value={String(original??"")} onChange={e=>update(key,e.target.value)}>{options.map(x=><option key={x} value={x}>{label(x)}</option>)}</select>:isLong?<textarea className="command-input pde-input pde-textarea" value={valueText(original)} onChange={e=>update(key,e.target.value)} spellCheck={false}/>:<input className="command-input pde-input" value={valueText(original)} onChange={e=>update(key,e.target.value)}/>}</label>})}</div>
       <button type="button" className="pde-advanced-toggle" onClick={()=>setShowAdvanced(v=>!v)}>{showAdvanced?"Hide":"Show"} system details</button>
       {showAdvanced&&<div className="pde-system-box"><div><span>ID</span><code>{String(draft.id)}</code></div><div><span>Type</span><code>{String(draft.entityType)}</code></div><div><span>Created</span><code>{String(draft.createdAt)}</code></div><div><span>Updated</span><code>{String(draft.updatedAt)}</code></div></div>}
       <div className="pde-footer"><button type="button" className="danger-action mini-action" onClick={remove} disabled={adding}>Delete</button><span className="row-meta">{adding?"New record is not saved until you tap Save.":"Changes are local-first and saved immediately when you tap Save."}</span><button type="button" className="action" onClick={cancel}>Cancel</button><button type="button" className="action primary" onClick={save}>Save</button></div>
-    </div>}
+    </div>
    </div>
-  </div>
+  </div>}
  </section>;
 }
