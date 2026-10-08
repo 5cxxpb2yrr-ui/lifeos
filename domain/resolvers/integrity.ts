@@ -56,7 +56,7 @@ export function validateDatabaseIntegrity(db:LifeOSDatabase):IntegrityResult{
 }
 for(const a of db.auditEntries){
  const targetInfo=ids.get(a.targetId);
- if(!targetInfo) errors.push({severity:"error",code:"BROKEN_AUDIT_TARGET",message:`Audit entry ${a.id} targets missing id ${a.targetId}.`,recordId:a.id,recordType:a.entityType});
+ if(!targetInfo && a.action!=="delete") errors.push({severity:"error",code:"BROKEN_AUDIT_TARGET",message:`Audit entry ${a.id} targets missing id ${a.targetId}.`,recordId:a.id,recordType:a.entityType});
  if(a.action!=="create"&&a.action!=="update"&&a.action!=="delete"&&a.action!=="import"&&a.action!=="export"&&a.action!=="restore"&&a.action!=="migrate") errors.push({severity:"error",code:"INVALID_AUDIT_ACTION",message:`Audit entry ${a.id} has invalid action ${a.action}.`,recordId:a.id,recordType:a.entityType});
  if(a.action==="create"&&a.before!==undefined) warnings.push({severity:"warning",code:"CREATE_HAS_BEFORE_SNAPSHOT",message:`Create audit ${a.id} unexpectedly contains a before snapshot.`,recordId:a.id,recordType:a.entityType});
  if((a.action==="update"||a.action==="delete")&&!a.before) errors.push({severity:"error",code:"MISSING_AUDIT_BEFORE",message:`Audit entry ${a.id} is missing its before snapshot.`,recordId:a.id,recordType:a.entityType});
