@@ -1,5 +1,6 @@
 import type {BaseEntity,Event,EventStatus,LifeOSDatabase,OpenLoop,Person} from "@/domain/contracts/database";
 import {appendAudit} from "@/domain/services/audit";
+import {validateDatabaseIntegrity} from "@/domain/resolvers/integrity";
 const now=()=>new Date().toISOString(); const id=(p:string)=>p+"-"+crypto.randomUUID(); const toRecord=(value:BaseEntity):Record<string,unknown>=>Object.fromEntries(Object.entries(value));
 export function createEvent(db:LifeOSDatabase,input:Pick<Event,"title"|"eventType"|"status"> & Partial<Event>):LifeOSDatabase{const t=now();const event:Event={...input,id:id("evt"),entityType:"event",createdAt:t,updatedAt:t,title:input.title,eventType:input.eventType,status:input.status};return appendAudit({...db,events:[...db.events,event]},event,"create","mission-control");}
 export function createOpenLoop(db:LifeOSDatabase,input:Pick<OpenLoop,"title"|"type"> & Partial<OpenLoop>):LifeOSDatabase{const t=now();const loop:OpenLoop={...input,id:id("loop"),entityType:"open_loop",createdAt:t,updatedAt:t,title:input.title,type:input.type,status:input.status??"open"};return appendAudit({...db,openLoops:[...db.openLoops,loop]},loop,"create","mission-control");}
@@ -56,6 +57,11 @@ export function deleteEntityRecord(db:LifeOSDatabase,entityType:string,entityId:
  const t=new Date().toISOString();
  next.auditEntries=[...next.auditEntries,{id:id("audit"),entityType:"audit",createdAt:t,updatedAt:t,action:"delete",targetId:before.id,targetType:before.entityType,timestamp:t,before:toRecord(before),source}];
  next.metadata={...next.metadata,updatedAt:t};
+ const integrity=validateDatabaseIntegrity(next);
+ if(!integrity.valid){
+  const details=integrity.errors.slice(0,3).map(error=>error.message).join(" ");
+  return {db,deleted:false,reason:"Delete blocked by database integrity: "+(details||"the resulting database is invalid.")};
+ }
  return {db:next,deleted:true};
 }
 
