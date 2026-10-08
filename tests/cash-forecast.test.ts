@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {createEmptyDatabase} from "../domain/services/empty-database.ts";
 import {resolveCashForecast} from "../domain/resolvers/cash-forecast.ts";
+import {resolveCashPressure} from "../domain/resolvers/cash-pressure.ts";
 
 test("cash forecast combines current cash, scheduled debt, recurring flows, and future event amounts",()=>{
  const db=createEmptyDatabase("2026-10-07T00:00:00.000Z");
@@ -38,8 +39,7 @@ test("cash pressure exposes the forecast day and all pressure-day obligations",(
  db.loanPayments.push({id:"pay-1",entityType:"loan_payment",createdAt:"2026-01-01T00:00:00.000Z",updatedAt:"2026-01-01T00:00:00.000Z",loanId:"loan-1",scheduledDate:"2026-10-08",scheduledAmountMinor:30000,status:"scheduled"});
  db.recurringRules.push({id:"rule-1",entityType:"recurring_rule",createdAt:"2026-01-01T00:00:00.000Z",updatedAt:"2026-01-01T00:00:00.000Z",name:"Power Bill",eventType:"expense",frequency:"monthly",startDate:"2026-10-08",nextOccurrence:"2026-10-08",enabled:true,template:{amountMinor:15000,direction:"expense"}});
  const view=resolveCashForecast(db,{startDate:"2026-10-07",horizonDays:3});
- const pressure=require("../domain/resolvers/cash-pressure.ts");
- const result=pressure.resolveCashPressure(db,{startDate:"2026-10-07",horizonDays:3});
+ const result=resolveCashPressure(db,{startDate:"2026-10-07",horizonDays:3});
  assert.equal(result.lowestBalanceDate,"2026-10-08");
  const item=result.attention[0];
  assert.equal(item.context?.forecastDate,"2026-10-08");
