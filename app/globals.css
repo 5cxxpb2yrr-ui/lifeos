@@ -398,3 +398,31 @@ select optgroup{
 .entity-editor-vin{grid-column:1/-1}.entity-editor-vin .command-input{border-color:rgba(255,213,79,.38);box-shadow:0 0 16px rgba(255,213,79,.06)}
 .entity-editor-footer{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)}
 @media(max-width:560px){.context-stack{margin-bottom:9px}.context-stack button,.context-stack .context-current,.context-stack .context-separator{font-size:8px}.entity-editor-modal{padding:13px;border-radius:16px}.entity-editor-grid{grid-template-columns:1fr;gap:8px}.entity-editor-vin{grid-column:auto}.entity-editor-footer{grid-template-columns:1fr 1fr}.entity-editor-footer .row-meta{grid-column:1/-1}.entity-editor-footer .action{min-height:46px}}
+
+/* Daily cash calendar */
+.cash-forecast-calendar{display:grid;gap:.8rem;margin-top:.9rem}
+.cash-calendar-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.55rem}
+.cash-calendar-summary>div{display:grid;gap:.2rem;padding:.7rem;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.025)}
+.cash-calendar-summary strong{font:700 .82rem Orbitron,sans-serif;color:var(--gold)}
+.cash-calendar-summary small{font-size:.62rem;color:rgba(237,244,255,.62)}
+.cash-calendar-list{display:grid;gap:.55rem}
+.cash-calendar-day{border:1px solid rgba(255,255,255,.08);border-radius:14px;background:rgba(255,255,255,.018);overflow:hidden;scroll-margin-top:18px}
+.cash-calendar-day.selected{border-color:rgba(255,213,79,.38);box-shadow:0 0 20px rgba(255,213,79,.05)}
+.cash-calendar-day.negative{border-color:rgba(255,90,90,.34)}
+.cash-calendar-day-head{width:100%;display:flex;justify-content:space-between;gap:.75rem;padding:.72rem;background:transparent;border:0;color:var(--text);text-align:left}
+.cash-calendar-day-head>div{display:grid;gap:.18rem}
+.cash-calendar-day-head>div:last-child{text-align:right}
+.cash-calendar-day-head strong{font:700 .72rem Orbitron,sans-serif}
+.cash-calendar-day-head span{font-size:.62rem;color:rgba(237,244,255,.58)}
+.cash-calendar-flow-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:rgba(255,255,255,.06);border-top:1px solid rgba(255,255,255,.06)}
+.cash-calendar-flow-grid>div{display:grid;gap:.18rem;padding:.55rem;background:#0a0f1b}
+.cash-calendar-flow-grid span{font-size:.54rem;color:rgba(237,244,255,.52);text-transform:uppercase;letter-spacing:.04em}
+.cash-calendar-flow-grid strong{font:600 .64rem Orbitron,sans-serif}
+.cash-calendar-obligations{display:grid;gap:.35rem;padding:.65rem;border-top:1px solid rgba(255,255,255,.06)}
+.cash-calendar-obligations .row{min-height:42px}
+@media(max-width:560px){
+ .cash-calendar-summary{grid-template-columns:1fr 1fr}
+ .cash-calendar-summary>div:last-child{grid-column:1/-1}
+ .cash-calendar-flow-grid{grid-template-columns:1fr 1fr}
+ .cash-calendar-day-head{padding:.68rem}
+}
