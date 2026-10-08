@@ -85,6 +85,8 @@ export function resolveCashPressure(
  }
 
  const attention:AttentionItem[]=[];
+ const lowestPoint=forecast.points.find(point=>point.date===forecast.lowestBalanceDate);
+ const highestPriorityObligation=lowestPoint?.sources.find(source=>source.type==="loan_payment"||source.type==="bill"||source.type==="other_expense");
  if(state!=="healthy"){
   const attentionState="at_risk";
   attention.push({
@@ -100,7 +102,14 @@ export function resolveCashPressure(
     reason,
     lowestBalanceMinor:forecast.lowestBalanceMinor,
     lowestBalanceDate:forecast.lowestBalanceDate,
-    firstNegativeDate:forecast.firstNegativeDate
+    firstNegativeDate:forecast.firstNegativeDate,
+    forecastDate:forecast.lowestBalanceDate,
+    highestPriorityObligation:highestPriorityObligation?{
+     type:highestPriorityObligation.type==="loan_payment"?"loan_payment":highestPriorityObligation.type==="other_expense"?"event":"recurring_rule",
+     id:highestPriorityObligation.id,
+     label:highestPriorityObligation.label,
+     amountMinor:highestPriorityObligation.amountMinor
+    }:undefined
    }
   });
  }
