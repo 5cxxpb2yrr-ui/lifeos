@@ -4,6 +4,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "LifeOS V2",
   description: "Personal operating system — Mission Control",
+  manifest: "/manifest.webmanifest",
+  icons: { icon: "/icons/icon.svg", apple: "/icons/icon.svg" },
+  appleWebApp: { capable: true, title: "LifeOS", statusBarStyle: "black" },
 };
 
 export const viewport: Viewport = {
