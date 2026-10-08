@@ -163,12 +163,43 @@ export default function EntityEditor({
     setActionError(null);
   }, [record]);
 
-  if (!target || !record) return null;
-
   const forecastImpact = useMemo(() => {
-    if (!forecastContext) return null;
-    return resolveCashForecast(db, { horizonDays: 30 }).points.find((point) => point.date === forecastContext.date) ?? null;
-  }, [db, forecastContext]);
+    if (!forecastContext || !record) return null;
+
+    try {
+      const changes: Record<string, unknown> = {};
+      for (const field of draft) {
+        changes[field.key] = parseValue(String(field.value ?? ""), field.original);
+      }
+
+      const previewDb = updateEntityRecord(db, record.entityType, record.id, changes);
+      const previewForecast = resolveCashForecast(previewDb, { horizonDays: 30 });
+
+      const dateField = draft.find((field) =>
+        ["scheduledDate", "nextOccurrence", "startDate"].includes(field.key)
+      );
+      const previewDate =
+        typeof dateField?.value === "string" && /^\\d{4}-\\d{2}-\\d{2}$/.test(dateField.value)
+          ? dateField.value
+          : forecastContext.date;
+
+      const previewPoint =
+        previewForecast.points.find((point) => point.date === previewDate) ?? null;
+      const currentForecast = resolveCashForecast(db, { horizonDays: 30 });
+      const currentPoint =
+        currentForecast.points.find((point) => point.date === previewDate) ?? null;
+
+      return {
+        ...previewPoint,
+        previewDate,
+        currentClosingBalanceMinor: currentPoint?.closingBalanceMinor ?? null,
+      };
+    } catch {
+      return null;
+    }
+  }, [db, draft, forecastContext, record]);
+
+  if (!target || !record) return null;
 
   const fields = record as unknown as Record<string, unknown>;
   const entityTypeLabel = (record.entityType ?? "record").replaceAll("_", " ");
@@ -293,9 +324,10 @@ export default function EntityEditor({
 
         {forecastContext && forecastImpact && (
           <div className="notice" style={{marginTop:"12px"}}>
-            <strong>Forecast impact</strong> · {new Date(forecastContext.date+"T12:00:00").toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})}
+            <strong>Unsaved forecast preview</strong> · {new Date(forecastImpact.previewDate+"T12:00:00").toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"})}
             {" · "}projected closing cash { (forecastImpact.closingBalanceMinor/100).toLocaleString(undefined,{style:"currency",currency:"USD"}) }
-            {forecastContext.amountMinor != null ? <> · scheduled { (forecastContext.amountMinor/100).toLocaleString(undefined,{style:"currency",currency:"USD"}) }</> : null}
+            {forecastImpact.currentClosingBalanceMinor != null ? <>{" · "}change { ((forecastImpact.closingBalanceMinor-forecastImpact.currentClosingBalanceMinor)/100).toLocaleString(undefined,{style:"currency",currency:"USD"}) }</> : null}
+            {" · "}changes are preview only until you tap Save Changes.
           </div>
         )}
 
