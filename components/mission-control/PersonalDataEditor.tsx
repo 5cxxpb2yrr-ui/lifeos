@@ -124,7 +124,6 @@ export default function PersonalDataEditor({db,onPersist,onNotice}:Props){
    onNotice("Delete was not saved. The record is still present.");
   }
  }
- }
  return <section className="card personal-data-editor">
   <div className="section-title"><div><div className="kicker">LifeOS / Personal Data</div><h2>Personal Data Survey</h2><div className="row-meta">Review every record, replace placeholders, add missing information, or remove records you don't want LifeOS to use.</div></div><span className="badge">{rows.length}</span></div>
   <div className="pde-layout">
