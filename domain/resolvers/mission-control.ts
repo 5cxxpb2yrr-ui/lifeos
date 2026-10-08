@@ -47,7 +47,7 @@ function cashPressureAttention(forecast:CashForecastView,pressure:CashPressureVi
  return{
   ...base,
   priority:Math.max(base.priority??0,topObligation?.priority??0),
-  reason:topObligation?.title ? base.reason+" Highest-priority obligation: "+topObligation.title+"." : base.reason,
+  reason:topObligation?.title ? pressure.reason+" Highest-priority obligation: "+topObligation.title+"." : pressure.reason,
   context:{
    ...(base.context??{}),
    forecastDate,
