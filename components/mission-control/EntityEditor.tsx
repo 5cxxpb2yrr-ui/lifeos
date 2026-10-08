@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 import type { LifeOSDatabase, BaseEntity } from "@/domain/contracts/database";
 import { deleteEntityRecord, updateEntityRecord } from "@/domain/services/operations";
+import EntityAttachments from "@/components/mission-control/EntityAttachments";
 
 type Editable = { key: string; value: unknown; original: unknown };
 
@@ -333,6 +334,8 @@ export default function EntityEditor({
             );
           })}
         </div>
+
+        <EntityAttachments db={db} entity={record} onPersist={onPersist} />
 
         <div className="entity-editor-footer">
           <span className="row-meta">System identity fields stay protected. All other fields are editable.</span>
