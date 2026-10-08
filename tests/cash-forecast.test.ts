@@ -31,3 +31,17 @@ test("cash forecast accepts a starting cash override and reports the first negat
  assert.equal(view.lowestBalanceMinor,-10000);
  assert.equal(view.lowestBalanceDate,"2026-10-08");
 });
+
+test("cash pressure exposes the forecast day and all pressure-day obligations",()=>{
+ const db=createEmptyDatabase("2026-10-07T00:00:00.000Z");
+ db.accounts.push({id:"acct-1",entityType:"financial_account",createdAt:"2026-01-01T00:00:00.000Z",updatedAt:"2026-01-01T00:00:00.000Z",name:"Checking",accountType:"checking",currency:"USD",openingBalanceMinor:50000});
+ db.loanPayments.push({id:"pay-1",entityType:"loan_payment",createdAt:"2026-01-01T00:00:00.000Z",updatedAt:"2026-01-01T00:00:00.000Z",loanId:"loan-1",scheduledDate:"2026-10-08",scheduledAmountMinor:30000,status:"scheduled"});
+ db.recurringRules.push({id:"rule-1",entityType:"recurring_rule",createdAt:"2026-01-01T00:00:00.000Z",updatedAt:"2026-01-01T00:00:00.000Z",name:"Power Bill",eventType:"expense",frequency:"monthly",startDate:"2026-10-08",nextOccurrence:"2026-10-08",enabled:true,template:{amountMinor:15000,direction:"expense"}});
+ const view=resolveCashForecast(db,{startDate:"2026-10-07",horizonDays:3});
+ const pressure=require("../domain/resolvers/cash-pressure.ts");
+ const result=pressure.resolveCashPressure(db,{startDate:"2026-10-07",horizonDays:3});
+ assert.equal(result.lowestBalanceDate,"2026-10-08");
+ const item=result.attention[0];
+ assert.equal(item.context?.forecastDate,"2026-10-08");
+ assert.equal((item.context?.obligations as unknown[]).length,2);
+});
