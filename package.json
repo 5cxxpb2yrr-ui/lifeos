@@ -10,7 +10,8 @@
     "test": "tsx --test tests/*.test.ts",
     "deploy": "next build",
     "preview": "next build",
-    "cf:typegen": "wrangler types"
+    "cf:typegen": "wrangler types",
+    "verify:bundle": "node scripts/verify-no-seed-in-bundle.mjs out"
   },
   "dependencies": {
     "next": "^16.0.0",
