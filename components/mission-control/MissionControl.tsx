@@ -51,7 +51,10 @@ export default function MissionControl(){
   <button className={activeView==="more"?"sidebar-link active":"sidebar-link"} onClick={()=>selectView("more")}><span>↔</span><strong>Relationships</strong><em>{db.relationships.length}</em></button>
   <button className={activeView==="assets"?"sidebar-link active":"sidebar-link"} onClick={()=>selectView("assets")}><span>◆</span><strong>Assets</strong><em>{db.assets.length}</em></button>
  </div>
- <div className="sidebar-group"><div className="sidebar-group-label">Personal</div>\n  <button className={activeView==="personal"?"sidebar-link active":"sidebar-link"} onClick={()=>selectView("personal")}><span>●</span><strong>Personal Data</strong><em>{db.people.length}</em></button>\n </div>\n <div className="sidebar-group"><div className="sidebar-group-label">Money</div>
+ <div className="sidebar-group"><div className="sidebar-group-label">Personal</div>
+  <button className={activeView==="personal"?"sidebar-link active":"sidebar-link"} onClick={()=>selectView("personal")}><span>●</span><strong>Personal Data</strong><em>{db.people.length}</em></button>
+ </div>
+ <div className="sidebar-group"><div className="sidebar-group-label">Money</div>
   <button className={activeView==="finance"?"sidebar-link active":"sidebar-link"} onClick={()=>selectView("finance")}><span>$</span><strong>Finance</strong><em>{db.accounts.length+db.loans.length}</em></button>
  </div>
  <div className="sidebar-group"><div className="sidebar-group-label">Property</div>
@@ -110,7 +113,9 @@ function DataView({view,db,onEvent,onEntity,onGraph,onNavigateView}:{view:"event
      ? db.vehicles.map(v=>({id:"vehicle:"+v.id,title:[v.year??"",v.make,v.model].filter(Boolean).join(" "),meta:"Vehicle · "+v.status+(v.currentMileage!=null?" · "+v.currentMileage.toLocaleString()+" "+v.mileageUnit:""),action:()=>onEntity("vehicle",v.id)}))
     : view==="properties"
      ? db.properties.map(p=>({id:"property:"+p.id,title:p.name,meta:"Property · "+p.propertyType+" · "+p.status,action:()=>onEntity("property",p.id)}))
-    : view==="personal"\n     ? db.people.map(p=>({id:"person:"+p.id,title:p.displayName,meta:"Person"+(p.email?" · "+p.email:"")+(p.phone?" · "+p.phone:""),action:()=>onGraph(p.id,"person")}))\n    : db.relationships.map(r=>({id:r.id,title:r.relationshipType.replaceAll("_"," "),meta:r.fromType+" → "+r.toType,action:()=>onGraph(r.id,"relationship")}));
+    : view==="personal"
+     ? db.people.map(p=>({id:"person:"+p.id,title:p.displayName,meta:"Person"+(p.email?" · "+p.email:"")+(p.phone?" · "+p.phone:""),action:()=>onGraph(p.id,"person")}))
+    : db.relationships.map(r=>({id:r.id,title:r.relationshipType.replaceAll("_"," "),meta:r.fromType+" → "+r.toType,action:()=>onGraph(r.id,"relationship")}));
  return <section className="card data-view">
   <div className="section-title"><div><div className="kicker">LifeOS / {title}</div><h2>{title}</h2></div><span className="badge">{rows.length}</span></div>
   {tabs&&<div className="data-tabs" role="tablist" aria-label={title+" sections"}>{tabs.map(([key,label])=><button type="button" role="tab" aria-selected={tab===key} className={"data-tab "+(tab===key?"active":"")} key={key} onClick={()=>setTab(key)}>{label}</button>)}</div>}
