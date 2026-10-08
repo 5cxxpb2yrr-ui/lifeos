@@ -2,6 +2,7 @@
 
 import {useMemo,useState} from "react";
 import type {LifeOSDatabase,CollectionName} from "@/domain/contracts/database";
+import {deleteEntityRecord} from "@/domain/services/operations";
 
 type EditableCollection=Exclude<CollectionName,"entities"|"auditEntries">;
 type Props={db:LifeOSDatabase;onPersist:(db:LifeOSDatabase,message:string)=>Promise<boolean>|boolean;onNotice:(message:string)=>void};
@@ -111,19 +112,18 @@ export default function PersonalDataEditor({db,onPersist,onNotice}:Props){
  async function remove(){
   if(!draft||adding)return;
   if(!window.confirm("Delete this record from your local LifeOS database? This can affect linked graph records."))return;
-  const next=structuredClone(db);
-  const list=next[collection] as unknown as Record<string,unknown>[];
-  const id=String(draft.id);
-  const remaining=list.filter(record=>String(record.id)!==id);
-  if(remaining.length===list.length){onNotice("Record no longer exists.");return}
-  list.splice(0,list.length,...remaining);
-  const saved=await onPersist(next,"Deleted "+collectionLabels[collection].replace(/s$/,"")+".");
+  const result=deleteEntityRecord(db,String(draft.entityType),String(draft.id),"personal-data-editor");
+  if(!result.deleted){onNotice(result.reason??"Record could not be deleted.");return}
+  const saved=await onPersist(result.db,"Deleted "+collectionLabels[collection].replace(/s$/,"")+".");
   if(saved!==false){
    setDraft(null);
    setSelectedId(null);
    setAdding(false);
    onNotice("Record deleted.");
+  }else{
+   onNotice("Delete was not saved. The record is still present.");
   }
+ }
  }
  return <section className="card personal-data-editor">
   <div className="section-title"><div><div className="kicker">LifeOS / Personal Data</div><h2>Personal Data Survey</h2><div className="row-meta">Review every record, replace placeholders, add missing information, or remove records you don't want LifeOS to use.</div></div><span className="badge">{rows.length}</span></div>
