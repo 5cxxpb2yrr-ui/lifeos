@@ -19,14 +19,14 @@ export function isLikelyPayrollDeposit(row:ConnectedTransactionRecord):boolean {
  return payrollPattern.test(label)&&Number.isFinite(amount)&&amount!==0&&(row.pending!==true);
 }
 /** Converts connected-ledger rows (provider convention: positive=debit, negative=credit) to LifeOS transactions. */
-export function importPayrollDeposits(db:LifeOSDatabase,rows:ConnectedTransactionRecord[],now=new Date().toISOString()):DepositImportResult {
+export function importPayrollDeposits(db:LifeOSDatabase,rows:ConnectedTransactionRecord[],now=new Date().toISOString(),currentBalanceMinor?:number):DepositImportResult {
  const matched=rows.filter(isLikelyPayrollDeposit);
  let account=db.accounts.find(a=>a.accountType==="checking"&&/usaa/i.test([a.institution,a.name].join(" ")));
  const next=structuredClone(db);
  if(!account){
   account={id:"account-usaa-checking-imported",entityType:"financial_account",createdAt:now,updatedAt:now,name:"USAA Checking (imported)",institution:"USAA",accountType:"checking",currency:"USD"};
   next.accounts.push(account);
- } else account=next.accounts.find(a=>a.id===account!.id)!;
+ } else {account=next.accounts.find(a=>a.id===account!.id)!;if(currentBalanceMinor!=null&&Number.isFinite(currentBalanceMinor)){account.openingBalanceMinor=currentBalanceMinor;account.updatedAt=now;}}
  const known=new Set(next.transactions.map(t=>t.externalReference).filter((x):x is string=>Boolean(x)));
  let imported=0,duplicates=0;\n const newTransactions:FinancialTransaction[]=[];
  for(const row of matched){
@@ -38,7 +38,7 @@ export function importPayrollDeposits(db:LifeOSDatabase,rows:ConnectedTransactio
   if(known.has(externalReference)){duplicates++;continue;}
   // LifeOS stores amounts as positive magnitudes and represents direction in transactionType.
   const amountMinor=row.amountMinor!=null?Math.round(Math.abs(raw)):Math.round(Math.abs(raw)*100);
-  const transaction:FinancialTransaction={id:"txn-"+externalReference.replace(/[^a-zA-Z0-9_-]/g,"-"),entityType:"financial_transaction",createdAt:now,updatedAt:now,transactionType:raw<0?"income":"expense",transactionDate:date,amountMinor,currency:row.currency??row.iso_currency_code??"USD",accountId:account.id,merchant:row.merchant_name??row.merchant??row.name,description:row.name??row.description??"Payroll deposit",externalReference};\n  next.transactions.push(transaction);newTransactions.push(transaction);
+  const transaction:FinancialTransaction={id:"txn-"+externalReference.replace(/[^a-zA-Z0-9_-]/g,"-"),entityType:"financial_transaction",createdAt:now,updatedAt:now,transactionType:raw<0?"income":"expense",transactionDate:date,amountMinor,currency:row.currency??row.iso_currency_code??"USD",accountId:account.id,merchant:row.merchant_name??row.merchant??row.name,description:row.name??row.description??"Payroll deposit",externalReference,metadata:{source:"connected_finance_import",payrollDeposit:true,cashBalanceExcluded:true}};\n  next.transactions.push(transaction);newTransactions.push(transaction);
   known.add(externalReference);imported++;
  }
  return {transactions:newTransactions,account,imported,duplicates,ignored:rows.length-matched.length,accountId:account.id};
