@@ -12,7 +12,9 @@ test("Full Life Control seed normalizes into a valid canonical LifeOS database",
  assert.equal(backup.seedVersion,IMMUTABLE_SEED_VERSION);
  assert.equal(backup.database.seedVersion,IMMUTABLE_SEED_VERSION);
  assert.equal(backup.database.events.length,15+89+6+4);
- assert.equal(backup.database.people.length,7);
+ assert.equal(backup.database.people.length,0);
+ assert.equal(source.people.length,0);
+ assert.equal(source.events.some((event:Record<string,unknown>)=>Object.prototype.hasOwnProperty.call(event,"people")||Object.prototype.hasOwnProperty.call(event,"personIds")),false);
  assert.equal(backup.database.vehicles.length,2);
  assert.equal(backup.database.vehicleMaintenance.length,89);
  assert.equal(backup.database.projects.length,4);
