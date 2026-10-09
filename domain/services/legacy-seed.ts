@@ -3,7 +3,7 @@ import type {Event,EventType,EventStatus,LifeOSBackup,LifeOSDatabase,Relationshi
 type R=Record<string,any>;
 const SCHEMA_VERSION="2.1.0";
 const APP_VERSION="0.2.0";
-export const IMMUTABLE_SEED_VERSION="FLC-v5-d22e0386087b4d6e";
+export const IMMUTABLE_SEED_VERSION="FLC-v5-people-cleared-v1.0.1";
 const nowIso=()=>new Date().toISOString();
 const iso=(v:any, fallback:string)=>{if(typeof v==="number")return new Date(v).toISOString();if(typeof v==="string"&&v)return v.length===10?v+"T00:00:00.000Z":v;return fallback};
 const money=(v:any)=>typeof v==="number"?Math.round(v*100):0;
