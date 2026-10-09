@@ -45,3 +45,32 @@ test("cash pressure exposes the forecast day and all pressure-day obligations",(
  assert.equal(item.context?.forecastDate,"2026-10-08");
  assert.equal((item.context?.obligations as unknown[]).length,2);
 });
+
+test("cash forecast accepts source-aware external financial flows without mutating canonical data",()=>{
+ const db=createEmptyDatabase("2026-10-07T00:00:00.000Z");
+ const view=resolveCashForecast(db,{
+  startDate:"2026-10-07",
+  horizonDays:3,
+  startingCashMinor:28345,
+  externalFlows:[
+   {date:"2026-10-08",amountMinor:2500,direction:"outflow",sourceId:"affirm-1",title:"Affirm — Streaming Bundle"},
+   {date:"2026-10-09",amountMinor:341033,direction:"inflow",sourceId:"payroll-1",title:"Payroll"}
+  ]
+ });
+ assert.equal(view.points[1].outflowMinor,2500);
+ assert.equal(view.points[2].inflowMinor,341033);
+ assert.equal(view.points[2].closingBalanceMinor,366878);
+ assert.deepEqual(view.points[1].entries[0],{
+  date:"2026-10-08",amountMinor:2500,direction:"outflow",sourceType:"external",
+  sourceId:"affirm-1",title:"Affirm — Streaming Bundle",priority:undefined
+ });
+ assert.equal(db.events.length,0);
+ assert.equal(db.recurringRules.length,0);
+});
+
+test("cash forecast exposes recurring income as payday metadata",()=>{
+ const db=createEmptyDatabase("2026-10-07T00:00:00.000Z");
+ db.recurringRules.push({id:"payday-rule",entityType:"recurring_rule",createdAt:"2026-01-01T00:00:00.000Z",updatedAt:"2026-01-01T00:00:00.000Z",name:"Biweekly payday",eventType:"income",frequency:"biweekly",startDate:"2026-10-08",nextOccurrence:"2026-10-08",enabled:true,template:{amountMinor:125000,direction:"income"}});
+ const view=resolveCashForecast(db,{startDate:"2026-10-07",horizonDays:4,startingCashMinor:0});
+ assert.deepEqual(view.paydays,[{date:"2026-10-08",amountMinor:125000,sourceType:"recurring_rule",sourceId:"payday-rule",title:"Biweekly payday"}]);
+});

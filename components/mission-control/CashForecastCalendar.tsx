@@ -2,6 +2,7 @@
 import {useEffect,useMemo,useRef,useState} from "react";
 import type {LifeOSDatabase} from "@/domain/contracts/database";
 import {resolveCashForecast} from "@/domain/resolvers/cash-forecast";
+import {payrollForecastFlows} from "@/domain/resolvers/payroll-deposits";
 
 function money(minor:number){return (minor/100).toLocaleString(undefined,{style:"currency",currency:"USD"});}
 function dateLabel(date:string){return new Date(date+"T12:00:00").toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});}
@@ -10,7 +11,7 @@ export default function CashForecastCalendar({db}:{db:LifeOSDatabase}){
  const [selectedDate,setSelectedDate]=useState<string|null>(null);
  const [baseline,setBaseline]=useState<{date:string;closingBalanceMinor:number}|null>(null);
  const dayRefs=useRef<Record<string,HTMLDivElement|null>>({});
- const forecast=useMemo(()=>resolveCashForecast(db,{horizonDays:30}),[db]);
+ const forecast=useMemo(()=>{const startDate=new Date().toISOString().slice(0,10);return resolveCashForecast(db,{startDate,horizonDays:30,externalFlows:payrollForecastFlows(db.transactions,startDate,30)});},[db]);
  useEffect(()=>{
   const handler=(event:Event)=>{
    const detail=(event as CustomEvent).detail as {date?:string};
@@ -21,7 +22,8 @@ export default function CashForecastCalendar({db}:{db:LifeOSDatabase}){
   const baselineHandler=(event:Event)=>{
    const detail=(event as CustomEvent).detail as {date?:string};
    if(!detail?.date)return;
-   const point=resolveCashForecast(db,{horizonDays:30}).points.find(p=>p.date===detail.date);
+   const startDate=new Date().toISOString().slice(0,10);
+   const point=resolveCashForecast(db,{startDate,horizonDays:30,externalFlows:payrollForecastFlows(db.transactions,startDate,30)}).points.find(p=>p.date===detail.date);
    if(point)setBaseline({date:detail.date,closingBalanceMinor:point.closingBalanceMinor});
   };
   window.addEventListener("lifeos:cash-forecast-day",handler);
@@ -44,7 +46,7 @@ export default function CashForecastCalendar({db}:{db:LifeOSDatabase}){
   <div className="cash-calendar-list">
    {forecast.points.map(point=><div key={point.date} ref={el=>{dayRefs.current[point.date]=el}} className={"cash-calendar-day "+(selectedDate===point.date?"selected ":"")+(point.closingBalanceMinor<0?"negative":"")}>
     <button type="button" className="cash-calendar-day-head" onClick={()=>{setSelectedDate(point.date);if(baseline?.date!==point.date)setBaseline(null);}}>
-     <div><strong>{dateLabel(point.date)}</strong><span>Opening {money(point.openingBalanceMinor)}</span></div>
+     <div><strong>{dateLabel(point.date)} {forecast.paydays.some(payday=>payday.date===point.date)&&<span className="badge" title={forecast.paydays.filter(payday=>payday.date===point.date).map(payday=>payday.title).join(", ")}>Payday</span>}</strong><span>Opening {money(point.openingBalanceMinor)}</span></div>
      <div><span>Closing</span><strong>{money(point.closingBalanceMinor)}</strong></div>
     </button>
     <div className="cash-calendar-flow-grid">
@@ -53,13 +55,14 @@ export default function CashForecastCalendar({db}:{db:LifeOSDatabase}){
      <div><span>Loan Payments</span><strong>{money(point.loanPaymentMinor)}</strong></div>
      <div><span>Other</span><strong>{money(point.otherExpenseMinor)}</strong></div>
     </div>
-    {selectedDate===point.date&&point.sources.length>0&&<div className="cash-calendar-obligations">
+    {selectedDate===point.date&&(point.sources.length>0||point.entries.some(entry=>entry.sourceType==="external"))&&<div className="cash-calendar-obligations">
       <div className="kicker">Underlying obligations</div>
       {point.sources.map(source=><button type="button" className="row entity-row" key={source.type+source.id} onClick={()=>{
        if(source.type==="bill"||source.type==="loan_payment"){window.dispatchEvent(new CustomEvent("lifeos:edit",{detail:{id:source.id,type:source.type==="bill"?"recurring_rule":"loan_payment",forecastDate:point.date,amountMinor:source.amountMinor}}));}else{window.dispatchEvent(new CustomEvent("lifeos:navigate",{detail:{kind:source.type==="income"?"event":"event",id:source.id}}));}
       }}>
        <div className="row-main"><div className="row-title">{source.label}</div><div className="row-meta">{source.type.replaceAll("_"," ")} · {money(source.amountMinor)}</div></div><span className="queue-count">›</span>
       </button>)}
+      {point.entries.filter(entry=>entry.sourceType==="external").map(entry=><div className="row entity-row" key={entry.sourceId}><div className="row-main"><div className="row-title">{entry.title}</div><div className="row-meta">Connected deposit forecast · {entry.direction} · {money(entry.amountMinor)}</div></div><span className="badge">Estimated</span></div>)}
     </div>}
    </div>)}
   </div>
