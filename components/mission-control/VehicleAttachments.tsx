@@ -3,7 +3,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import type {LifeOSDatabase} from "@/domain/contracts/database";
 import {addAttachment,attachmentKind,attachmentsForEntity,createAttachmentRecord,removeAttachment} from "@/domain/services/attachments";
 import {deleteR2Attachment,loadR2AttachmentPreview,uploadR2Attachment} from "@/storage/attachments/r2";
-import {browserSessionAttachmentAdapter,externalUrlAttachmentAdapter} from "@/storage/attachments/adapter";
+import {externalUrlAttachmentAdapter} from "@/storage/attachments/adapter";
 import {openICloudFiles} from "@/storage/attachments/icloud";
 
 export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSDatabase;vehicle:LifeOSDatabase["vehicles"][number];onPersist:(next:LifeOSDatabase,message:string)=>void}){
@@ -19,6 +19,7 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
  const [previewUrls,setPreviewUrls]=useState<Record<string,string>>({});
  const previewUrlsRef=useRef<Record<string,string>>({});
  useEffect(()=>{previewUrlsRef.current=previewUrls},[previewUrls]);
+ useEffect(()=>{let cancelled=false;const item=attachments.find(x=>x.id===selected);if(!item||item.storageProvider!=="cloudflare-r2"||previewUrls[item.id])return;loadR2AttachmentPreview(item).then(preview=>{if(!cancelled&&preview)setPreviewUrls(current=>current[item.id]?current:{...current,[item.id]:preview})}).catch(()=>undefined);return()=>{cancelled=true}},[selected,attachments,previewUrls]);
  useEffect(()=>()=>{Object.values(previewUrlsRef.current).forEach(url=>{if(url.startsWith("blob:"))URL.revokeObjectURL(url)})},[]);
 
  const addICloudReference=()=>{
@@ -42,7 +43,7 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
  const add=async()=>{
   if(!file&&!url.trim())return;
   const title=name.trim()||file?.name||"Vehicle document";
-  const mime=file?.type||undefined;
+  const mime=file?(file.type||(file.name.toLowerCase().endsWith(".pdf")?"application/pdf":/\.(png|jpe?g)$/i.test(file.name)?"image/jpeg":/\.gif$/i.test(file.name)?"image/gif":/\.webp$/i.test(file.name)?"image/webp":/\.heic$/i.test(file.name)?"image/heic":/\.avif$/i.test(file.name)?"image/avif":undefined)):undefined;
   const attachment=createAttachmentRecord({
    name:title,
    mimeType:mime,
@@ -62,21 +63,26 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
   }
 
   setUploading(true);
+  let uploaded:{key:string;etag?:string};
   try{
-   const uploaded=await uploadR2Attachment(file,attachment);
-   const preview=await loadR2AttachmentPreview(attachment);
-   if(preview)setPreviewUrls(current=>({...current,[attachment.id]:preview}));
-   const persisted={...attachment,storageReference:uploaded.key};
-   onPersist(addAttachment(db,persisted),"Vehicle attachment uploaded to secure R2 storage.");
-   setFile(null);setName("");
+   uploaded=await uploadR2Attachment(file,attachment);
   }catch(error){
    const message=error instanceof Error?error.message:"Attachment upload failed.";
-   const fallback={...attachment,storageProvider:"browser-session" as const,storageReference:undefined};
-   const objectUrl=browserSessionAttachmentAdapter.createPreview(file);
-   setPreviewUrls(current=>({...current,[attachment.id]:objectUrl}));
-   onPersist(addAttachment(db,fallback),`${message} Saved as a browser-session attachment instead.`);
+   window.alert(message+" No attachment record was saved. Your selected file is still available to retry.");
+   setUploading(false);
+   return;
+  }
+  const persisted={...attachment,storageReference:uploaded.key};
+  try{
+   onPersist(addAttachment(db,persisted),"Vehicle attachment uploaded to permanent R2 storage.");
    setFile(null);setName("");
-  }finally{setUploading(false)}
+  }catch{
+   window.alert("The file was uploaded to permanent storage, but LifeOS could not confirm that its attachment record was saved. Keep this file selected and check the record before retrying.");
+   setUploading(false);
+   return;
+  }
+  try{const preview=await loadR2AttachmentPreview(persisted);if(preview)setPreviewUrls(current=>({...current,[attachment.id]:preview}));}catch{/* The upload is already durable; preview recovery can retry when opened. */}
+  setUploading(false);
  };
 
  const deleteAttachment=async(attachmentId:string)=>{
@@ -97,6 +103,7 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
 
  const selectedAttachment=attachments.find(item=>item.id===selected);
  const selectedUrl=selectedAttachment?previewUrls[selectedAttachment.id]||externalUrlAttachmentAdapter.resolveUrl(selectedAttachment):null;
+ const selectedMime=selectedAttachment?.mimeType||(selectedAttachment?.name.toLowerCase().endsWith(".pdf")?"application/pdf":/\.(png|jpe?g|gif|webp|heic|avif)$/i.test(selectedAttachment?.name??"")?"image/unknown":"");
 
  return <section className="vehicle-attachments card">
   <div className="section-title"><div><div className="kicker">Vehicle Context</div><h3>Attachments</h3></div><span className="badge">{attachments.length}</span></div>
@@ -116,6 +123,6 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
   </div>
   {attachments.length?<div className="attachment-grid">{attachments.map(item=>{const kind=attachmentKind(item.mimeType);const preview=previewUrls[item.id];return <button type="button" className="attachment-card" key={item.id} onClick={()=>setSelected(item.id)}><div className="attachment-thumb">{preview&&kind==="image"?<img src={preview} alt=""/>:kind==="image"&&item.storageReference?.startsWith("http")?<img src={item.storageReference} alt=""/>:<span className="attachment-icon">{kind==="pdf"?"PDF":item.documentType?.toUpperCase()??"DOC"}</span>}</div><div className="attachment-card-body"><strong>{item.name}</strong><span>{item.documentType?.replaceAll("_"," ")??"document"} · {item.storageProvider==="icloud"?"iCloud Drive":item.storageProvider==="cloudflare-r2"?"Secure R2":item.storageProvider}</span></div></button>})}</div>:<div className="row"><div className="row-meta">No vehicle attachments yet.</div></div>}
   {selectedAttachment&&selectedAttachment.storageProvider==="icloud"&&<div className="attachment-lightbox" role="dialog" aria-modal="true" onMouseDown={()=>setSelected(null)}><div className="attachment-viewer" onMouseDown={e=>e.stopPropagation()}><div className="attachment-viewer-head"><div><div className="kicker">iCloud Drive</div><h3>{selectedAttachment.name}</h3></div><div className="row-actions"><button type="button" className="mini-action danger-action" onClick={()=>deleteAttachment(selectedAttachment.id)}>Delete</button><button type="button" className="mini-action" onClick={()=>setSelected(null)}>Close</button></div></div><div className="attachment-open-card"><p>LifeOS keeps this file in your iCloud Drive. Use the deterministic path below in the Files app.</p><code>{selectedAttachment.storagePath}</code>{selectedAttachment.storageReference&&<a href={selectedAttachment.storageReference} target="_blank" rel="noreferrer" className="action primary">Open iCloud share</a>}<button type="button" className="action" onClick={openICloudFiles}>Open iCloud Drive</button></div></div></div>}
-  {selectedAttachment&&selectedAttachment.storageProvider!=="icloud"&&<div className="attachment-lightbox" role="dialog" aria-modal="true" onMouseDown={()=>setSelected(null)}><div className="attachment-viewer" onMouseDown={e=>e.stopPropagation()}><div className="attachment-viewer-head"><div><div className="kicker">{selectedAttachment.documentType??"Attachment"}</div><h3>{selectedAttachment.name}</h3></div><div className="row-actions"><button type="button" className="mini-action danger-action" onClick={()=>deleteAttachment(selectedAttachment.id)}>Delete</button><button type="button" className="mini-action" onClick={()=>setSelected(null)}>Close</button></div></div><div className="attachment-preview">{selectedUrl&&attachmentKind(selectedAttachment.mimeType)==="image"?<img src={selectedUrl} alt={selectedAttachment.name}/>:selectedUrl&&attachmentKind(selectedAttachment.mimeType)==="pdf"?<iframe title={selectedAttachment.name} src={selectedUrl}/>:selectedUrl?<div className="attachment-open-card"><p>Preview is not available for this file type.</p><a href={selectedUrl} target="_blank" rel="noreferrer" className="action primary">Open attachment</a></div>:<div className="attachment-open-card"><p>This attachment has metadata but no preview URL in the current session.</p></div>}</div></div></div>}
+  {selectedAttachment&&selectedAttachment.storageProvider!=="icloud"&&<div className="attachment-lightbox" role="dialog" aria-modal="true" onMouseDown={()=>setSelected(null)}><div className="attachment-viewer" onMouseDown={e=>e.stopPropagation()}><div className="attachment-viewer-head"><div><div className="kicker">{selectedAttachment.documentType??"Attachment"}</div><h3>{selectedAttachment.name}</h3></div><div className="row-actions"><button type="button" className="mini-action danger-action" onClick={()=>deleteAttachment(selectedAttachment.id)}>Delete</button><button type="button" className="mini-action" onClick={()=>setSelected(null)}>Close</button></div></div><div className="attachment-preview">{selectedUrl&&(selectedMime.startsWith("image/")||attachmentKind(selectedAttachment.mimeType)==="image")?<img src={selectedUrl} alt={selectedAttachment.name}/>:selectedUrl&&(selectedMime==="application/pdf"||attachmentKind(selectedAttachment.mimeType)==="pdf")?<iframe title={selectedAttachment.name} src={selectedUrl}/>:selectedUrl?<div className="attachment-open-card"><p>Preview is not available for this file type. You can still open or download the original file.</p><a href={selectedUrl} target="_blank" rel="noreferrer" className="action primary">Open attachment</a></div>:<div className="attachment-open-card"><p>This attachment has metadata but no preview URL in the current session.</p></div>}</div></div></div>}
  </section>;
 }

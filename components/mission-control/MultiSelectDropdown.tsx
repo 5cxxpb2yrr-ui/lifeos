@@ -29,11 +29,11 @@ export default function MultiSelectDropdown({ value, options, onChange, disabled
         <span>{label}</span><span style={{ float: "right", opacity: 0.75 }}>{open ? "▴" : "▾"}</span>
       </button>
       {open && (
-        <div role="listbox" aria-multiselectable="true" className="card" style={{ position: "absolute", zIndex: 50, left: 0, right: 0, top: "calc(100% + 6px)", padding: 10, maxHeight: 240, overflowY: "auto" }}>
+        <div role="listbox" aria-multiselectable="true" className="card" style={{ position: "absolute", zIndex: 1500, left: 0, right: 0, top: "calc(100% + 6px)", padding: 10, maxHeight: 240, overflowY: "auto", background: "#151a27", color: "#edf4ff", border: "1px solid rgba(255,213,79,.42)", boxShadow: "0 18px 44px rgba(0,0,0,.78)", opacity: 1, backdropFilter: "none", WebkitBackdropFilter: "none" }}>
           {options.length ? options.map(option => {
             const checked = selected.includes(option);
             return (
-              <label key={option} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 6px", cursor: "pointer" }}>
+              <label key={option} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 6px", cursor: "pointer", color: "#edf4ff", background: "transparent" }}>
                 <input type="checkbox" checked={checked} onChange={() => onChange(checked ? selected.filter(x => x !== option) : [...selected, option])} />
                 <span>{option}</span>
               </label>
