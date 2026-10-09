@@ -26,8 +26,9 @@ export default function EntityAttachments({db,entity,onPersist}:{db:LifeOSDataba
   try{
    uploaded=await uploadR2Attachment(file,attachment);
   }catch(error){
-   const message=error instanceof Error?error.message:"Attachment upload failed.";
-   window.alert(message+" No attachment record was saved. Your selected file is still available to retry.");
+   const rawMessage=error instanceof Error?error.message:"Attachment upload failed.";
+   const message=rawMessage==="Failed to fetch"||rawMessage==="Load failed"?"LifeOS could not reach secure attachment storage. This can happen when Cloudflare Access authentication is missing or the storage request is blocked. No attachment record was saved.":rawMessage+" No attachment record was saved.";
+   window.alert(message+" Your selected file is still available to retry.");
    setUploading(false);
    return;
   }
@@ -48,7 +49,7 @@ export default function EntityAttachments({db,entity,onPersist}:{db:LifeOSDataba
  return <section className="event-edit-section entity-attachments-section">
   <div className="event-edit-section-heading"><span className="kicker">Attachments</span><span className="row-meta">{attachments.length?attachments.length+" attached":"Add files, receipts, photos, or documents"}</span></div>
   <div className="field-grid">
-   <label className="field-label">File<input className="command-input" type="file" disabled={uploading} onChange={e=>setFile(e.target.files?.[0]??null)}/></label>
+   <label className="field-label">File<input className="command-input" type="file" disabled={uploading} onChange={e=>{const selectedFile=e.target.files?.[0]??null;setFile(selectedFile);if(selectedFile&&!name.trim())setName(selectedFile.name)}}/></label>
    <label className="field-label">Name<input className="command-input" value={name} onChange={e=>setName(e.target.value)} placeholder="Receipt, photo, document…"/></label>
    <label className="field-label">Type<select className="command-input" value={documentType??"other"} onChange={e=>setDocumentType(e.target.value as typeof documentType)}><option value="receipt">Receipt</option><option value="photo">Photo</option><option value="contract">Contract</option><option value="statement">Statement</option><option value="insurance">Insurance</option><option value="warranty">Warranty</option><option value="manual">Manual</option><option value="service_record">Service record</option><option value="plan">Plan</option><option value="other">Other</option></select></label>
    <label className="field-label">Existing link<input className="command-input" value={url} onChange={e=>setUrl(e.target.value)} placeholder="iCloud / shared URL"/></label>
