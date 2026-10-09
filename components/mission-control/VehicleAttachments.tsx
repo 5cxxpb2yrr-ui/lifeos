@@ -98,6 +98,7 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
 
  const selectedAttachment=attachments.find(item=>item.id===selected);
  const selectedUrl=selectedAttachment?previewUrls[selectedAttachment.id]||externalUrlAttachmentAdapter.resolveUrl(selectedAttachment):null;
+ const selectedMime=selectedAttachment?.mimeType||(selectedAttachment?.name.toLowerCase().endsWith(".pdf")?"application/pdf":/\.(png|jpe?g|gif|webp|heic|avif)$/i.test(selectedAttachment?.name??"")?"image/unknown":"");
 
  return <section className="vehicle-attachments card">
   <div className="section-title"><div><div className="kicker">Vehicle Context</div><h3>Attachments</h3></div><span className="badge">{attachments.length}</span></div>
