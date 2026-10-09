@@ -31,8 +31,7 @@ export function resolveContextEngine(
 ): ContextEngineView {
   const now = options.now ?? new Date();
   const graph = resolveGraph(db, centerId);
-  const nodeById = new Map(graph.nodes.map((node) => [node.id, node]));
-  const references: ContextReference[] = graph.edges.map((edge) => {
+  const references: ContextReference[] = graph.edges.map((edge): ContextReference => {
     const outgoing = edge.from.id === centerId;
     const other = outgoing ? edge.to : edge.from;
     return {
@@ -75,8 +74,6 @@ export function resolveContextEngine(
     ...openLoops.flatMap((loop) => loop.dueAt ? [loop.dueAt] : []),
   ].filter((value) => Number.isFinite(Date.parse(value)) && Date.parse(value) >= now.getTime()).sort();
 
-  // Ensure references are based on the resolver's graph output; no ad-hoc links are created here.
-  void nodeById;
   return {
     center: graph.center,
     references,
