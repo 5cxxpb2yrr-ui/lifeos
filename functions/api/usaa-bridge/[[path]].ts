@@ -60,7 +60,7 @@ export async function onRequest({ request, env }: Context): Promise<Response> {
   if (method !== "GET" && method !== "PATCH") return error(405, "Method not allowed.");
   const jwt = request.headers.get("Cf-Access-Jwt-Assertion");
   if (!jwt || !(await validAccessJwt(jwt))) return error(401, "LifeOS sign-in is required.");
-  if (!constantTimeEqual(env.BRIDGE_PROXY_TOKEN, env.BRIDGE_PROXY_TOKEN) || env.BRIDGE_PROXY_TOKEN.length < 32) {
+  if (env.BRIDGE_PROXY_TOKEN.length < 32) {
     return error(503, "Deposit bridge is not configured.");
   }
   const url = new URL(request.url);
