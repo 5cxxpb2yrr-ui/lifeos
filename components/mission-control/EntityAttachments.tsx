@@ -27,7 +27,7 @@ export default function EntityAttachments({db,entity,onPersist}:{db:LifeOSDataba
  };
  const del=async(id:string)=>{const item=attachments.find(x=>x.id===id);if(!item)return;if(!window.confirm("Delete “"+item.name+"” from this "+entity.entityType.replaceAll("_"," ")+"?"))return;try{if(item.storageProvider==="cloudflare-r2")await deleteR2Attachment(item);const preview=previewUrls[id];if(preview)URL.revokeObjectURL(preview);setPreviewUrls(v=>{const n={...v};delete n[id];return n});setSelected(null);onPersist(removeAttachment(db,id),"Attachment deleted.");}catch(error){window.alert(error instanceof Error?error.message:"Unable to delete attachment.");}};
  const selectedItem=attachments.find(x=>x.id===selected); const selectedUrl=selectedItem?previewUrls[selectedItem.id]||externalUrlAttachmentAdapter.resolveUrl(selectedItem):null;
- const selectedMime=selectedItem?.mimeType||(selectedItem?.name.toLowerCase().endsWith(".pdf")?"application/pdf":/\\.(png|jpe?g|gif|webp|heic|avif)$/i.test(selectedItem?.name??"")?"image/unknown":"");
+ const selectedMime=selectedItem?.mimeType||(selectedItem?.name.toLowerCase().endsWith(".pdf")?"application/pdf":/\.(png|jpe?g|gif|webp|heic|avif)$/i.test(selectedItem?.name??"")?"image/unknown":"");
  return <section className="event-edit-section entity-attachments-section">
   <div className="event-edit-section-heading"><span className="kicker">Attachments</span><span className="row-meta">{attachments.length?attachments.length+" attached":"Add files, receipts, photos, or documents"}</span></div>
   <div className="field-grid">
