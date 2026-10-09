@@ -23,9 +23,9 @@ export default function ContextEnginePanel({ db, centerId, onNavigate }: Props) 
   const groups: ContextGroup[] = [
     { title: "Related events", items: context.relatedEvents.map((x) => ({ id: x.id, type: "event", label: x.title, meta: x.dueAt ?? x.startAt ?? x.status })) },
     { title: "Open loops", items: context.openLoops.map((x) => ({ id: x.id, type: "open_loop", label: x.title, meta: [x.status, x.dueAt ? "Due " + new Date(x.dueAt).toLocaleDateString() : ""].filter(Boolean).join(" · ") })) },
-    { title: "Decisions", items: context.decisions.map((x) => ({ id: x.id, type: "decision", label: "question" in x && typeof x.question === "string" ? x.question : x.id, meta: "Decision" })) },
-    { title: "Projects", items: context.projects.map((x) => ({ id: x.id, type: "project", label: "name" in x && typeof x.name === "string" ? x.name : x.id, meta: "Project" })) },
-    { title: "Documents", items: context.documents.map((x) => ({ id: x.id, type: "document", label: "name" in x && typeof x.name === "string" ? x.name : x.id, meta: "Document" })) },
+    { title: "Decisions", items: context.decisions.map((x) => ({ id: x.id, type: "decision", label: "question" in x && typeof x.question === "string" ? x.question : "title" in x && typeof x.title === "string" ? x.title : "Decision", meta: "Decision" })) },
+    { title: "Projects", items: context.projects.map((x) => ({ id: x.id, type: "project", label: "name" in x && typeof x.name === "string" ? x.name : "title" in x && typeof x.title === "string" ? x.title : "Project", meta: "Project" })) },
+    { title: "Documents", items: context.documents.map((x) => ({ id: x.id, type: "document", label: "name" in x && typeof x.name === "string" ? x.name : "title" in x && typeof x.title === "string" ? x.title : "Document", meta: "Document" })) },
   ].map((group) => ({ ...group, items: group.items.filter((item) => item.id !== centerId) }));
   const representedIds = new Set(groups.flatMap((group) => group.items.map((item) => item.id)));
   const otherReferences: ContextItem[] = context.references
@@ -34,8 +34,8 @@ export default function ContextEnginePanel({ db, centerId, onNavigate }: Props) 
     .map((reference) => ({
       id: reference.id,
       type: reference.type,
-      label: reference.label || reference.type.replaceAll("_", " "),
-      meta: [reference.type.replaceAll("_", " "), reference.relationship.replaceAll("_", " "), reference.direction].join(" · "),
+      label: reference.label?.trim() || reference.type.replaceAll("_", " "),
+      meta: [reference.type.replaceAll("_", " "), reference.relationship.replaceAll("_", " "), reference.direction === "incoming" ? "Links to this record" : "Linked from this record"].join(" · "),
     }));
   if (otherReferences.length) groups.push({ title: "Other linked records", items: otherReferences });
   return <section className="context-engine-panel card">
