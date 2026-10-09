@@ -43,7 +43,7 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
  const add=async()=>{
   if(!file&&!url.trim())return;
   const title=name.trim()||file?.name||"Vehicle document";
-  const mime=file?.type||undefined;
+  const mime=file?(file.type||(file.name.toLowerCase().endsWith(".pdf")?"application/pdf":/\.(png|jpe?g)$/i.test(file.name)?"image/jpeg":/\.gif$/i.test(file.name)?"image/gif":/\.webp$/i.test(file.name)?"image/webp":/\.heic$/i.test(file.name)?"image/heic":/\.avif$/i.test(file.name)?"image/avif":undefined)):undefined;
   const attachment=createAttachmentRecord({
    name:title,
    mimeType:mime,
