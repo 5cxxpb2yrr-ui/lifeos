@@ -1,7 +1,8 @@
 "use client";
 import {useEffect,useMemo,useRef,useState} from "react";
 import type {LifeOSDatabase} from "@/domain/contracts/database";
-import {resolveCashForecast} from "@/domain/resolvers/cash-forecast";\nimport {payrollForecastFlows} from "@/domain/resolvers/payroll-deposits";
+import {resolveCashForecast} from "@/domain/resolvers/cash-forecast";
+import {payrollForecastFlows} from "@/domain/resolvers/payroll-deposits";
 
 function money(minor:number){return (minor/100).toLocaleString(undefined,{style:"currency",currency:"USD"});}
 function dateLabel(date:string){return new Date(date+"T12:00:00").toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});}
@@ -21,7 +22,8 @@ export default function CashForecastCalendar({db}:{db:LifeOSDatabase}){
   const baselineHandler=(event:Event)=>{
    const detail=(event as CustomEvent).detail as {date?:string};
    if(!detail?.date)return;
-   const startDate=new Date().toISOString().slice(0,10);\n   const point=resolveCashForecast(db,{startDate,horizonDays:30,externalFlows:payrollForecastFlows(db.transactions,startDate,30)}).points.find(p=>p.date===detail.date);
+   const startDate=new Date().toISOString().slice(0,10);
+   const point=resolveCashForecast(db,{startDate,horizonDays:30,externalFlows:payrollForecastFlows(db.transactions,startDate,30)}).points.find(p=>p.date===detail.date);
    if(point)setBaseline({date:detail.date,closingBalanceMinor:point.closingBalanceMinor});
   };
   window.addEventListener("lifeos:cash-forecast-day",handler);
