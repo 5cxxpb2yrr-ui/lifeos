@@ -65,18 +65,13 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
   setUploading(true);
   try{
    const uploaded=await uploadR2Attachment(file,attachment);
-   const preview=await loadR2AttachmentPreview(attachment);
-   if(preview)setPreviewUrls(current=>({...current,[attachment.id]:preview}));
    const persisted={...attachment,storageReference:uploaded.key};
-   onPersist(addAttachment(db,persisted),"Vehicle attachment uploaded to secure R2 storage.");
+   onPersist(addAttachment(db,persisted),"Vehicle attachment uploaded to permanent R2 storage.");
    setFile(null);setName("");
+   try{const preview=await loadR2AttachmentPreview(persisted);if(preview)setPreviewUrls(current=>({...current,[attachment.id]:preview}));}catch{/* The upload is already durable; preview recovery can retry when opened. */}
   }catch(error){
    const message=error instanceof Error?error.message:"Attachment upload failed.";
-   const fallback={...attachment,storageProvider:"browser-session" as const,storageReference:undefined};
-   const objectUrl=browserSessionAttachmentAdapter.createPreview(file);
-   setPreviewUrls(current=>({...current,[attachment.id]:objectUrl}));
-   onPersist(addAttachment(db,fallback),`${message} Saved as a browser-session attachment instead.`);
-   setFile(null);setName("");
+   window.alert(message+" No attachment record was saved. Your selected file is still available to retry.");
   }finally{setUploading(false)}
  };
 
