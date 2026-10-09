@@ -44,7 +44,7 @@ export default function CashForecastCalendar({db}:{db:LifeOSDatabase}){
   <div className="cash-calendar-list">
    {forecast.points.map(point=><div key={point.date} ref={el=>{dayRefs.current[point.date]=el}} className={"cash-calendar-day "+(selectedDate===point.date?"selected ":"")+(point.closingBalanceMinor<0?"negative":"")}>
     <button type="button" className="cash-calendar-day-head" onClick={()=>{setSelectedDate(point.date);if(baseline?.date!==point.date)setBaseline(null);}}>
-     <div><strong>{dateLabel(point.date)}</strong><span>Opening {money(point.openingBalanceMinor)}</span></div>
+     <div><strong>{dateLabel(point.date)} {forecast.paydays.some(payday=>payday.date===point.date)&&<span className="badge" title={forecast.paydays.filter(payday=>payday.date===point.date).map(payday=>payday.title).join(", ")}>Payday</span>}</strong><span>Opening {money(point.openingBalanceMinor)}</span></div>
      <div><span>Closing</span><strong>{money(point.closingBalanceMinor)}</strong></div>
     </button>
     <div className="cash-calendar-flow-grid">
