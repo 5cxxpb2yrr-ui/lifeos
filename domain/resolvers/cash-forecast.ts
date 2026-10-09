@@ -139,7 +139,8 @@ export function resolveCashForecast(
  for(const flow of options.externalFlows??[]){
   if(flow.date<day(start)||flow.date>day(end)||!Number.isFinite(flow.amountMinor)||flow.amountMinor<=0)continue;
   const entry:CashForecastEntry={date:flow.date,amountMinor:Math.abs(flow.amountMinor),direction:flow.direction,sourceType:"external",sourceId:flow.sourceId??("external:"+flow.date+":"+(flow.title??"flow")),title:flow.title??"External financial flow",priority:typeof flow.priority==="number"?Math.max(1,Math.min(5,Math.round(flow.priority))):undefined};
-  externalFlows.set(flow.date,[...(externalFlows.get(flow.date)??[]),entry]);\n  if(flow.direction==="inflow"&&/payroll/i.test(entry.title))paydays.push({date:flow.date,amountMinor:entry.amountMinor,sourceType:"external",sourceId:entry.sourceId,title:entry.title});
+  externalFlows.set(flow.date,[...(externalFlows.get(flow.date)??[]),entry]);
+  if(flow.direction==="inflow"&&/payroll/i.test(entry.title))paydays.push({date:flow.date,amountMinor:entry.amountMinor,sourceType:"external",sourceId:entry.sourceId,title:entry.title});
  }
  const points:CashForecastPoint[]=[];
  let lowest=balance;
