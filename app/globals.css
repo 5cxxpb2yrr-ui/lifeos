@@ -467,3 +467,9 @@ select optgroup{
  .attachment-preview-toolbar .mini-action{min-width:36px;min-height:38px}
  .attachment-viewer .attachment-preview{padding:4px}
 }
+
+
+/* Keep graph-context navigation rows readable on mobile Safari. */
+.context-engine-item{width:100%;color:var(--text);font:inherit;text-align:left}
+.context-engine-item .row-main{flex:1 1 auto;width:0;min-width:0;overflow:hidden}
+.context-engine-item .row-title,.context-engine-item .row-meta{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis}
