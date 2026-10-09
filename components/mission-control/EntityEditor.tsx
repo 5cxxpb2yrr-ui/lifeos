@@ -67,7 +67,12 @@ function formatLabel(key: string): string {
     .replace(/^./, (x) => x.toUpperCase());
 }
 
-function parseValue(value: string, original: unknown): unknown {
+function parseValue(value: unknown, original: unknown): unknown {
+  if (typeof value !== "string") {
+    // Structured controls (e.g. MultiSelectDropdown) already return typed values.
+    // Never stringify an array/object and then try to parse its display representation.
+    return value;
+  }
   if (value === "") return undefined;
 
   if (typeof original === "number") {
@@ -169,7 +174,7 @@ export default function EntityEditor({
     try {
       const changes: Record<string, unknown> = {};
       for (const field of draft) {
-        changes[field.key] = parseValue(String(field.value ?? ""), field.original);
+        changes[field.key] = parseValue(field.value, field.original);
       }
 
       const previewDb = updateEntityRecord(db, record.entityType, record.id, changes);
