@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useMemo,useRef,useState} from "react";
 import type {LifeOSDatabase} from "@/domain/contracts/database";
-import {resolveCashForecast} from "@/domain/resolvers/cash-forecast";
+import {resolveCashForecast} from "@/domain/resolvers/cash-forecast";\nimport {payrollForecastFlows} from "@/domain/resolvers/payroll-deposits";
 
 function money(minor:number){return (minor/100).toLocaleString(undefined,{style:"currency",currency:"USD"});}
 function dateLabel(date:string){return new Date(date+"T12:00:00").toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});}
@@ -10,7 +10,7 @@ export default function CashForecastCalendar({db}:{db:LifeOSDatabase}){
  const [selectedDate,setSelectedDate]=useState<string|null>(null);
  const [baseline,setBaseline]=useState<{date:string;closingBalanceMinor:number}|null>(null);
  const dayRefs=useRef<Record<string,HTMLDivElement|null>>({});
- const forecast=useMemo(()=>resolveCashForecast(db,{horizonDays:30}),[db]);
+ const forecast=useMemo(()=>{const startDate=new Date().toISOString().slice(0,10);return resolveCashForecast(db,{startDate,horizonDays:30,externalFlows:payrollForecastFlows(db.transactions,startDate,30)});},[db]);
  useEffect(()=>{
   const handler=(event:Event)=>{
    const detail=(event as CustomEvent).detail as {date?:string};
@@ -21,7 +21,7 @@ export default function CashForecastCalendar({db}:{db:LifeOSDatabase}){
   const baselineHandler=(event:Event)=>{
    const detail=(event as CustomEvent).detail as {date?:string};
    if(!detail?.date)return;
-   const point=resolveCashForecast(db,{horizonDays:30}).points.find(p=>p.date===detail.date);
+   const startDate=new Date().toISOString().slice(0,10);\n   const point=resolveCashForecast(db,{startDate,horizonDays:30,externalFlows:payrollForecastFlows(db.transactions,startDate,30)}).points.find(p=>p.date===detail.date);
    if(point)setBaseline({date:detail.date,closingBalanceMinor:point.closingBalanceMinor});
   };
   window.addEventListener("lifeos:cash-forecast-day",handler);
@@ -53,7 +53,7 @@ export default function CashForecastCalendar({db}:{db:LifeOSDatabase}){
      <div><span>Loan Payments</span><strong>{money(point.loanPaymentMinor)}</strong></div>
      <div><span>Other</span><strong>{money(point.otherExpenseMinor)}</strong></div>
     </div>
-    {selectedDate===point.date&&point.sources.length>0&&<div className="cash-calendar-obligations">
+    {selectedDate===point.date&&(point.sources.length>0||point.entries.some(entry=>entry.sourceType==="external"))&&<div className="cash-calendar-obligations">
       <div className="kicker">Underlying obligations</div>
       {point.sources.map(source=><button type="button" className="row entity-row" key={source.type+source.id} onClick={()=>{
        if(source.type==="bill"||source.type==="loan_payment"){window.dispatchEvent(new CustomEvent("lifeos:edit",{detail:{id:source.id,type:source.type==="bill"?"recurring_rule":"loan_payment",forecastDate:point.date,amountMinor:source.amountMinor}}));}else{window.dispatchEvent(new CustomEvent("lifeos:navigate",{detail:{kind:source.type==="income"?"event":"event",id:source.id}}));}
