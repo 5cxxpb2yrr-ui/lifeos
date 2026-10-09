@@ -3,7 +3,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import type {LifeOSDatabase} from "@/domain/contracts/database";
 import {addAttachment,attachmentKind,attachmentsForEntity,createAttachmentRecord,removeAttachment} from "@/domain/services/attachments";
 import {deleteR2Attachment,loadR2AttachmentPreview,uploadR2Attachment} from "@/storage/attachments/r2";
-import {browserSessionAttachmentAdapter,externalUrlAttachmentAdapter} from "@/storage/attachments/adapter";
+import {externalUrlAttachmentAdapter} from "@/storage/attachments/adapter";
 import {openICloudFiles} from "@/storage/attachments/icloud";
 
 export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSDatabase;vehicle:LifeOSDatabase["vehicles"][number];onPersist:(next:LifeOSDatabase,message:string)=>void}){
@@ -63,21 +63,26 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
   }
 
   setUploading(true);
+  let uploaded:{key:string;etag?:string};
   try{
-   const uploaded=await uploadR2Attachment(file,attachment);
-   const preview=await loadR2AttachmentPreview(attachment);
-   if(preview)setPreviewUrls(current=>({...current,[attachment.id]:preview}));
-   const persisted={...attachment,storageReference:uploaded.key};
-   onPersist(addAttachment(db,persisted),"Vehicle attachment uploaded to secure R2 storage.");
-   setFile(null);setName("");
+   uploaded=await uploadR2Attachment(file,attachment);
   }catch(error){
    const message=error instanceof Error?error.message:"Attachment upload failed.";
-   const fallback={...attachment,storageProvider:"browser-session" as const,storageReference:undefined};
-   const objectUrl=browserSessionAttachmentAdapter.createPreview(file);
-   setPreviewUrls(current=>({...current,[attachment.id]:objectUrl}));
-   onPersist(addAttachment(db,fallback),`${message} Saved as a browser-session attachment instead.`);
+   window.alert(message+" No attachment record was saved. Your selected file is still available to retry.");
+   setUploading(false);
+   return;
+  }
+  const persisted={...attachment,storageReference:uploaded.key};
+  try{
+   onPersist(addAttachment(db,persisted),"Vehicle attachment uploaded to permanent R2 storage.");
    setFile(null);setName("");
-  }finally{setUploading(false)}
+  }catch{
+   window.alert("The file was uploaded to permanent storage, but LifeOS could not confirm that its attachment record was saved. Keep this file selected and check the record before retrying.");
+   setUploading(false);
+   return;
+  }
+  try{const preview=await loadR2AttachmentPreview(persisted);if(preview)setPreviewUrls(current=>({...current,[attachment.id]:preview}));}catch{/* The upload is already durable; preview recovery can retry when opened. */}
+  setUploading(false);
  };
 
  const deleteAttachment=async(attachmentId:string)=>{

@@ -3,7 +3,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import type {BaseEntity,LifeOSDatabase,AttachmentEntityType} from "@/domain/contracts/database";
 import {addAttachment,attachmentsForEntity,createAttachmentRecord,removeAttachment} from "@/domain/services/attachments";
 import {deleteR2Attachment,loadR2AttachmentPreview,uploadR2Attachment} from "@/storage/attachments/r2";
-import {browserSessionAttachmentAdapter,externalUrlAttachmentAdapter} from "@/storage/attachments/adapter";
+import {externalUrlAttachmentAdapter} from "@/storage/attachments/adapter";
 
 export default function EntityAttachments({db,entity,onPersist}:{db:LifeOSDatabase;entity:BaseEntity;onPersist:(next:LifeOSDatabase,message:string)=>void}){
  const entityType=entity.entityType as AttachmentEntityType;
@@ -22,9 +22,25 @@ export default function EntityAttachments({db,entity,onPersist}:{db:LifeOSDataba
   const attachment=createAttachmentRecord({name:title,mimeType:inferredMime,sizeBytes:file?.size,storageProvider:file?"cloudflare-r2":"external-url",storageReference:file?undefined:url.trim()||undefined,documentType,tags:[entity.entityType,documentType||"other"],description:"Attachment linked to "+entity.entityType.replaceAll("_"," "),linkedEntities:[{entityId:entity.id,entityType}]});
   if(!file){onPersist(addAttachment(db,attachment),(documentType==="receipt"?"Receipt":"Attachment")+" linked to "+entity.entityType.replaceAll("_"," ")+".");setUrl("");setName("");return;}
   setUploading(true);
-  try{const uploaded=await uploadR2Attachment(file,attachment);const preview=await loadR2AttachmentPreview({...attachment,storageReference:uploaded.key});if(preview)setPreviewUrls(v=>({...v,[attachment.id]:preview}));onPersist(addAttachment(db,{...attachment,storageReference:uploaded.key}),(documentType==="receipt"?"Receipt":"Attachment")+" uploaded and linked.");setFile(null);setName("");}
-  catch(error){const message=error instanceof Error?error.message:"Attachment upload failed.";const fallback={...attachment,storageProvider:"browser-session" as const};setPreviewUrls(v=>({...v,[attachment.id]:browserSessionAttachmentAdapter.createPreview(file)}));onPersist(addAttachment(db,fallback),message+" Saved as a browser-session attachment instead.");setFile(null);setName("");}
-  finally{setUploading(false)}
+  let uploaded:{key:string;etag?:string};
+  try{
+   uploaded=await uploadR2Attachment(file,attachment);
+  }catch(error){
+   const message=error instanceof Error?error.message:"Attachment upload failed.";
+   window.alert(message+" No attachment record was saved. Your selected file is still available to retry.");
+   setUploading(false);
+   return;
+  }
+  try{
+   onPersist(addAttachment(db,{...attachment,storageReference:uploaded.key}), (documentType==="receipt"?"Receipt":"Attachment")+" uploaded to permanent R2 storage and linked.");
+   setFile(null);setName("");
+  }catch(error){
+   window.alert("The file was uploaded to permanent storage, but LifeOS could not confirm that its attachment record was saved. Keep this file selected and retry only after checking the record.");
+   setUploading(false);
+   return;
+  }
+  try{const preview=await loadR2AttachmentPreview({...attachment,storageReference:uploaded.key});if(preview)setPreviewUrls(current=>({...current,[attachment.id]:preview}));}catch{/* The upload is already durable; preview recovery can retry when opened. */}
+  setUploading(false);
  };
  const del=async(id:string)=>{const item=attachments.find(x=>x.id===id);if(!item)return;if(!window.confirm("Delete “"+item.name+"” from this "+entity.entityType.replaceAll("_"," ")+"?"))return;try{if(item.storageProvider==="cloudflare-r2")await deleteR2Attachment(item);const preview=previewUrls[id];if(preview)URL.revokeObjectURL(preview);setPreviewUrls(v=>{const n={...v};delete n[id];return n});setSelected(null);onPersist(removeAttachment(db,id),"Attachment deleted.");}catch(error){window.alert(error instanceof Error?error.message:"Unable to delete attachment.");}};
  const selectedItem=attachments.find(x=>x.id===selected); const selectedUrl=selectedItem?previewUrls[selectedItem.id]||externalUrlAttachmentAdapter.resolveUrl(selectedItem):null;
