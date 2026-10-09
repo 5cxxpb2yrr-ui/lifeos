@@ -28,7 +28,8 @@ const json = (body: unknown, status = 200) => Response.json(body, {
   headers: { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff", "Referrer-Policy": "no-referrer" },
 });
 
-function authorized(request: Request, secret: string): boolean {
+function authorized(request: Request, secret: string | undefined): boolean {
+  if (typeof secret !== "string" || secret.length < 32) return false;
   const value = request.headers.get("Authorization") ?? "";
   const match = /^Bearer ([A-Za-z0-9._~-]{32,256})$/.exec(value);
   if (!match || match[1].length !== secret.length) return false;
