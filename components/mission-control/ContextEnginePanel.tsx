@@ -10,7 +10,10 @@ export default function ContextEnginePanel({ db, centerId, onNavigate }: Props) 
   if (!context.center) return null;
   const openReference = (item: ContextReference) => {
     if (onNavigate) onNavigate(item.id, item.type);
-    else { const kind = item.type === "event" ? "event" : item.type === "open_loop" ? "loop" : item.type === "loan_payment" ? "payment" : ["account", "loan", "vehicle", "property"].includes(item.type) ? item.type : "graph"; window.dispatchEvent(new CustomEvent("lifeos:navigate", { detail: { kind, id: item.id, type: item.type } })); }
+    else {
+      const kind = item.type === "event" ? "event" : item.type === "open_loop" ? "loop" : item.type === "loan_payment" ? "payment" : ["account", "loan", "vehicle", "property"].includes(item.type) ? item.type : "graph";
+      window.dispatchEvent(new CustomEvent("lifeos:navigate", { detail: { kind, id: item.id, type: item.type } }));
+    }
   };
   const nextDue = context.nextDueAt ? new Date(context.nextDueAt).toLocaleString() : null;
   const groups = [
@@ -20,6 +23,16 @@ export default function ContextEnginePanel({ db, centerId, onNavigate }: Props) 
     { title: "Projects", items: context.projects.map((x) => ({ id: x.id, type: "project", label: "name" in x && typeof x.name === "string" ? x.name : x.id, meta: "Project" })) },
     { title: "Documents", items: context.documents.map((x) => ({ id: x.id, type: "document", label: "name" in x && typeof x.name === "string" ? x.name : x.id, meta: "Document" })) },
   ].map((group) => ({ ...group, items: group.items.filter((item) => item.id !== centerId) }));
+  const representedIds = new Set(groups.flatMap((group) => group.items.map((item) => item.id)));
+  const otherReferences = context.references
+    .filter((reference) => reference.id !== centerId && !representedIds.has(reference.id))
+    .filter((reference, index, all) => all.findIndex((candidate) => candidate.id === reference.id) === index)
+    .map((reference) => ({
+      ...reference,
+      label: reference.label || reference.type.replaceAll("_", " "),
+      meta: [reference.type.replaceAll("_", " "), reference.relationship.replaceAll("_", " "), reference.direction].join(" · "),
+    }));
+  if (otherReferences.length) groups.push({ title: "Other linked records", items: otherReferences.map((reference) => ({ id: reference.id, type: reference.type, label: reference.label, meta: reference.meta })) });
   return <section className="context-engine-panel card">
     <div className="section-title"><h3>Context from the graph</h3><span className="badge">Derived</span></div>
     <p className="row-meta">Read-only context assembled from linked LifeOS records. Canonical records are unchanged.</p>
@@ -30,6 +43,6 @@ export default function ContextEnginePanel({ db, centerId, onNavigate }: Props) 
         <span className="row-main"><span className="row-title">{item.label}</span><span className="row-meta">{item.meta}</span></span><span aria-hidden="true">›</span>
       </button>)}
     </div>)}
-    {groups.every((group) => group.items.length === 0) && <div className="row"><div className="row-meta">No directly linked events, open loops, decisions, projects, or documents yet.</div></div>}
+    {groups.every((group) => group.items.length === 0) && <div className="row"><div className="row-meta">No directly linked records yet.</div></div>}
   </section>;
 }
