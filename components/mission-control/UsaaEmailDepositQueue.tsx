@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import type { LifeOSDatabase } from "@/domain/contracts/database";
-import { importPayrollDeposits, type ConnectedTransactionRecord } from "@/domain/resolvers/payroll-deposits";
+import { importPayrollDeposits, isLikelyPayrollDeposit, type ConnectedTransactionRecord } from "@/domain/resolvers/payroll-deposits";
 
 type QueuedDeposit = {
   id: string; postedDate: string; amountMinor: number; description: string;
@@ -31,7 +31,9 @@ export default function UsaaEmailDepositQueue({ db, onPersist }: {
     setBusy(true); setError(""); setMessage("");
     try {
       if (!items.length) throw new Error("No pending deposits to import. Refresh the queue first.");
-      const rows: ConnectedTransactionRecord[] = items.map((item) => ({
+      const eligible = items.filter((item) => isLikelyPayrollDeposit({ name: item.description, amount: -(item.amountMinor / 100), pending: false }));
+      if (!eligible.length) throw new Error("No pending item matches a payroll deposit. Nothing was imported or acknowledged; check the alert description and resolver match rules.");
+      const rows: ConnectedTransactionRecord[] = eligible.map((item) => ({
         transaction_id: "usaa-email:" + item.id,
         date: item.postedDate,
         // Existing resolver convention: negative provider amount represents income.
@@ -42,13 +44,14 @@ export default function UsaaEmailDepositQueue({ db, onPersist }: {
         pending: false,
       }));
       const result = importPayrollDeposits(db, rows, new Date().toISOString());
+      if (result.imported === 0 && result.duplicates === 0) throw new Error("No eligible deposits could be imported. The queue was left unchanged.");
       const next = structuredClone(db);
       if (result.account && !next.accounts.some((account) => account.id === result.account!.id)) next.accounts.push(result.account);
       next.transactions.push(...result.transactions);
       if (result.imported > 0) await onPersist(next, `USAA email bridge: ${result.imported} deposit(s) imported; ${result.duplicates} duplicate(s) skipped. Historical deposits do not change the current cash balance.`);
       // Acknowledgement follows local persistence. If acknowledgement fails, a retry is safe because transaction IDs deduplicate.
       const failures: string[] = [];
-      for (const item of items) {
+      for (const item of eligible) {
         try {
           const response = await fetch("/api/usaa-bridge/v1/deposits/" + item.id + "/ack", {
             method: "PATCH", headers: { "Content-Type": "application/json" },
@@ -57,8 +60,9 @@ export default function UsaaEmailDepositQueue({ db, onPersist }: {
           if (!response.ok) failures.push(item.id);
         } catch { failures.push(item.id); }
       }
-      setItems((current) => current.filter((item) => failures.includes(item.id)));
-      setMessage(`Import complete: ${result.imported} added, ${result.duplicates} already present. ${failures.length ? failures.length + " acknowledgement(s) need retry." : "Queue acknowledged."}`);
+      const acknowledged = new Set(eligible.map((item) => item.id).filter((id) => !failures.includes(id)));
+      setItems((current) => current.filter((item) => !acknowledged.has(item.id)));
+      setMessage(`Import complete: ${result.imported} added, ${result.duplicates} already present. ${failures.length ? failures.length + " acknowledgement(s) need retry." : "Eligible queue items acknowledged."} ${items.length - eligible.length} non-payroll item(s) left pending.`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Deposit import failed.");
     } finally { setBusy(false); }
