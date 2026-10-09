@@ -55,7 +55,7 @@ export function payrollForecastFlows(transactions:FinancialTransaction[],startDa
  const amounts=regular.map(t=>t.amountMinor).sort((a,b)=>a-b);
  const median=amounts[Math.floor((amounts.length-1)/2)];
  if(!median||!Number.isFinite(median))return [];
- const last=deposits[deposits.length-1];
+ const last=regular[regular.length-1];
  let next=Date.parse(last.transactionDate+"T00:00:00Z")+cadence*86400000;
  const end=Date.parse(startDate+"T00:00:00Z")+Math.max(1,horizonDays)*86400000;
  while(next<Date.parse(startDate+"T00:00:00Z"))next+=cadence*86400000;
