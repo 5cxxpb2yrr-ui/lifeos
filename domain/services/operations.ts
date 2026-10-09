@@ -70,7 +70,7 @@ export function createRelationship(
 ):LifeOSDatabase{
  if(!input.fromId||!input.toId||input.fromId===input.toId)return db;
  const exists=(entityId:string)=>{
-  const collections:BaseEntity[][]=[db.entities,db.events,db.openLoops,db.people,db.assets,db.accounts,db.transactions,db.loans,db.loanPayments,db.vehicles,db.vehicleMaintenance,db.properties,db.rooms,db.homeSystems,db.electricalDevices,db.projects,db.goals,db.decisions,db.documents,db.recurringRules,db.relationships,db.attachments];
+  const collections:BaseEntity[][]=[db.entities,db.events,db.openLoops,db.people,db.assets,db.accounts,db.transactions,db.loans,db.loanPayments,db.vehicles,db.vehicleMaintenance,db.properties,db.rooms,db.homeSystems,db.electricalDevices,db.projects,db.goals,db.decisions,db.documents,db.recurringRules,db.relationships,db.attachments??[]];
   return collections.some(items=>items.some(item=>item.id===entityId));
  };
  if(!exists(input.fromId)||!exists(input.toId))return db;
