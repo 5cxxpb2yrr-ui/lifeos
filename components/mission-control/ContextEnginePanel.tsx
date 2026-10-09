@@ -10,7 +10,7 @@ export default function ContextEnginePanel({ db, centerId, onNavigate }: Props) 
   if (!context.center) return null;
   const openReference = (item: ContextReference) => {
     if (onNavigate) onNavigate(item.id, item.type);
-    else window.dispatchEvent(new CustomEvent("lifeos:navigate", { detail: { kind: "graph", id: item.id, type: item.type } }));
+    else { const kind = item.type === "event" ? "event" : item.type === "open_loop" ? "loop" : item.type === "loan_payment" ? "payment" : ["account", "loan", "vehicle", "property"].includes(item.type) ? item.type : "graph"; window.dispatchEvent(new CustomEvent("lifeos:navigate", { detail: { kind, id: item.id, type: item.type } })); }
   };
   const nextDue = context.nextDueAt ? new Date(context.nextDueAt).toLocaleString() : null;
   const groups = [
