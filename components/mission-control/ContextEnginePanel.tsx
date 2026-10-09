@@ -17,8 +17,8 @@ export default function ContextEnginePanel({ db, centerId, onNavigate }: Props) 
     { title: "Related events", items: context.relatedEvents.map((x) => ({ id: x.id, type: "event", label: x.title, meta: x.dueAt ?? x.startAt ?? x.status })) },
     { title: "Open loops", items: context.openLoops.map((x) => ({ id: x.id, type: "open_loop", label: x.title, meta: [x.status, x.dueAt ? "Due " + new Date(x.dueAt).toLocaleDateString() : ""].filter(Boolean).join(" · ") })) },
     { title: "Decisions", items: context.decisions.map((x) => ({ id: x.id, type: "decision", label: "question" in x ? x.question : x.id, meta: "Decision" })) },
-    { title: "Projects", items: context.projects.map((x) => ({ id: x.id, type: "project", label: "name" in x ? x.name : x.id, meta: "Project" })) },
-    { title: "Documents", items: context.documents.map((x) => ({ id: x.id, type: "document", label: "name" in x ? x.name : x.id, meta: "Document" })) },
+    { title: "Projects", items: context.projects.map((x) => ({ id: x.id, type: "project", label: "name" in x && typeof x.name === "string" ? x.name : x.id, meta: "Project" })) },
+    { title: "Documents", items: context.documents.map((x) => ({ id: x.id, type: "document", label: "name" in x && typeof x.name === "string" ? x.name : x.id, meta: "Document" })) },
   ].map((group) => ({ ...group, items: group.items.filter((item) => item.id !== centerId) }));
   return <section className="context-engine-panel card">
     <div className="section-title"><h3>Context from the graph</h3><span className="badge">Derived</span></div>
