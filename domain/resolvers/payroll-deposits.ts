@@ -1,4 +1,4 @@
-import type {FinancialTransaction,LifeOSDatabase} from "@/domain/contracts/database";
+import type {FinancialAccount,FinancialTransaction,LifeOSDatabase} from "@/domain/contracts/database";
 import type {CashForecastOptions} from "@/domain/resolvers/cash-forecast";
 
 export interface ConnectedTransactionRecord {
@@ -9,7 +9,7 @@ export interface ConnectedTransactionRecord {
  account_id?:string; accountId?:string; account_name?:string; institution?:string;
  category?:string|string[]; pending?:boolean; currency?:string; iso_currency_code?:string;
 }
-export interface DepositImportResult { transactions:FinancialTransaction[]; imported:number; duplicates:number; ignored:number; accountId:string; }
+export interface DepositImportResult { transactions:FinancialTransaction[]; account?:FinancialAccount; imported:number; duplicates:number; ignored:number; accountId:string; }
 const payrollPattern=/\b(payroll|payroll\s*deposit|kia georgia inc)\b/i;
 const asDate=(value:unknown)=>typeof value==="string"?value.slice(0,10):"";
 const asAmount=(value:unknown)=>{const n=typeof value==="string"?Number(value):Number(value);return Number.isFinite(n)?n:NaN;};
@@ -28,7 +28,7 @@ export function importPayrollDeposits(db:LifeOSDatabase,rows:ConnectedTransactio
   next.accounts.push(account);
  } else account=next.accounts.find(a=>a.id===account!.id)!;
  const known=new Set(next.transactions.map(t=>t.externalReference).filter((x):x is string=>Boolean(x)));
- let imported=0,duplicates=0;
+ let imported=0,duplicates=0;\n const newTransactions:FinancialTransaction[]=[];
  for(const row of matched){
   const reference=String(row.transaction_id??row.transactionId??row.id??"");
   const date=asDate(row.posted_datetime??row.date??row.transactionDate);
@@ -38,10 +38,10 @@ export function importPayrollDeposits(db:LifeOSDatabase,rows:ConnectedTransactio
   if(known.has(externalReference)){duplicates++;continue;}
   // LifeOS stores amounts as positive magnitudes and represents direction in transactionType.
   const amountMinor=row.amountMinor!=null?Math.round(Math.abs(raw)):Math.round(Math.abs(raw)*100);
-  next.transactions.push({id:"txn-"+externalReference.replace(/[^a-zA-Z0-9_-]/g,"-"),entityType:"financial_transaction",createdAt:now,updatedAt:now,transactionType:raw<0?"income":"expense",transactionDate:date,amountMinor,currency:row.currency??row.iso_currency_code??"USD",accountId:account.id,merchant:row.merchant_name??row.merchant??row.name,description:row.name??row.description??"Payroll deposit",externalReference});
+  const transaction:FinancialTransaction={id:"txn-"+externalReference.replace(/[^a-zA-Z0-9_-]/g,"-"),entityType:"financial_transaction",createdAt:now,updatedAt:now,transactionType:raw<0?"income":"expense",transactionDate:date,amountMinor,currency:row.currency??row.iso_currency_code??"USD",accountId:account.id,merchant:row.merchant_name??row.merchant??row.name,description:row.name??row.description??"Payroll deposit",externalReference};\n  next.transactions.push(transaction);newTransactions.push(transaction);
   known.add(externalReference);imported++;
  }
- return {transactions:next.transactions.filter(t=>t.externalReference?.startsWith("connected-finance:")),imported,duplicates,ignored:rows.length-matched.length,accountId:account.id};
+ return {transactions:newTransactions,account,imported,duplicates,ignored:rows.length-matched.length,accountId:account.id};
 }
 export function payrollForecastFlows(transactions:FinancialTransaction[],startDate:string,horizonDays=30):NonNullable<CashForecastOptions["externalFlows"]> {
  const deposits=transactions.filter(t=>t.transactionType==="income"&&/\b(payroll|payroll\s*deposit|kia georgia inc)\b/i.test([t.description,t.merchant].filter(Boolean).join(" "))&&t.amountMinor>0).sort((a,b)=>a.transactionDate.localeCompare(b.transactionDate));
