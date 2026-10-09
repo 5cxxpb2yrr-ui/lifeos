@@ -23,6 +23,7 @@ import EntityEditor from "@/components/mission-control/EntityEditor";
 import PersonalDataView from "@/components/mission-control/PersonalDataView";
 import CashForecastCalendar from "@/components/mission-control/CashForecastCalendar";
 import PayrollDepositImport from "@/components/mission-control/PayrollDepositImport";
+import UsaaEmailDepositQueue from "@/components/mission-control/UsaaEmailDepositQueue";
 import ContextEnginePanel from "@/components/mission-control/ContextEnginePanel";
 
 type NavigationTarget={kind:string;id:string;type?:string;label:string};
@@ -122,7 +123,7 @@ function DataView({view,db,onEvent,onEntity,onGraph,onNavigateView,onPersist}:{v
     : db.relationships.map(r=>({id:r.id,title:r.relationshipType.replaceAll("_"," "),meta:r.fromType+" → "+r.toType,action:()=>onGraph(r.id,"relationship")}));
  return <section className="card data-view">
   <div className="section-title"><div><div className="kicker">LifeOS / {title}</div><h2>{title}</h2></div><span className="badge">{rows.length}</span></div>
-  {view==="finance"&&tab==="overview"&&<><PayrollDepositImport db={db} onPersist={onPersist}/><CashForecastCalendar db={db}/></>}
+  {view==="finance"&&tab==="overview"&&<><UsaaEmailDepositQueue db={db} onPersist={onPersist}/><PayrollDepositImport db={db} onPersist={onPersist}/><CashForecastCalendar db={db}/></>}
   {tabs&&<label className="field-label data-section-selector">{title+" section"}<select className="command-input" value={tab} onChange={e=>setTab(e.target.value)} aria-label={title+" sections"}>{tabs.map(([key,label])=><option key={key} value={key}>{label}</option>)}</select></label>}
   {view==="vehicles"&&<div className="context-tabs"><button type="button" onClick={()=>{onNavigateView("assets")}}>Assets</button><span>› Vehicles</span><button type="button" onClick={()=>{onNavigateView("properties")}}>Properties</button></div>}
   {view==="properties"&&<div className="context-tabs"><button type="button" onClick={()=>onNavigateView("assets")}>Assets</button><span>› Properties</span><button type="button" onClick={()=>{onNavigateView("vehicles")}}>Vehicles</button></div>}

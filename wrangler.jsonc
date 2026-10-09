@@ -3,12 +3,20 @@
   "name": "lifeos-v2",
   "pages_build_output_dir": "./out",
   "compatibility_date": "2026-10-01",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "services": [
     {
       "binding": "ATTACHMENTS",
       "service": "lifeos-attachments"
+    },
+    {
+      "binding": "USAA_BRIDGE",
+      "service": "lifeos-usaa-email-bridge"
     }
   ],
-  "observability": { "enabled": true }
+  "observability": {
+    "enabled": true
+  }
 }
