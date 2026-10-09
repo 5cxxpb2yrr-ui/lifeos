@@ -1,5 +1,11 @@
+type DepositKVNamespace = {
+  get(key: string): Promise<string | null>;
+  put(key: string, value: string, options?: { expirationTtl?: number }): Promise<void>;
+  list(options?: { prefix?: string; limit?: number; cursor?: string }): Promise<{ keys: Array<{ name: string }>; list_complete?: boolean; cursor?: string }>;
+};
+
 export interface Env {
-  DEPOSITS: KVNamespace;
+  DEPOSITS: DepositKVNamespace;
   BRIDGE_TOKEN: string;
   BRIDGE_PROXY_TOKEN: string;
 }
