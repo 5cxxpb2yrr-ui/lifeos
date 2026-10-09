@@ -12,7 +12,7 @@
 
 - The LifeOS Pages hostname and all enabled preview hostnames must be protected by Cloudflare Access with an explicit owner-only allow policy.
 - The browser calls the same-origin `/api/attachments/<storagePath>` Pages Function; it does not call the Worker cross-origin.
-- The Pages Function requires the Cloudflare Access JWT assertion and forwards it only to the bound `lifeos-attachments` Worker. The Worker must independently validate the signed JWT before any R2 operation. A header's mere presence is not authentication.
+- The Pages Function cryptographically validates the Cloudflare Access JWT signature, issuer, expiry, and exact LifeOS app audience against Cloudflare Access signing keys before forwarding it to the bound `lifeos-attachments` Worker. A header's mere presence is not authentication. The Worker's public hostname remains protected by its own existing Cloudflare Access application; service-bound calls are reachable through the authenticated Pages Function.
 - The Function uses a private service binding to the Worker. It does not expose R2 credentials or a public bucket URL. Do not add a public fallback, bypass JWT validation, or accept a client-supplied owner identity.
 - Keep the Worker Access app and private R2 bucket in place. The Worker remains responsible for signed-JWT validation and object operations.
 - The Wrangler/Pages deployment must include the `ATTACHMENTS` service binding. If the Pages deployment has not applied that binding, fail closed with a storage error.
