@@ -6,7 +6,6 @@
       "type": "Doctor Visit",
       "date": "2026-09-26",
       "notes": "Went over mri ",
-      "personIds": [],
       "createdAt": "2026-09-30T11:35:06.779Z",
       "updatedAt": "2026-09-30T11:35:06.779Z"
     },
@@ -16,7 +15,6 @@
       "type": "Workout",
       "date": "2026-09-22",
       "notes": "",
-      "personIds": [],
       "createdAt": "2026-09-30T11:35:06.781Z",
       "updatedAt": "2026-09-30T11:35:06.781Z"
     },
@@ -26,7 +24,6 @@
       "type": "Maintenance",
       "date": "2026-09-11",
       "notes": "",
-      "personIds": [],
       "createdAt": "2026-09-30T11:35:06.781Z",
       "updatedAt": "2026-09-30T11:35:06.781Z"
     },
@@ -36,7 +33,6 @@
       "type": "Learning Session",
       "date": "2026-09-18",
       "notes": "",
-      "personIds": [],
       "createdAt": "2026-09-30T11:35:06.782Z",
       "updatedAt": "2026-09-30T11:35:06.782Z"
     },
@@ -46,7 +42,6 @@
       "type": "Vacation",
       "date": "2026-09-14",
       "notes": "",
-      "personIds": [],
       "createdAt": "2026-09-30T11:35:06.782Z",
       "updatedAt": "2026-09-30T11:35:06.782Z"
     },
@@ -56,7 +51,6 @@
       "type": "Workout",
       "date": "2026-09-26",
       "notes": "Felt strong, negative split.",
-      "personIds": [],
       "createdAt": "2026-09-30T11:35:06.783Z",
       "updatedAt": "2026-09-30T11:35:06.783Z"
     },
@@ -67,7 +61,6 @@
       "type": "Planning",
       "status": "Completed",
       "notes": "Plan the week and identify priorities.",
-      "people": [],
       "assets": [],
       "goals": [
         "g1"
@@ -85,9 +78,6 @@
       "type": "Work",
       "status": "Planned",
       "notes": "Focused execution.",
-      "people": [
-        "p1"
-      ],
       "assets": [],
       "goals": [
         "g2"
@@ -105,9 +95,6 @@
       "type": "Relationship",
       "status": "Planned",
       "notes": "Reconnect.",
-      "people": [
-        "p2"
-      ],
       "assets": [],
       "goals": [
         "g3"
@@ -134,9 +121,6 @@
       "type": "Conversation",
       "date": "2026-09-23",
       "notes": "Caught up on her new job.",
-      "personIds": [
-        "c1ripjog"
-      ],
       "createdAt": "2026-09-30T11:35:06.785Z",
       "updatedAt": "2026-09-30T11:35:06.785Z"
     },
@@ -146,9 +130,6 @@
       "type": "Meeting",
       "date": "2026-09-25",
       "notes": "Aligned on roadmap priorities.",
-      "personIds": [
-        "aqbwii80"
-      ],
       "createdAt": "2026-09-30T11:35:06.786Z",
       "updatedAt": "2026-09-30T11:35:06.786Z"
     },
@@ -158,9 +139,6 @@
       "type": "Conversation",
       "date": "2026-09-20",
       "notes": "",
-      "personIds": [
-        "pneem8ct"
-      ],
       "createdAt": "2026-09-30T11:35:06.786Z",
       "updatedAt": "2026-09-30T11:35:06.786Z"
     },
@@ -170,7 +148,6 @@
       "type": "Purchase",
       "date": "2026-09-24",
       "notes": "Replacement for dev machine.",
-      "personIds": [],
       "createdAt": "2026-09-30T11:35:06.786Z",
       "updatedAt": "2026-09-30T11:35:06.786Z"
     },
@@ -180,78 +157,11 @@
       "type": "Doctor Visit",
       "date": "2026-09-21",
       "notes": "Bloodwork normal.",
-      "personIds": [],
       "createdAt": "2026-09-30T11:35:06.787Z",
       "updatedAt": "2026-09-30T11:35:06.787Z"
     }
   ],
-  "people": [
-    {
-      "id": "aqbwii80",
-      "name": "James Ford",
-      "relationship": "Business partner",
-      "lastContact": "2026-09-25",
-      "frequencyDays": 5,
-      "createdAt": "2026-09-30T11:35:06.788Z",
-      "updatedAt": "2026-09-30T11:35:06.788Z"
-    },
-    {
-      "id": "c1ripjog",
-      "name": "Priya Nair",
-      "relationship": "Close friend",
-      "lastContact": "2026-09-23",
-      "frequencyDays": 10,
-      "createdAt": "2026-09-30T11:35:06.788Z",
-      "updatedAt": "2026-09-30T11:35:06.788Z"
-    },
-    {
-      "id": "p1",
-      "name": "Alex Morgan",
-      "relationship": "Friend",
-      "score": 82,
-      "lastContact": "2026-08-29",
-      "notes": "Close friend.",
-      "createdAt": 1788457404135,
-      "updatedAt": "2026-09-30T11:35:06.788Z"
-    },
-    {
-      "id": "p2",
-      "name": "Family",
-      "relationship": "Family",
-      "score": 91,
-      "lastContact": "2026-09-01",
-      "notes": "Priority relationship.",
-      "createdAt": 1788457404135,
-      "updatedAt": "2026-09-30T11:35:06.789Z"
-    },
-    {
-      "id": "pmjabkyw",
-      "name": "Aiko Tanaka",
-      "relationship": "College friend",
-      "lastContact": "2026-08-17",
-      "frequencyDays": 30,
-      "createdAt": "2026-09-30T11:35:06.789Z",
-      "updatedAt": "2026-09-30T11:35:06.789Z"
-    },
-    {
-      "id": "pneem8ct",
-      "name": "Dana Ruiz",
-      "relationship": "Sister",
-      "lastContact": "2026-09-20",
-      "frequencyDays": 7,
-      "createdAt": "2026-09-30T11:35:06.789Z",
-      "updatedAt": "2026-09-30T11:35:06.789Z"
-    },
-    {
-      "id": "ryz7tphx",
-      "name": "Marcus Chen",
-      "relationship": "Mentor",
-      "lastContact": "2026-09-01",
-      "frequencyDays": 14,
-      "createdAt": "2026-09-30T11:35:06.790Z",
-      "updatedAt": "2026-09-30T11:35:06.790Z"
-    }
-  ],
+  "people": [],
   "assets": [
     {
       "id": "1wrdzlec",
