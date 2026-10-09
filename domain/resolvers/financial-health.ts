@@ -3,7 +3,7 @@ export interface FinancialHealthView{cashMinor:number;scheduledDebtMinor:number;
 export function resolveFinancialHealth(db:LifeOSDatabase):FinancialHealthView{
  const cashAccountIds=new Set(db.accounts.filter(a=>a.accountType==="checking"||a.accountType==="savings"||a.accountType==="cash").map(a=>a.id));
  const cashMinor=db.accounts.filter(a=>cashAccountIds.has(a.id)).reduce((sum,a)=>sum+(a.openingBalanceMinor??0),0)
-  +db.transactions.filter(t=>cashAccountIds.has(t.accountId)).reduce((sum,t)=>{
+  +db.transactions.filter(t=>cashAccountIds.has(t.accountId)&&t.metadata?.cashBalanceExcluded!==true).reduce((sum,t)=>{
    if(t.transactionType==="income"||t.transactionType==="refund")return sum+t.amountMinor;
    if(t.transactionType==="expense"||t.transactionType==="payment")return sum-t.amountMinor;
    if(t.transactionType==="adjustment")return sum+t.amountMinor;
