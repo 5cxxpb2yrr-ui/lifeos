@@ -448,3 +448,21 @@ select optgroup{
  .attachment-preview iframe{height:52dvh;min-height:220px}
  .attachment-viewer-head .row-actions{flex-shrink:0}
 }
+
+
+/* Attachment document controls: fit the page first, zoom only on request */
+.attachment-preview-toolbar{display:flex;align-items:center;justify-content:center;gap:8px;flex:0 0 auto;padding:8px;border-bottom:1px solid rgba(255,255,255,.08);background:#0b101c;color:#ffd54f}
+.attachment-preview-toolbar span{min-width:48px;text-align:center;font:600 10px Orbitron,sans-serif;color:#edf4ff}
+.attachment-preview-toolbar .mini-action{min-width:38px;min-height:34px;display:inline-flex;align-items:center;justify-content:center}
+.attachment-viewer .attachment-preview{flex:1 1 auto;min-height:0;max-height:none;width:100%;padding:8px;overflow:auto;align-items:center;justify-content:center}
+.attachment-preview.attachment-fit-page{display:flex}
+.attachment-preview .attachment-document-image{display:block;width:auto;height:auto;max-width:100%;max-height:100%;object-fit:contain;flex:0 0 auto}
+.attachment-preview.attachment-zoomed{align-items:flex-start;justify-content:center}
+.attachment-preview.attachment-zoomed .attachment-document-image{max-width:none;max-height:none;height:auto;object-fit:contain}
+.attachment-preview.attachment-pdf-preview{display:flex;align-items:stretch;padding:0;overflow:hidden}
+.attachment-preview.attachment-pdf-preview iframe{width:100%;height:100%;min-height:0;flex:1 1 auto;border:0;background:#fff}
+@media(max-width:560px){
+ .attachment-preview-toolbar{gap:6px;padding:6px}
+ .attachment-preview-toolbar .mini-action{min-width:36px;min-height:38px}
+ .attachment-viewer .attachment-preview{padding:4px}
+}
