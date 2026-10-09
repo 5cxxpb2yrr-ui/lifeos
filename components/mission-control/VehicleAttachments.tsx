@@ -67,8 +67,9 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
   try{
    uploaded=await uploadR2Attachment(file,attachment);
   }catch(error){
-   const message=error instanceof Error?error.message:"Attachment upload failed.";
-   window.alert(message+" No attachment record was saved. Your selected file is still available to retry.");
+   const rawMessage=error instanceof Error?error.message:"Attachment upload failed.";
+   const message=rawMessage==="Failed to fetch"||rawMessage==="Load failed"?"LifeOS could not reach secure attachment storage. This can happen when Cloudflare Access authentication is missing or the storage request is blocked. No attachment record was saved.":rawMessage+" No attachment record was saved.";
+   window.alert(message+" Your selected file is still available to retry.");
    setUploading(false);
    return;
   }
@@ -112,7 +113,7 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
    <label className="field-label">Name<input className="command-input" value={name} onChange={e=>setName(e.target.value)} placeholder="2006 Scion xB Service Manual"/></label>
    <label className="field-label">Category<select className="command-input" value={category} onChange={e=>setCategory(e.target.value as typeof category)}><option value="manual">Manual</option><option value="service_record">Service record</option><option value="receipt">Receipt</option><option value="photo">Photo</option><option value="other">Other</option></select></label>
    <label className="field-label">External storage link<input className="command-input" value={url} onChange={e=>setUrl(e.target.value)} placeholder="iCloud / shared-file URL"/></label>
-   <label className="field-label">R2 upload<input className="command-input" type="file" disabled={uploading} onChange={e=>setFile(e.target.files?.[0]??null)}/></label>
+   <label className="field-label">R2 upload<input className="command-input" type="file" disabled={uploading} onChange={e=>{const selectedFile=e.target.files?.[0]??null;setFile(selectedFile);if(selectedFile&&!name.trim())setName(selectedFile.name)}}/></label>
    <label className="field-label">iCloud Drive path<input className="command-input" value={icloudPath} onChange={e=>setIcloudPath(e.target.value)} placeholder="Auto-generated LifeOS/Attachments path"/></label>
    <label className="field-label">iCloud share URL<input className="command-input" value={icloudShareUrl} onChange={e=>setIcloudShareUrl(e.target.value)} placeholder="Optional iCloud share link"/></label>
   </div>
