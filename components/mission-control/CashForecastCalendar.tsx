@@ -60,6 +60,7 @@ export default function CashForecastCalendar({db}:{db:LifeOSDatabase}){
       }}>
        <div className="row-main"><div className="row-title">{source.label}</div><div className="row-meta">{source.type.replaceAll("_"," ")} · {money(source.amountMinor)}</div></div><span className="queue-count">›</span>
       </button>)}
+      {point.entries.filter(entry=>entry.sourceType==="external").map(entry=><div className="row entity-row" key={entry.sourceId}><div className="row-main"><div className="row-title">{entry.title}</div><div className="row-meta">Connected deposit forecast · {entry.direction} · {money(entry.amountMinor)}</div></div><span className="badge">Estimated</span></div>)}
     </div>}
    </div>)}
   </div>
