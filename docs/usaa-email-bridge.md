@@ -2,7 +2,7 @@
 
 ## Flow
 
-USAA deposit notification email → iPhone Shortcuts personal automation → authenticated Cloudflare Worker intake → deduplicated pending deposit → LifeOS cash forecast import.
+USAA deposit notification email → iPhone Shortcuts personal automation → authenticated Cloudflare Worker intake → deduplicated pending deposit → Access-validated same-origin Pages proxy → Finance queue review/import → payroll resolver and cash calendar.
 
 This is a notification bridge, not a complete bank feed. It cannot discover transactions for which USAA sends no email. Email notifications may be delayed or formatted differently; review extracted amount and date during initial testing.
 
@@ -34,11 +34,19 @@ This is a notification bridge, not a complete bank feed. It cannot discover tran
 - Create the Worker and a private KV namespace; bind the namespace as `DEPOSITS`.
 - Set `BRIDGE_TOKEN` as a high-entropy Cloudflare Worker secret; do not commit it.
 - Set a separate `BRIDGE_PROXY_TOKEN` as a Worker secret and as a Pages secret for the same-origin Access-validated proxy. The proxy must validate the LifeOS Access JWT before forwarding list/ack requests.
-- Configure the Pages `USAA_BRIDGE` service binding to this Worker for both preview and production.
+- Configure the Pages `USAA_BRIDGE` service binding to this Worker for both preview and production. The repository's root `wrangler.jsonc` declares this binding, so create the named Worker before deploying the Pages change.
 - Deploy a staging version first. Test invalid token, invalid JSON, oversized payload, duplicate alert, date/amount validation, queue listing, and acknowledgement.
 - Confirm the payroll resolver imports actual deposits as historical transaction records with `cashBalanceExcluded: true`; projected paydays remain separately labeled estimates.
 - Rotate the bridge token if the Shortcut is shared or exposed. A new token must be deployed before updating the Shortcut.
 
 ## Important current limitation
 
-The bridge intake and secure queue are only the first half of automation. A same-origin Access-validated Pages Function and Mission Control queue importer must be wired before queued deposits automatically appear in the cash calendar. Until then, do not describe the process as end-to-end automatic.
+The Pages proxy and Mission Control queue importer are now present in the pull request. The bridge is still not end-to-end until the private Worker, KV namespace, Worker secrets, Pages service binding, and Pages secret are configured and staging tests pass. Import remains review-and-confirm in Finance → Overview; it is not silent auto-posting. Until deployment and verification, do not describe it as active automation.
+
+## LifeOS queue importer
+
+- Finance → Overview includes a **USAA Email Deposit Queue** panel with Refresh queue and Import pending deposits.
+- Queue records are fetched only through `/api/usaa-bridge/...`, which validates the signed Cloudflare Access JWT before forwarding through the private service binding.
+- Imported rows reuse the payroll resolver's transaction contract and stable external reference. The resolver marks imported payroll history `cashBalanceExcluded: true`; the bridge never overwrites the current checking balance.
+- The importer acknowledges a queue item only after local persistence succeeds. If acknowledgement fails, re-import is safe because the external reference deduplicates the transaction.
+- The queue requires a human tap to refresh and import; automatic email capture is handled by the iOS Shortcut, but cash history is not silently modified by opening LifeOS.
