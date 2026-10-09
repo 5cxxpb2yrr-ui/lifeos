@@ -1,6 +1,6 @@
 type Env = {
   USAA_BRIDGE: { fetch: (request: Request) => Promise<Response> };
-  BRIDGE_PROXY_TOKEN: string;
+  BRIDGE_PROXY_TOKEN?: string;
 };
 type Context = { request: Request; env: Env };
 type JwtPayload = { iss?: string; aud?: string | string[]; exp?: number; nbf?: number };
@@ -60,7 +60,7 @@ export async function onRequest({ request, env }: Context): Promise<Response> {
   if (method !== "GET" && method !== "PATCH") return error(405, "Method not allowed.");
   const jwt = request.headers.get("Cf-Access-Jwt-Assertion");
   if (!jwt || !(await validAccessJwt(jwt))) return error(401, "LifeOS sign-in is required.");
-  if (env.BRIDGE_PROXY_TOKEN.length < 32) {
+  if (typeof env.BRIDGE_PROXY_TOKEN !== "string" || env.BRIDGE_PROXY_TOKEN.length < 32) {
     return error(503, "Deposit bridge is not configured.");
   }
   const url = new URL(request.url);
