@@ -156,7 +156,7 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
          <button type="button" className="mini-action" aria-label="Zoom in" onClick={() => setPreviewZoom(current => current === null ? 125 : Math.min(200, current + 25))}>＋</button>
         </div>
         <div className="attachment-preview attachment-pdf-preview">
-         <iframe title={selectedAttachment.name} src={`${selectedUrl}#view=${previewZoom === null ? "Fit" : "FitH"}${previewZoom === null ? "" : `&zoom=${previewZoom}`}`}/>
+         <div className="attachment-pdf-frame" style={{width:`${previewZoom??100}%`,height:`${previewZoom??100}%`}}><iframe title={selectedAttachment.name} src={`${selectedUrl}#view=Fit`} style={previewZoom===null?undefined:{width:`${10000/previewZoom}%`,height:`${10000/previewZoom}%`,transform:`scale(${previewZoom/100})`,transformOrigin:"top left"}}/></div>
         </div>
        </>
       ) : (
