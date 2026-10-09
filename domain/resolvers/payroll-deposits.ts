@@ -28,7 +28,8 @@ export function importPayrollDeposits(db:LifeOSDatabase,rows:ConnectedTransactio
   next.accounts.push(account);
  } else {account=next.accounts.find(a=>a.id===account!.id)!;if(currentBalanceMinor!=null&&Number.isFinite(currentBalanceMinor)){account.openingBalanceMinor=currentBalanceMinor;account.updatedAt=now;}}
  const known=new Set(next.transactions.map(t=>t.externalReference).filter((x):x is string=>Boolean(x)));
- let imported=0,duplicates=0;\n const newTransactions:FinancialTransaction[]=[];
+ let imported=0,duplicates=0;
+ const newTransactions:FinancialTransaction[]=[];
  for(const row of matched){
   const reference=String(row.transaction_id??row.transactionId??row.id??"");
   const date=asDate(row.posted_datetime??row.date??row.transactionDate);
@@ -38,7 +39,8 @@ export function importPayrollDeposits(db:LifeOSDatabase,rows:ConnectedTransactio
   if(known.has(externalReference)){duplicates++;continue;}
   // LifeOS stores amounts as positive magnitudes and represents direction in transactionType.
   const amountMinor=row.amountMinor!=null?Math.round(Math.abs(raw)):Math.round(Math.abs(raw)*100);
-  const transaction:FinancialTransaction={id:"txn-"+externalReference.replace(/[^a-zA-Z0-9_-]/g,"-"),entityType:"financial_transaction",createdAt:now,updatedAt:now,transactionType:raw<0?"income":"expense",transactionDate:date,amountMinor,currency:row.currency??row.iso_currency_code??"USD",accountId:account.id,merchant:row.merchant_name??row.merchant??row.name,description:row.name??row.description??"Payroll deposit",externalReference,metadata:{source:"connected_finance_import",payrollDeposit:true,cashBalanceExcluded:true}};\n  next.transactions.push(transaction);newTransactions.push(transaction);
+  const transaction:FinancialTransaction={id:"txn-"+externalReference.replace(/[^a-zA-Z0-9_-]/g,"-"),entityType:"financial_transaction",createdAt:now,updatedAt:now,transactionType:raw<0?"income":"expense",transactionDate:date,amountMinor,currency:row.currency??row.iso_currency_code??"USD",accountId:account.id,merchant:row.merchant_name??row.merchant??row.name,description:row.name??row.description??"Payroll deposit",externalReference,metadata:{source:"connected_finance_import",payrollDeposit:true,cashBalanceExcluded:true}};
+  next.transactions.push(transaction);newTransactions.push(transaction);
   known.add(externalReference);imported++;
  }
  return {transactions:newTransactions,account,imported,duplicates,ignored:rows.length-matched.length,accountId:account.id};
