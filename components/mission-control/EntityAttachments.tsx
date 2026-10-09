@@ -18,7 +18,8 @@ export default function EntityAttachments({db,entity,onPersist}:{db:LifeOSDataba
  const add=async()=>{
   if(!file&&!url.trim())return;
   const title=name.trim()||file?.name||(entity.entityType.replaceAll("_"," ")+" attachment");
-  const attachment=createAttachmentRecord({name:title,mimeType:file?.type,sizeBytes:file?.size,storageProvider:file?"cloudflare-r2":"external-url",storageReference:file?undefined:url.trim()||undefined,documentType,tags:[entity.entityType,documentType||"other"],description:"Attachment linked to "+entity.entityType.replaceAll("_"," "),linkedEntities:[{entityId:entity.id,entityType}]});
+  const inferredMime=file?(file.type||(file.name.toLowerCase().endsWith(".pdf")?"application/pdf":/\.(png|jpe?g)$/i.test(file.name)?"image/jpeg":/\.gif$/i.test(file.name)?"image/gif":/\.webp$/i.test(file.name)?"image/webp":/\.heic$/i.test(file.name)?"image/heic":/\.avif$/i.test(file.name)?"image/avif":undefined)):undefined;
+  const attachment=createAttachmentRecord({name:title,mimeType:inferredMime,sizeBytes:file?.size,storageProvider:file?"cloudflare-r2":"external-url",storageReference:file?undefined:url.trim()||undefined,documentType,tags:[entity.entityType,documentType||"other"],description:"Attachment linked to "+entity.entityType.replaceAll("_"," "),linkedEntities:[{entityId:entity.id,entityType}]});
   if(!file){onPersist(addAttachment(db,attachment),(documentType==="receipt"?"Receipt":"Attachment")+" linked to "+entity.entityType.replaceAll("_"," ")+".");setUrl("");setName("");return;}
   setUploading(true);
   try{const uploaded=await uploadR2Attachment(file,attachment);const preview=await loadR2AttachmentPreview({...attachment,storageReference:uploaded.key});if(preview)setPreviewUrls(v=>({...v,[attachment.id]:preview}));onPersist(addAttachment(db,{...attachment,storageReference:uploaded.key}),(documentType==="receipt"?"Receipt":"Attachment")+" uploaded and linked.");setFile(null);setName("");}
