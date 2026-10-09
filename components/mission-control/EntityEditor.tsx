@@ -243,7 +243,7 @@ export default function EntityEditor({
     try {
       const changes: Record<string, unknown> = {};
       for (const field of draft) {
-        changes[field.key] = parseValue(String(field.value ?? ""), field.original);
+        changes[field.key] = parseValue(field.value, field.original);
       }
 
       const next = updateEntityRecord(db, record.entityType, record.id, changes);
