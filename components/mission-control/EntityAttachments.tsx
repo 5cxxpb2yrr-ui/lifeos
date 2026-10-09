@@ -3,7 +3,7 @@ import {useEffect,useMemo,useRef,useState} from "react";
 import type {BaseEntity,LifeOSDatabase,AttachmentEntityType} from "@/domain/contracts/database";
 import {addAttachment,attachmentsForEntity,createAttachmentRecord,removeAttachment} from "@/domain/services/attachments";
 import {deleteR2Attachment,loadR2AttachmentPreview,uploadR2Attachment} from "@/storage/attachments/r2";
-import {browserSessionAttachmentAdapter,externalUrlAttachmentAdapter} from "@/storage/attachments/adapter";
+import {externalUrlAttachmentAdapter} from "@/storage/attachments/adapter";
 
 export default function EntityAttachments({db,entity,onPersist}:{db:LifeOSDatabase;entity:BaseEntity;onPersist:(next:LifeOSDatabase,message:string)=>void}){
  const entityType=entity.entityType as AttachmentEntityType;
