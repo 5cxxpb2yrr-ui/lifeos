@@ -139,7 +139,7 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
        <>
         <div className="attachment-preview-toolbar">
          <button type="button" className="mini-action" onClick={() => setPreviewZoom(null)}>Fit page</button>
-         <button type="button" className="mini-action" aria-label="Zoom out" onClick={() => setPreviewZoom(current => current === null ? 75 : Math.max(50, current - 25))}>−</button>
+         <button type="button" className="mini-action" aria-label="Zoom out" onClick={() => setPreviewZoom(current => current === null ? 75 : Math.max(25, current - 25))}>−</button>
          <span>{previewZoom === null ? "Fit" : `${previewZoom}%`}</span>
          <button type="button" className="mini-action" aria-label="Zoom in" onClick={() => setPreviewZoom(current => current === null ? 125 : Math.min(200, current + 25))}>＋</button>
         </div>
@@ -151,7 +151,7 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
        <>
         <div className="attachment-preview-toolbar">
          <button type="button" className="mini-action" onClick={() => setPreviewZoom(null)}>Fit page</button>
-         <button type="button" className="mini-action" aria-label="Zoom out" onClick={() => setPreviewZoom(current => current === null ? 75 : Math.max(50, current - 25))}>−</button>
+         <button type="button" className="mini-action" aria-label="Zoom out" onClick={() => setPreviewZoom(current => current === null ? 75 : Math.max(25, current - 25))}>−</button>
          <span>{previewZoom === null ? "Fit" : `${previewZoom}%`}</span>
          <button type="button" className="mini-action" aria-label="Zoom in" onClick={() => setPreviewZoom(current => current === null ? 125 : Math.min(200, current + 25))}>＋</button>
         </div>
