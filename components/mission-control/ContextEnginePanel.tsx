@@ -3,6 +3,8 @@
 import type { LifeOSDatabase } from "@/domain/contracts/database";
 import { resolveContextEngine, type ContextReference } from "@/domain/resolvers/context-engine";
 
+type ContextItem = { id: string; type: string; label: string; meta: string };
+type ContextGroup = { title: string; items: ContextItem[] };
 type Props = { db: LifeOSDatabase; centerId: string; onNavigate?: (id: string, type: string) => void };
 
 export default function ContextEnginePanel({ db, centerId, onNavigate }: Props) {
@@ -16,7 +18,7 @@ export default function ContextEnginePanel({ db, centerId, onNavigate }: Props) 
     }
   };
   const nextDue = context.nextDueAt ? new Date(context.nextDueAt).toLocaleString() : null;
-  const groups = [
+  const groups: ContextGroup[] = [
     { title: "Related events", items: context.relatedEvents.map((x) => ({ id: x.id, type: "event", label: x.title, meta: x.dueAt ?? x.startAt ?? x.status })) },
     { title: "Open loops", items: context.openLoops.map((x) => ({ id: x.id, type: "open_loop", label: x.title, meta: [x.status, x.dueAt ? "Due " + new Date(x.dueAt).toLocaleDateString() : ""].filter(Boolean).join(" · ") })) },
     { title: "Decisions", items: context.decisions.map((x) => ({ id: x.id, type: "decision", label: "question" in x && typeof x.question === "string" ? x.question : x.id, meta: "Decision" })) },
@@ -24,15 +26,16 @@ export default function ContextEnginePanel({ db, centerId, onNavigate }: Props) 
     { title: "Documents", items: context.documents.map((x) => ({ id: x.id, type: "document", label: "name" in x && typeof x.name === "string" ? x.name : x.id, meta: "Document" })) },
   ].map((group) => ({ ...group, items: group.items.filter((item) => item.id !== centerId) }));
   const representedIds = new Set(groups.flatMap((group) => group.items.map((item) => item.id)));
-  const otherReferences = context.references
+  const otherReferences: ContextItem[] = context.references
     .filter((reference) => reference.id !== centerId && !representedIds.has(reference.id))
     .filter((reference, index, all) => all.findIndex((candidate) => candidate.id === reference.id) === index)
     .map((reference) => ({
-      ...reference,
+      id: reference.id,
+      type: reference.type,
       label: reference.label || reference.type.replaceAll("_", " "),
       meta: [reference.type.replaceAll("_", " "), reference.relationship.replaceAll("_", " "), reference.direction].join(" · "),
     }));
-  if (otherReferences.length) groups.push({ title: "Other linked records", items: otherReferences.map((reference) => ({ id: reference.id, type: reference.type, label: reference.label, meta: reference.meta })) });
+  if (otherReferences.length) groups.push({ title: "Other linked records", items: otherReferences });
   return <section className="context-engine-panel card">
     <div className="section-title"><h3>Context from the graph</h3><span className="badge">Derived</span></div>
     <p className="row-meta">Read-only context assembled from linked LifeOS records. Canonical records are unchanged.</p>
