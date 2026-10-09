@@ -21,7 +21,8 @@ import VehicleAttachments from "@/components/mission-control/VehicleAttachments"
 import GarageTroubleshooting from "@/components/mission-control/GarageTroubleshooting";
 import EntityEditor from "@/components/mission-control/EntityEditor";
 import PersonalDataView from "@/components/mission-control/PersonalDataView";
-import CashForecastCalendar from "@/components/mission-control/CashForecastCalendar";\nimport PayrollDepositImport from "@/components/mission-control/PayrollDepositImport";
+import CashForecastCalendar from "@/components/mission-control/CashForecastCalendar";
+import PayrollDepositImport from "@/components/mission-control/PayrollDepositImport";
 import ContextEnginePanel from "@/components/mission-control/ContextEnginePanel";
 
 type NavigationTarget={kind:string;id:string;type?:string;label:string};
