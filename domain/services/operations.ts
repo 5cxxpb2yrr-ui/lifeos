@@ -61,3 +61,23 @@ export function linkEventToOpenLoop(db:LifeOSDatabase,eventId:string,loopId:stri
  let next={...db,events:db.events.map(e=>e.id===event.id?linkedEvent:e),openLoops:db.openLoops.map(o=>o.id===loop.id?linkedLoop:o)};
  next=appendAudit(next,linkedEvent,"update","event-engine",event); return appendAudit(next,linkedLoop,"update","event-engine",loop);
 }
+
+
+/** Create an explicit, auditable graph edge between two existing canonical records. */
+export function createRelationship(
+ db:LifeOSDatabase,
+ input:{fromId:string;fromType:string;toId:string;toType:string;relationshipType?:import("@/domain/contracts/database").RelationshipType},
+):LifeOSDatabase{
+ if(!input.fromId||!input.toId||input.fromId===input.toId)return db;
+ const exists=(entityId:string)=>{
+  const collections:BaseEntity[][]=[db.entities,db.events,db.openLoops,db.people,db.assets,db.accounts,db.transactions,db.loans,db.loanPayments,db.vehicles,db.vehicleMaintenance,db.properties,db.rooms,db.homeSystems,db.electricalDevices,db.projects,db.goals,db.decisions,db.documents,db.recurringRules,db.relationships,db.attachments??[]];
+  return collections.some(items=>items.some(item=>item.id===entityId));
+ };
+ if(!exists(input.fromId)||!exists(input.toId))return db;
+ const relationshipType=input.relationshipType??"related_to";
+ const existing=db.relationships.find(r=>r.fromId===input.fromId&&r.toId===input.toId&&r.relationshipType===relationshipType);
+ if(existing)return db;
+ const t=now();
+ const relationship:import("@/domain/contracts/database").Relationship={id:id("rel"),entityType:"relationship",createdAt:t,updatedAt:t,fromId:input.fromId,fromType:input.fromType,toId:input.toId,toType:input.toType,relationshipType};
+ return appendAudit({...db,relationships:[...db.relationships,relationship]},relationship,"create","universal-capture");
+}

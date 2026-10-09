@@ -1,17 +1,18 @@
 {
   "schemaVersion": "1.0.0",
   "seedId": "full-life-control",
-  "seedVersion": "1.0.0",
-  "status": "immutable",
+  "seedVersion": "1.0.1",
+  "status": "authorized-amendment",
   "sourceFile": "seed/full-life-control-seed-backup.json",
   "format": "FLC-v5",
   "architecture": "LifeOS Core: Events + Graph + Resolver-owned Views",
-  "byteLength": 59563,
-  "gitBlobSha": "f4444b6d2f851ec4e8733c7a5ca2422fe0de5e09",
+  "byteLength": 57328,
+  "gitBlobSha": "92c5a8acff69ae4ba21970fd824397a4ea573aa5",
   "immutablePolicy": [
-    "Do not modify, regenerate, normalize, migrate, or replace this seed in place.",
-    "Operational state and backups may evolve independently.",
-    "A new seed requires explicit user authorization and a new seedVersion.",
-    "All future LifeOS builds must preserve this seed as the baseline."
+    "The original v1.0.0 seed is preserved at seed/archive/full-life-control-seed-backup-v1.0.0.json.",
+    "This v1.0.1 canonical seed amendment was explicitly authorized by the user and removes only the seven seeded People records and event references to those records.",
+    "All other seed records and the Events bus must be preserved; People remains a supported LifeOS entity type.",
+    "Do not make further seed changes without explicit user authorization.",
+    "Operational state and backups may evolve independently."
   ]
 }
