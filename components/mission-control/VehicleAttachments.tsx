@@ -63,16 +63,26 @@ export default function VehicleAttachments({db,vehicle,onPersist}:{db:LifeOSData
   }
 
   setUploading(true);
+  let uploaded:{key:string;etag?:string};
   try{
-   const uploaded=await uploadR2Attachment(file,attachment);
-   const persisted={...attachment,storageReference:uploaded.key};
-   onPersist(addAttachment(db,persisted),"Vehicle attachment uploaded to permanent R2 storage.");
-   setFile(null);setName("");
-   try{const preview=await loadR2AttachmentPreview(persisted);if(preview)setPreviewUrls(current=>({...current,[attachment.id]:preview}));}catch{/* The upload is already durable; preview recovery can retry when opened. */}
+   uploaded=await uploadR2Attachment(file,attachment);
   }catch(error){
    const message=error instanceof Error?error.message:"Attachment upload failed.";
    window.alert(message+" No attachment record was saved. Your selected file is still available to retry.");
-  }finally{setUploading(false)}
+   setUploading(false);
+   return;
+  }
+  const persisted={...attachment,storageReference:uploaded.key};
+  try{
+   onPersist(addAttachment(db,persisted),"Vehicle attachment uploaded to permanent R2 storage.");
+   setFile(null);setName("");
+  }catch{
+   window.alert("The file was uploaded to permanent storage, but LifeOS could not confirm that its attachment record was saved. Keep this file selected and check the record before retrying.");
+   setUploading(false);
+   return;
+  }
+  try{const preview=await loadR2AttachmentPreview(persisted);if(preview)setPreviewUrls(current=>({...current,[attachment.id]:preview}));}catch{/* The upload is already durable; preview recovery can retry when opened. */}
+  setUploading(false);
  };
 
  const deleteAttachment=async(attachmentId:string)=>{
