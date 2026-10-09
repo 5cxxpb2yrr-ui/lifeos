@@ -64,9 +64,9 @@ export function resolveContextEngine(
       const bDate = b.dueAt ?? "9999";
       return aDate.localeCompare(bDate);
     });
-  const decisions = db.decisions.filter((item) => connectedIds.has(item.id));
-  const projects = db.projects.filter((item) => connectedIds.has(item.id));
-  const documents = db.documents.filter((item) => connectedIds.has(item.id));
+  const decisions = db.decisions.filter((item) => connectedIds.has(item.id) || item.id === centerId);
+  const projects = db.projects.filter((item) => connectedIds.has(item.id) || item.id === centerId);
+  const documents = db.documents.filter((item) => connectedIds.has(item.id) || item.id === centerId);
   const nowIso = now.toISOString();
   const dueCandidates = [
     ...relatedEvents.flatMap((event) => event.status === "completed" || event.status === "cancelled" || event.status === "skipped"
