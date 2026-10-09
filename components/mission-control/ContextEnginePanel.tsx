@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { LifeOSDatabase } from "@/domain/contracts/database";
 import { resolveContextEngine, type ContextReference } from "@/domain/resolvers/context-engine";
 
@@ -8,6 +9,7 @@ type ContextGroup = { title: string; items: ContextItem[] };
 type Props = { db: LifeOSDatabase; centerId: string; onNavigate?: (id: string, type: string) => void };
 
 export default function ContextEnginePanel({ db, centerId, onNavigate }: Props) {
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const context = resolveContextEngine(db, centerId);
   if (!context.center) return null;
   const openReference = (item: ContextReference) => {
@@ -41,8 +43,8 @@ export default function ContextEnginePanel({ db, centerId, onNavigate }: Props) 
     <p className="row-meta">Read-only context assembled from linked LifeOS records. Canonical records are unchanged.</p>
     {nextDue && <div className="row"><div className="row-main"><div className="row-title">Next due</div><div className="row-meta">{nextDue}</div></div></div>}
     {groups.map((group) => group.items.length > 0 && <div className="context-engine-group" key={group.title}>
-      <div className="kicker">{group.title} · {group.items.length}</div>
-      {group.items.slice(0, 4).map((item) => <button className="row context-engine-item" key={item.id} onClick={() => openReference({ id: item.id, type: item.type, label: item.label, relationship: "context", direction: "outgoing" })}>
+      <div className="section-title"><div className="kicker">{group.title} · {group.items.length}</div>{group.items.length > 4 && <button type="button" className="mini-action" aria-expanded={expandedGroups.includes(group.title)} onClick={() => setExpandedGroups((current) => current.includes(group.title) ? current.filter((title) => title !== group.title) : [...current, group.title])}>{expandedGroups.includes(group.title) ? "Show less" : "Show all " + group.items.length}</button>}</div>
+      {(expandedGroups.includes(group.title) ? group.items : group.items.slice(0, 4)).map((item) => <button className="row context-engine-item" key={item.id} onClick={() => openReference({ id: item.id, type: item.type, label: item.label, relationship: "context", direction: "outgoing" })}>
         <span className="row-main"><span className="row-title">{item.label}</span><span className="row-meta">{item.meta}</span></span><span aria-hidden="true">›</span>
       </button>)}
     </div>)}
