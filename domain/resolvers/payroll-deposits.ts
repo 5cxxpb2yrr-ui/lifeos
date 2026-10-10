@@ -48,24 +48,40 @@ export function importPayrollDeposits(db:LifeOSDatabase,rows:ConnectedTransactio
 export function payrollForecastFlows(transactions:FinancialTransaction[],startDate:string,horizonDays=30):NonNullable<CashForecastOptions["externalFlows"]> {
  const deposits=transactions.filter(t=>t.transactionType==="income"&&/\b(payroll|payroll\s*deposit|kia georgia inc)\b/i.test([t.description,t.merchant].filter(Boolean).join(" "))&&t.amountMinor>0).sort((a,b)=>a.transactionDate.localeCompare(b.transactionDate));
  if(deposits.length<3)return [];
- // Use only the dominant cadence; isolated supplemental deposits should not move the schedule.
- const gaps:number[]=[];
- for(let i=1;i<deposits.length;i++){const gap=(Date.parse(deposits[i].transactionDate+"T00:00:00Z")-Date.parse(deposits[i-1].transactionDate+"T00:00:00Z"))/86400000;if(gap>=12&&gap<=16)gaps.push(gap);}
- if(gaps.length<2)return [];
- const cadence=Math.round(gaps.reduce((s,n)=>s+n,0)/gaps.length);
- const regular=deposits.filter((t,i)=>i===0||((Date.parse(t.transactionDate+"T00:00:00Z")-Date.parse(deposits[i-1].transactionDate+"T00:00:00Z"))/86400000>=12&&(Date.parse(t.transactionDate+"T00:00:00Z")-Date.parse(deposits[i-1].transactionDate+"T00:00:00Z"))/86400000<=16));
+ // Infer cadence from the most common 12–16 day gaps, then anchor to the
+ // latest deposit that belongs to that cadence. Supplemental deposits should
+ // neither reset the schedule nor prevent a later regular deposit from matching.
+ const gapCounts=new Map<number,number>();
+ for(let i=0;i<deposits.length;i++){
+  for(let j=i+1;j<deposits.length;j++){
+   const gap=(Date.parse(deposits[j].transactionDate+"T00:00:00Z")-Date.parse(deposits[i].transactionDate+"T00:00:00Z"))/86400000;
+   if(gap>16)break;
+   if(gap>=12&&gap<=16)gapCounts.set(Math.round(gap),(gapCounts.get(Math.round(gap))??0)+1);
+  }
+ }
+ if(!gapCounts.size)return [];
+ const cadence=[...gapCounts.entries()].sort((a,b)=>b[1]-a[1]||a[0]-b[0])[0][0];
+ const regular:FinancialTransaction[]=[];
+ for(const deposit of deposits){
+  if(!regular.length){regular.push(deposit);continue;}
+  const last=regular[regular.length-1];
+  const gap=(Date.parse(deposit.transactionDate+"T00:00:00Z")-Date.parse(last.transactionDate+"T00:00:00Z"))/86400000;
+  if(gap>=cadence-2&&gap<=cadence+2)regular.push(deposit);
+ }
+ if(regular.length<3)return [];
  const amounts=regular.map(t=>t.amountMinor).sort((a,b)=>a-b);
  const median=amounts.length%2?amounts[Math.floor(amounts.length/2)]:Math.round((amounts[amounts.length/2-1]+amounts[amounts.length/2])/2);
  if(!median||!Number.isFinite(median))return [];
  const last=regular[regular.length-1];
  let next=Date.parse(last.transactionDate+"T00:00:00Z")+cadence*86400000;
- const end=Date.parse(startDate+"T00:00:00Z")+Math.max(1,horizonDays)*86400000;
- while(next<Date.parse(startDate+"T00:00:00Z"))next+=cadence*86400000;
+ const start=Date.parse(startDate+"T00:00:00Z");
+ const end=start+Math.max(1,horizonDays)*86400000;
+ while(next<start)next+=cadence*86400000;
  const flows:NonNullable<CashForecastOptions["externalFlows"]>=[];
  for(let guard=0;next<end&&guard<30;guard++,next+=cadence*86400000){
   const date=new Date(next).toISOString().slice(0,10);
   if(deposits.some(t=>t.transactionDate===date))continue;
   flows.push({date,amountMinor:median,direction:"inflow",sourceId:"payroll-estimate:"+date,title:"Expected Kia Georgia payroll (historical median)",priority:1});
  }
- return flows;
+
 }
