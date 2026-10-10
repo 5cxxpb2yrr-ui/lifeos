@@ -110,3 +110,13 @@ test("cash pressure includes external outflows in the lowest-day obligation expl
  assert.ok(result.forecast.points[0].entries.some(entry=>entry.sourceId==="affirm-payment-1"));
  assert.ok((pressure.context?.obligations as Array<{id:string}>).some(item=>item.id==="affirm-payment-1"));
 });
+
+
+test("canonical scheduled income suppresses same-day estimated payroll to prevent double counting",()=>{
+ const db=createEmptyDatabase("2026-10-07T00:00:00.000Z");
+ db.recurringRules.push({id:"payroll-rule",entityType:"recurring_rule",createdAt:"2026-01-01T00:00:00.000Z",updatedAt:"2026-01-01T00:00:00.000Z",name:"Payroll",eventType:"income",frequency:"biweekly",startDate:"2026-10-09",nextOccurrence:"2026-10-09",enabled:true,template:{amountMinor:300000,direction:"income"}});
+ const view=resolveCashForecast(db,{startDate:"2026-10-09",horizonDays:1,startingCashMinor:10000,externalFlows:[{date:"2026-10-09",amountMinor:298336,direction:"inflow",sourceId:"payroll-estimate:2026-10-09",title:"Expected Kia Georgia payroll (historical median)"}]});
+ assert.equal(view.points[0].inflowMinor,300000);
+ assert.equal(view.points[0].entries.filter(entry=>entry.sourceType==="external").length,0);
+ assert.equal(view.paydays.length,1);
+});
