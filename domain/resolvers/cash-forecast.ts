@@ -116,7 +116,7 @@ export function resolveCashForecast(
    const list=recurringSources.get(date)??[];
    list.push({id:rule.id,type:amount>0?"income":"bill",label:rule.name,amountMinor:Math.abs(amount),sourceType:"recurring_rule"});
    recurringSources.set(date,list);
-   if(rule.eventType==="income"&&amount>0)paydays.push({date,amountMinor:amount,sourceType:"recurring_rule",sourceId:rule.id,title:rule.name});
+   if(amount>0&&(rule.eventType==="income"||rule.template.direction==="income"))paydays.push({date,amountMinor:amount,sourceType:"recurring_rule",sourceId:rule.id,title:rule.name});
   }
  }
  const eventFlows=new Map<string,number>();
