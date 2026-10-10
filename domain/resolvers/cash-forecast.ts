@@ -18,7 +18,7 @@ export interface CashForecastEntry{
  title:string;
  priority?:number;
 }
-export interface CashForecastPayday{date:string;amountMinor:number;sourceType:"recurring_rule"|"event";sourceId:string;title:string;}
+export interface CashForecastPayday{date:string;amountMinor:number;sourceType:"recurring_rule"|"event"|"external";sourceId:string;title:string;}
 export interface CashForecastOptions{startDate?:string;horizonDays?:number;startingCashMinor?:number;externalFlows?:Array<{date:string;amountMinor:number;direction:"inflow"|"outflow";sourceId?:string;title?:string;priority?:number}>;}
 
 export interface CashForecastPoint{
@@ -140,6 +140,7 @@ export function resolveCashForecast(
   if(flow.date<day(start)||flow.date>day(end)||!Number.isFinite(flow.amountMinor)||flow.amountMinor<=0)continue;
   const entry:CashForecastEntry={date:flow.date,amountMinor:Math.abs(flow.amountMinor),direction:flow.direction,sourceType:"external",sourceId:flow.sourceId??("external:"+flow.date+":"+(flow.title??"flow")),title:flow.title??"External financial flow",priority:typeof flow.priority==="number"?Math.max(1,Math.min(5,Math.round(flow.priority))):undefined};
   externalFlows.set(flow.date,[...(externalFlows.get(flow.date)??[]),entry]);
+  if(flow.direction==="inflow"&&/payroll/i.test(entry.title))paydays.push({date:flow.date,amountMinor:entry.amountMinor,sourceType:"external",sourceId:entry.sourceId,title:entry.title});
  }
  const points:CashForecastPoint[]=[];
  let lowest=balance;
