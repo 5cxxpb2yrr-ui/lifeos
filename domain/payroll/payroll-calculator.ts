@@ -144,16 +144,21 @@ export function calculatePayroll(input: PayrollPeriodInput): PayrollCalculation 
 export function calculateStandardBiweeklyPayroll(overrides: Partial<PayrollPeriodInput> = {}): PayrollCalculation {
   return calculatePayroll({ regularHours: 72, doubleTimeHours: 12, ...overrides });
 }
-/** Biweekly cycle anchored to 2025-12-29. Returns true when a date is in the anchored 14-day window. */
-export function isInBiweeklyPayPeriod(date: string, periodStart = "2025-12-29"): boolean {
+/** Returns the start date of the 14-day pay period containing date, anchored to 2025-12-29. */
+export function getBiweeklyPeriodStart(date: string, anchor = "2025-12-29"): string {
   const day = (value: string) => {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) throw new RangeError("Dates must use YYYY-MM-DD");
+    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) throw new RangeError("Dates must use YYYY-MM-DD");
     const parsed = new Date(value + "T00:00:00.000Z");
     if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value) throw new RangeError("Invalid calendar date: " + value);
     return Math.floor(parsed.getTime() / 86_400_000);
   };
-  const offset = day(date) - day(periodStart);
-  return offset >= 0 && offset % 14 < 14;
+  const anchorDay = day(anchor);
+  const periodOffset = Math.floor((day(date) - anchorDay) / 14);
+  return new Date((anchorDay + periodOffset * 14) * 86_400_000).toISOString().slice(0, 10);
+}
+/** True when the date exactly matches a biweekly cycle anchor/pay-period start. */
+export function isBiweeklyPayPeriodStart(date: string, anchor = "2025-12-29"): boolean {
+  return getBiweeklyPeriodStart(date, anchor) === date;
 }
 /** Sundays and explicitly listed weekday holidays qualify for double time when worked. */
 export function qualifiesForDoubleTime(date: string, weekdayHolidayDates: string[] = []): boolean {
