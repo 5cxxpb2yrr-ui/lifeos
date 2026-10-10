@@ -16,10 +16,8 @@ const defaults: Record<NumericKey, number> = {
 export default function PayrollCalculatorPage() {
   const [values, setValues] = useState(defaults);
   const [filingStatus, setFilingStatus] = useState<"married_filing_jointly" | "single" | "head_of_household">("married_filing_jointly");
-  const [saved, setSaved] = useState(false);
   const update = (key: NumericKey, value: string) => {
     setValues((current) => ({ ...current, [key]: value === "" ? 0 : Math.max(0, Number(value) || 0) }));
-    setSaved(false);
   };
   const result = useMemo(() => calculatePayroll({
     baseHourlyRateCents: Math.round(values.baseRate * 100),
