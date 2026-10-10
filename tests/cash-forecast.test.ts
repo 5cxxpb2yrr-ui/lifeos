@@ -75,6 +75,13 @@ test("cash forecast exposes recurring income as payday metadata",()=>{
  assert.deepEqual(view.paydays,[{date:"2026-10-08",amountMinor:125000,sourceType:"recurring_rule",sourceId:"payday-rule",title:"Biweekly payday"}]);
 });
 
+test("cash forecast recognizes explicit income direction as payday even when event type is generic",()=>{
+ const db=createEmptyDatabase("2026-10-07T00:00:00.000Z");
+ db.recurringRules.push({id:"payday-direction",entityType:"recurring_rule",createdAt:"2026-01-01T00:00:00.000Z",updatedAt:"2026-01-01T00:00:00.000Z",name:"Payday by direction",eventType:"other",frequency:"biweekly",startDate:"2026-10-08",nextOccurrence:"2026-10-08",enabled:true,template:{amountMinor:125000,direction:"income"}});
+ const view=resolveCashForecast(db,{startDate:"2026-10-07",horizonDays:4,startingCashMinor:0});
+ assert.deepEqual(view.paydays,[{date:"2026-10-08",amountMinor:125000,sourceType:"recurring_rule",sourceId:"payday-direction",title:"Payday by direction"}]);
+});
+
 test("cash forecast keeps same-day income and expenses separate instead of netting categories",()=>{
  const db=createEmptyDatabase("2026-10-07T00:00:00.000Z");
  db.recurringRules.push({id:"payday-same-day",entityType:"recurring_rule",createdAt:"2026-01-01T00:00:00.000Z",updatedAt:"2026-01-01T00:00:00.000Z",name:"Payday",eventType:"income",frequency:"weekly",startDate:"2026-10-08",nextOccurrence:"2026-10-08",enabled:true,template:{amountMinor:100000,direction:"income"}});
