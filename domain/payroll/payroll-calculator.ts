@@ -33,7 +33,6 @@ export interface PayrollPeriodInput {
   filingStatus?: FilingStatus;
   qualifyingChildrenUnder17?: number;
   taxConfig?: Partial<PayrollTaxConfig>;
-  yearToDateSocialSecurityWagesCents?: number;
   yearToDateMedicareWagesCents?: number;
 }
 export interface PayrollCalculation {
@@ -67,7 +66,7 @@ export const DEFAULT_PAYROLL_TAX_CONFIG: PayrollTaxConfig = {
   socialSecurityRate: 0.062,
   medicareRate: 0.0145,
   additionalMedicareRate: 0.009,
-  additionalMedicareThresholdCents: 200_000_000,
+  additionalMedicareThresholdCents: 20_000_000,
 };
 function centsForHours(hours: number, rateCents: number, multiplier = 1): number {
   return Math.round(hours * rateCents * multiplier);
@@ -110,9 +109,7 @@ export function calculatePayroll(input: PayrollPeriodInput): PayrollCalculation 
   const taxableWagesCents = grossPayCents - pretaxDeductionsCents;
   validNonNegative("pretaxDeductionsCents", input.pretaxDeductionsCents ?? 0);
   validNonNegative("postTaxDeductionsCents", input.postTaxDeductionsCents ?? 0);
-  const ytdSS = input.yearToDateSocialSecurityWagesCents ?? 0;
   const ytdMedicare = input.yearToDateMedicareWagesCents ?? 0;
-  validNonNegative("yearToDateSocialSecurityWagesCents", ytdSS);
   validNonNegative("yearToDateMedicareWagesCents", ytdMedicare);
   // The 2026 Social Security wage base is deliberately not hard-coded here;
   // users may supply year-to-date wages, while the estimate remains configurable.
