@@ -35,7 +35,7 @@ export function importPayrollDeposits(db:LifeOSDatabase,rows:ConnectedTransactio
   const date=asDate(row.posted_datetime??row.date??row.transactionDate);
   const raw=row.amountMinor!=null?asAmount(row.amountMinor):asAmount(row.amount);
   if(!date||!Number.isFinite(raw)||raw===0){invalid++;continue;}
-  const externalReference=reference? "connected-finance:"+reference : "connected-finance:"+date+":"+Math.round(Math.abs(raw)*100)+":"+String(row.name??row.merchant_name??"payroll");
+  const externalReference=reference? "connected-finance:"+reference : "connected-finance:"+date+":"+(row.amountMinor!=null?Math.round(Math.abs(raw)):Math.round(Math.abs(raw)*100))+":"+String(row.name??row.merchant_name??"payroll");
   if(known.has(externalReference)){duplicates++;continue;}
   // LifeOS stores amounts as positive magnitudes and represents direction in transactionType.
   const amountMinor=row.amountMinor!=null?Math.round(Math.abs(raw)):Math.round(Math.abs(raw)*100);
