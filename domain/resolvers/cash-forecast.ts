@@ -138,6 +138,13 @@ export function resolveCashForecast(
  const externalFlows=new Map<string,CashForecastEntry[]>();
  for(const flow of options.externalFlows??[]){
   if(flow.date<day(start)||flow.date>day(end)||!Number.isFinite(flow.amountMinor)||flow.amountMinor<=0)continue;
+  // A payroll estimate is a fallback, not an additional paycheck. If canonical
+  // income is already scheduled for that date, keep the canonical source only.
+  const canonicalIncomeAlreadyScheduled=flow.direction==="inflow"&&/payroll/i.test(flow.title??"")&&(
+   (recurringSources.get(flow.date)??[]).some(source=>source.type==="income")||
+   (eventSources.get(flow.date)??[]).some(source=>source.type==="income")
+  );
+  if(canonicalIncomeAlreadyScheduled)continue;
   const entry:CashForecastEntry={date:flow.date,amountMinor:Math.abs(flow.amountMinor),direction:flow.direction,sourceType:"external",sourceId:flow.sourceId??("external:"+flow.date+":"+(flow.title??"flow")),title:flow.title??"External financial flow",priority:typeof flow.priority==="number"?Math.max(1,Math.min(5,Math.round(flow.priority))):undefined};
   externalFlows.set(flow.date,[...(externalFlows.get(flow.date)??[]),entry]);
   if(flow.direction==="inflow"&&/payroll/i.test(entry.title))paydays.push({date:flow.date,amountMinor:entry.amountMinor,sourceType:"external",sourceId:entry.sourceId,title:entry.title});
