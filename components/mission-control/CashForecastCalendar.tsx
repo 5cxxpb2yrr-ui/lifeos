@@ -32,7 +32,7 @@ export default function CashForecastCalendar({db}:{db:LifeOSDatabase}){
  },[db]);
  const selected=forecast.points.find(point=>point.date===selectedDate);
  const firstOffset=forecast.points.length?weekday(forecast.points[0].date):0;
- const calendarCells=(Array.from({length:firstOffset},(_,i)=>({key:"empty-"+i,point:null}))).concat(forecast.points.map(point=>({key:point.date,point})));
+ const calendarCells:Array<{key:string;point:(typeof forecast.points)[number]|null}>=[...Array.from({length:firstOffset},(_,i)=>({key:"empty-"+i,point:null})),...forecast.points.map(point=>({key:point.date,point}))];
  return <section className="card cash-forecast-calendar">
   <div className="section-title"><div><div className="kicker">Finance / Cash Forecast</div><h2>Daily Cash Calendar</h2></div><span className="badge">{forecast.points.length} days</span></div>
   <div className="row-meta">Tap any day to inspect opening cash, projected activity, closing balance, and the underlying obligations.</div>
