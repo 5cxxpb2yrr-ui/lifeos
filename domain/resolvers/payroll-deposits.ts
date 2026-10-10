@@ -83,5 +83,5 @@ export function payrollForecastFlows(transactions:FinancialTransaction[],startDa
   if(deposits.some(t=>t.transactionDate===date))continue;
   flows.push({date,amountMinor:median,direction:"inflow",sourceId:"payroll-estimate:"+date,title:"Expected Kia Georgia payroll (historical median)",priority:1});
  }
-
+ return flows;
 }
