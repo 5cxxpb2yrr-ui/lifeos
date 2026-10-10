@@ -1,7 +1,7 @@
 import type {LifeOSDatabase,RecurringRule} from "@/domain/contracts/database";
 import {resolveFinancialHealth} from "./financial-health";
 
-export type CashForecastSourceType="income"|"bill"|"loan_payment"|"other_expense";
+export type CashForecastSourceType="income"|"bill"|"loan_payment"|"other_expense"|"external";
 export interface CashForecastSource{
  id:string;
  type:CashForecastSourceType;
@@ -149,9 +149,7 @@ export function resolveCashForecast(
  for(let i=0;i<horizon;i++){
   const dateKey=day(addDays(start,i));
   const opening=balance;
-  const recurringValue=recurring.get(dateKey)??0;
-  const eventValue=eventFlows.get(dateKey)??0;
-  const incomeMinor=Math.max(0,recurringValue)+Math.max(0,eventValue);
+  const incomeMinor=(recurringSources.get(dateKey)??[]).filter(x=>x.type==="income").reduce((sum,x)=>sum+x.amountMinor,0)+(eventSources.get(dateKey)??[]).filter(x=>x.type==="income").reduce((sum,x)=>sum+x.amountMinor,0);
   const billMinor=(recurringSources.get(dateKey)??[]).filter(x=>x.type==="bill").reduce((sum,x)=>sum+x.amountMinor,0);
   const loanPaymentMinor=scheduled.get(dateKey)??0;
   const otherExpenseMinor=(eventSources.get(dateKey)??[]).filter(x=>x.type==="other_expense").reduce((sum,x)=>sum+x.amountMinor,0);
@@ -160,7 +158,8 @@ export function resolveCashForecast(
   const externalOutflow=externalEntries.filter(e=>e.direction==="outflow").reduce((sum,e)=>sum+e.amountMinor,0);
   const inflow=incomeMinor+externalInflow;
   const outflow=loanPaymentMinor+billMinor+otherExpenseMinor+externalOutflow;
-  const sources=[...(recurringSources.get(dateKey)??[]),...(scheduledSources.get(dateKey)??[]),...(eventSources.get(dateKey)??[])].sort((a,b)=>b.amountMinor-a.amountMinor);
+  const externalSources:CashForecastSource[]=externalEntries.filter(e=>e.direction==="outflow").map(e=>({id:e.sourceId,type:"external",label:e.title,amountMinor:e.amountMinor,sourceType:"external"}));
+  const sources=[...(recurringSources.get(dateKey)??[]),...(scheduledSources.get(dateKey)??[]),...(eventSources.get(dateKey)??[]),...externalSources].sort((a,b)=>b.amountMinor-a.amountMinor);
   const entries:CashForecastEntry[]=[
    ...(recurringSources.get(dateKey)??[]).map(s=>({date:dateKey,amountMinor:s.amountMinor,direction:s.type==="income"?"inflow" as const:"outflow" as const,sourceType:"recurring_rule" as const,sourceId:s.id,title:s.label})),
    ...(scheduledSources.get(dateKey)??[]).map(s=>({date:dateKey,amountMinor:s.amountMinor,direction:"outflow" as const,sourceType:"loan_payment" as const,sourceId:s.id,title:s.label})),
