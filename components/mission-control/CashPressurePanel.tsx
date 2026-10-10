@@ -36,6 +36,6 @@ export default function CashPressurePanel({db}:{db:LifeOSDatabase}){
   {pressure.firstNegativeDate&&<p className="cash-pressure-warning"><strong>First projected negative day:</strong> {dateLabel(pressure.firstNegativeDate)}</p>}
   {level!=="healthy"&&<p className="row-meta">{pressure.reason}</p>}
   {obligations.length>0&&<div className="cash-pressure-obligations"><strong>Obligations on the lowest-balance day</strong><ul>{obligations.map(item=><li key={item.id}>{item.label} <span>{money(item.amountMinor)}</span></li>)}</ul></div>}
-  {pressure.attention.map(item=><button type="button" className="cash-pressure-action" key={item.id} onClick={()=>window.dispatchEvent(new CustomEvent("lifeos:cash-pressure",{detail:{id:item.id,state:pressure.state,date:pressure.lowestBalanceDate}}))}>View attention details <span aria-hidden="true">→</span></button>)}
+  {pressure.attention.length>0&&<div className="notice" role="status"><strong>Attention Queue:</strong> {pressure.attention.map(item=>item.title).join(" · ")}</div>}
  </section>;
 }
