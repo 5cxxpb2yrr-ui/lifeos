@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { calculatePayroll, calculateStandardBiweeklyPayroll, qualifiesForDoubleTime, isInBiweeklyPayPeriod } from "../domain/payroll/payroll-calculator.ts";
+import { calculatePayroll, calculateStandardBiweeklyPayroll, qualifiesForDoubleTime, getBiweeklyPeriodStart, isBiweeklyPayPeriodStart } from "../domain/payroll/payroll-calculator.ts";
 
 test("standard biweekly gross is 72 regular plus 12 double-time hours", () => {
   const result = calculateStandardBiweeklyPayroll();
@@ -54,7 +54,10 @@ test("Sunday and weekday holidays qualify for double time, Saturday does not by 
 });
 
 test("biweekly cycle uses the Dec 29, 2025 anchor", () => {
-  assert.equal(isInBiweeklyPayPeriod("2025-12-29"), true);
-  assert.equal(isInBiweeklyPayPeriod("2025-12-28"), false);
-  assert.equal(isInBiweeklyPayPeriod("2026-01-12"), true);
+  assert.equal(getBiweeklyPeriodStart("2025-12-29"), "2025-12-29");
+  assert.equal(getBiweeklyPeriodStart("2026-01-15"), "2026-01-12");
+  assert.equal(getBiweeklyPeriodStart("2025-12-28"), "2025-12-15");
+  assert.equal(isBiweeklyPayPeriodStart("2025-12-29"), true);
+  assert.equal(isBiweeklyPayPeriodStart("2026-01-12"), true);
+  assert.equal(isBiweeklyPayPeriodStart("2026-01-15"), false);
 });
