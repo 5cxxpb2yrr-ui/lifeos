@@ -74,3 +74,32 @@ test("cash forecast exposes recurring income as payday metadata",()=>{
  const view=resolveCashForecast(db,{startDate:"2026-10-07",horizonDays:4,startingCashMinor:0});
  assert.deepEqual(view.paydays,[{date:"2026-10-08",amountMinor:125000,sourceType:"recurring_rule",sourceId:"payday-rule",title:"Biweekly payday"}]);
 });
+
+test("cash forecast keeps same-day income and expenses separate instead of netting categories",()=>{
+ const db=createEmptyDatabase("2026-10-07T00:00:00.000Z");
+ db.recurringRules.push({id:"payday-same-day",entityType:"recurring_rule",createdAt:"2026-01-01T00:00:00.000Z",updatedAt:"2026-01-01T00:00:00.000Z",name:"Payday",eventType:"income",frequency:"weekly",startDate:"2026-10-08",nextOccurrence:"2026-10-08",enabled:true,template:{amountMinor:100000,direction:"income"}});
+ db.recurringRules.push({id:"bill-same-day",entityType:"recurring_rule",createdAt:"2026-01-01T00:00:00.000Z",updatedAt:"2026-01-01T00:00:00.000Z",name:"Rent",eventType:"expense",frequency:"weekly",startDate:"2026-10-08",nextOccurrence:"2026-10-08",enabled:true,template:{amountMinor:80000,direction:"expense"}});
+ db.events.push({id:"income-event",entityType:"event",createdAt:"2026-01-01T00:00:00.000Z",updatedAt:"2026-01-01T00:00:00.000Z",eventType:"income",title:"Reimbursement",status:"planned",dueAt:"2026-10-08T12:00:00.000Z",metadata:{amountMinor:5000}});
+ db.events.push({id:"expense-event",entityType:"event",createdAt:"2026-01-01T00:00:00.000Z",updatedAt:"2026-01-01T00:00:00.000Z",eventType:"expense",title:"Groceries",status:"planned",dueAt:"2026-10-08T12:00:00.000Z",metadata:{amountMinor:12000}});
+ const point=resolveCashForecast(db,{startDate:"2026-10-08",horizonDays:1,startingCashMinor:50000}).points[0];
+ assert.equal(point.inflowMinor,105000);
+ assert.equal(point.outflowMinor,92000);
+ assert.equal(point.closingBalanceMinor,63000);
+ assert.equal(point.incomeMinor,105000);
+ assert.equal(point.billMinor,80000);
+ assert.equal(point.otherExpenseMinor,12000);
+});
+
+test("cash pressure includes external outflows in the lowest-day obligation explanation",()=>{
+ const db=createEmptyDatabase("2026-10-07T00:00:00.000Z");
+ db.accounts.push({id:"acct-1",entityType:"financial_account",createdAt:"2026-01-01T00:00:00.000Z",updatedAt:"2026-01-01T00:00:00.000Z",name:"Checking",accountType:"checking",currency:"USD",openingBalanceMinor:10000});
+ const result=resolveCashPressure(db,{
+  startDate:"2026-10-08",
+  horizonDays:1,
+  externalFlows:[{date:"2026-10-08",amountMinor:25000,direction:"outflow",sourceId:"affirm-payment-1",title:"Affirm installment",priority:1}]
+ } as Parameters<typeof resolveCashPressure>[1]);
+ const pressure=result.attention[0];
+ assert.equal(result.state,"negative");
+ assert.ok(result.forecast.points[0].entries.some(entry=>entry.sourceId==="affirm-payment-1"));
+ assert.ok((pressure.context?.obligations as Array<{id:string}>).some(item=>item.id==="affirm-payment-1"));
+});
