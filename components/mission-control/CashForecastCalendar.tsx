@@ -2,6 +2,7 @@
 import {useEffect,useMemo,useState} from "react";
 import type {LifeOSDatabase} from "@/domain/contracts/database";
 import {resolveCashForecast} from "@/domain/resolvers/cash-forecast";
+import {payrollForecastFlows} from "@/domain/resolvers/payroll-deposits";
 
 function money(minor:number){return (minor/100).toLocaleString(undefined,{style:"currency",currency:"USD"});}
 function dateLabel(date:string){return new Date(date+"T12:00:00").toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});}
@@ -11,7 +12,7 @@ function weekday(date:string){return new Date(date+"T12:00:00").getDay();}
 export default function CashForecastCalendar({db}:{db:LifeOSDatabase}){
  const [selectedDate,setSelectedDate]=useState<string|null>(null);
  const [baseline,setBaseline]=useState<{date:string;closingBalanceMinor:number}|null>(null);
- const forecast=useMemo(()=>resolveCashForecast(db,{horizonDays:30}),[db]);
+ const forecast=useMemo(()=>{const startDate=new Date().toISOString().slice(0,10);return resolveCashForecast(db,{startDate,horizonDays:30,externalFlows:payrollForecastFlows(db.transactions,startDate,30)});},[db]);
  useEffect(()=>{
   const handler=(event:Event)=>{
    const detail=(event as CustomEvent).detail as {date?:string};
