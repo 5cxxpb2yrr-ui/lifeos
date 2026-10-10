@@ -61,3 +61,12 @@ test("biweekly cycle uses the Dec 29, 2025 anchor", () => {
   assert.equal(isBiweeklyPayPeriodStart("2026-01-12"), true);
   assert.equal(isBiweeklyPayPeriodStart("2026-01-15"), false);
 });
+
+test("additional Medicare estimate applies only to wages above the $200,000 threshold", () => {
+  const result = calculatePayroll({
+    regularHours: 0, flatGrossEntries: [{ id: "gross", label: "Gross", amountCents: 100000 }],
+    yearToDateMedicareWagesCents: 19_999_000,
+    taxConfig: { federalWithholdingRate: 0, georgiaWithholdingRate: 0, socialSecurityRate: 0, medicareRate: 0 },
+  });
+  assert.equal(result.additionalMedicareCents, 891);
+});
