@@ -7,9 +7,9 @@ const money = (cents: number) => new Intl.NumberFormat("en-US", { style: "curren
 const fieldStyle: React.CSSProperties = { width: "100%", boxSizing: "border-box", background: "#101626", color: "#edf4ff", border: "1px solid rgba(255,255,255,.16)", borderRadius: 10, padding: "11px 12px", fontSize: 16 };
 const labelStyle: React.CSSProperties = { display: "block", color: "#aab6cb", fontSize: 12, marginBottom: 6 };
 const cardStyle: React.CSSProperties = { background: "rgba(255,255,255,.045)", border: "1px solid rgba(255,255,255,.10)", borderRadius: 16, padding: 16, minWidth: 0 };
-type NumericKey = "baseRate" | "regularHours" | "overtimeHours" | "doubleTimeHours" | "ptoHours" | "holidayBankHoursUsed" | "bankedWeekdayHolidayCount" | "bonusDollars" | "flatGrossDollars" | "pretaxDollars" | "postTaxDollars" | "federalRate" | "georgiaRate" | "children";
+type NumericKey = "baseRate" | "regularHours" | "overtimeHours" | "doubleTimeHours" | "ptoHours" | "paidHolidayHours" | "holidayBankHoursUsed" | "bankedWeekdayHolidayCount" | "bonusDollars" | "flatGrossDollars" | "pretaxDollars" | "postTaxDollars" | "federalRate" | "georgiaRate" | "children";
 const defaults: Record<NumericKey, number> = {
-  baseRate: 41.64, regularHours: 72, overtimeHours: 0, doubleTimeHours: 12, ptoHours: 0, holidayBankHoursUsed: 0,
+  baseRate: 41.64, regularHours: 72, overtimeHours: 0, doubleTimeHours: 12, ptoHours: 0, paidHolidayHours: 0, holidayBankHoursUsed: 0,
   bankedWeekdayHolidayCount: 0, bonusDollars: 0, flatGrossDollars: 0, pretaxDollars: 0, postTaxDollars: 0,
   federalRate: 10, georgiaRate: 5, children: 2,
 };
@@ -22,7 +22,7 @@ export default function PayrollCalculatorPage() {
   const result = useMemo(() => calculatePayroll({
     baseHourlyRateCents: Math.round(values.baseRate * 100),
     regularHours: values.regularHours, overtimeHours: values.overtimeHours, doubleTimeHours: values.doubleTimeHours,
-    ptoHours: values.ptoHours, holidayBankHoursUsed: values.holidayBankHoursUsed,
+    ptoHours: values.ptoHours, paidHolidayHours: values.paidHolidayHours, holidayBankHoursUsed: values.holidayBankHoursUsed,
     bankedWeekdayHolidayCount: Math.floor(values.bankedWeekdayHolidayCount),
     bonuses: values.bonusDollars > 0 ? [{ id: "bonus", label: "Bonus", amountCents: Math.round(values.bonusDollars * 100) }] : [],
     flatGrossEntries: values.flatGrossDollars > 0 ? [{ id: "flat-gross", label: "Flat gross entry", amountCents: Math.round(values.flatGrossDollars * 100) }] : [],
@@ -67,7 +67,7 @@ export default function PayrollCalculatorPage() {
               {numberField("regularHours", "Regular hours", "0.25")}
               {numberField("overtimeHours", "Overtime premium hours (extra 0.5×)", "0.25", "Only the additional half-time premium; straight-time pay for these hours is already included in regular hours.")}
               {numberField("doubleTimeHours", "Double-time hours (2×)", "0.25")}
-              {numberField("ptoHours", "PTO hours paid", "0.25")}
+              {numberField("ptoHours", "PTO hours paid", "0.25")}\n              {numberField("paidHolidayHours", "Paid holiday hours", "0.25", "Holiday pay is separate from hours banked for future use.")}
               {numberField("holidayBankHoursUsed", "Holiday-bank hours paid", "0.25")}
               {numberField("bankedWeekdayHolidayCount", "Weekday holidays banked", "1", "Adds 12 bank hours per holiday; no extra pay for the banked holiday.")}
               {numberField("bonusDollars", "Bonus ($)", "0.01")}
@@ -99,7 +99,7 @@ export default function PayrollCalculatorPage() {
           {line("Regular pay", result.regularPayCents)}
           {line("Overtime premium (extra 0.5×)", result.overtimePayCents)}
           {line("Double-time pay", result.doubleTimePayCents)}
-          {line("PTO pay", result.ptoPayCents)}
+          {line("Paid holiday pay", result.paidHolidayPayCents)}\n          {line("PTO pay", result.ptoPayCents)}
           {line("Holiday-bank pay", result.holidayBankPayCents)}
           {line("Bonuses", result.bonusPayCents)}
           {line("Other flat gross", result.flatGrossPayCents)}
