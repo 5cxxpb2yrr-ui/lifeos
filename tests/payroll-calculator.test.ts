@@ -62,7 +62,22 @@ test("biweekly cycle uses the Dec 29, 2025 anchor", () => {
   assert.equal(isBiweeklyPayPeriodStart("2026-01-15"), false);
 });
 
-test("paystub calibration reproduces gross, taxes, deductions, and net pay", () => {\n  const result = calculatePayroll({\n    baseHourlyRateCents: 4164, regularHours: 60, overtimeHours: 16, paidHolidayHours: 8, ptoHours: 20,\n    flatGrossEntries: [{ id: "gtli", label: "EE GTLI taxable", amountCents: 858 }],\n    pretaxDeductionsCents: 25578, postTaxDeductionsCents: 11032,\n    taxConfig: { federalWithholdingRate: 12849 / 375024, georgiaWithholdingRate: 9118 / 375024 },\n  });\n  assert.equal(result.grossPayCents, 400602);\n  assert.equal(result.federalWithholdingCents, 12849);\n  assert.equal(result.georgiaWithholdingCents, 9118);\n  assert.equal(result.socialSecurityCents, 23252);\n  assert.equal(result.medicareCents, 5438);\n  assert.equal(result.estimatedNetPayCents, 313335);\n});\n\ntest("additional Medicare estimate applies only to wages above the $200,000 threshold", () => {
+test("paystub calibration reproduces gross, taxes, deductions, and net pay", () => {
+  const result = calculatePayroll({
+    baseHourlyRateCents: 4164, regularHours: 60, overtimeHours: 16, paidHolidayHours: 8, ptoHours: 20,
+    flatGrossEntries: [{ id: "gtli", label: "EE GTLI taxable", amountCents: 858 }],
+    pretaxDeductionsCents: 25578, postTaxDeductionsCents: 11032,
+    taxConfig: { federalWithholdingRate: 12849 / 375024, georgiaWithholdingRate: 9118 / 375024 },
+  });
+  assert.equal(result.grossPayCents, 400602);
+  assert.equal(result.federalWithholdingCents, 12849);
+  assert.equal(result.georgiaWithholdingCents, 9118);
+  assert.equal(result.socialSecurityCents, 23252);
+  assert.equal(result.medicareCents, 5438);
+  assert.equal(result.estimatedNetPayCents, 313335);
+});
+
+test("additional Medicare estimate applies only to wages above the $200,000 threshold", () => {
   const result = calculatePayroll({
     regularHours: 0, flatGrossEntries: [{ id: "gross", label: "Gross", amountCents: 100000 }],
     yearToDateMedicareWagesCents: 19_999_000,
