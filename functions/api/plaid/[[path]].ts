@@ -75,7 +75,7 @@ function config(env: PlaidEnv): { host: string; clientId: string; secret: string
   // No default: Sandbox must be explicitly selected in the deployment configuration.
   const environment = env.PLAID_ENV;
   // Production is deliberately disabled in this foundation until Sandbox acceptance and explicit approval.
-  if (environment !== "sandbox" || !env.PLAID_CLIENT_ID || !env.PLAID_SECRET) return null;
+  if (environment !== "sandbox" || !env.PLAID_CLIENT_ID || !env.PLAID_SECRET || !env.PLAID_TOKEN_ENCRYPTION_KEY) return null;
   return { host: PLAID_HOSTS[environment], clientId: env.PLAID_CLIENT_ID, secret: env.PLAID_SECRET };
 }
 async function plaidPost<T>(cfg: { host: string; clientId: string; secret: string }, path: string, data: Record<string, unknown>): Promise<T> {
