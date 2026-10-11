@@ -34,7 +34,10 @@ const currentPaySchedule = (today = localDateString(new Date())) => {
   const pay = daysFromAnchor <= 0
     ? anchorPayDate
     : addDays(anchorPayDate, Math.ceil(daysFromAnchor / 14) * 14);
-  const start = addDays(pay, -18);
+  // Confirmed payroll mapping: Oct 27 payday covers Oct 5–18. The next
+  // biweekly payday (Nov 10) covers Oct 19–Nov 1, so the period starts 22
+  // days before payday and spans 14 calendar days inclusive.
+  const start = addDays(pay, -22);
   const end = addDays(start, 13);
   return { payDate: pay, periodStart: start, periodEnd: end };
 };
