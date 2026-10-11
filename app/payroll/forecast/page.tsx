@@ -8,6 +8,7 @@ import {
 } from "@/domain/payroll/payroll-cashflow";
 import type { Event, FinancialTransaction } from "@/domain/contracts/database";
 import { loadLocalDatabase, saveLocalDatabase } from "@/storage/indexeddb/database";
+import FloatingLifeOSMenu from "@/components/mission-control/FloatingLifeOSMenu";
 
 const money = (minor: unknown) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
@@ -136,18 +137,18 @@ export default function PayrollForecastPage() {
   const labelClass = "block text-xs font-semibold uppercase tracking-wide text-slate-400";
 
   return (
-    <main className="min-h-screen bg-[#080b14] px-4 py-6 text-[#edf4ff] sm:px-6">
-      <div className="mx-auto max-w-3xl space-y-5">
+    <main className="min-h-screen bg-[#080b14] px-4 py-6 pb-28 text-[#edf4ff] sm:px-6">
+      <div className="mx-auto max-w-4xl space-y-5">
         <header className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-300">LifeOS / Finance</p>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#ff6a00]">LifeOS / Finance</p>
             <h1 className="mt-2 text-2xl font-bold">Payroll Forecast</h1>
             <p className="mt-1 text-sm text-slate-400">Project net pay into the cash forecast, then reconcile the real deposit.</p>
           </div>
-          <a href="/payroll" className="rounded-xl border border-white/15 px-3 py-2 text-sm hover:border-cyan-300">Calculator</a>
+          <a href="/payroll" className="rounded-xl border border-white/15 px-3 py-2 text-sm hover:border-[#ffd54f]">Calculator</a>
         </header>
 
-        {message && <div role="status" className="rounded-xl border border-cyan-400/30 bg-cyan-400/10 p-3 text-sm">{message}</div>}
+        {message && <div role="status" className="rounded-xl border border-[#ff6a00]/35 bg-[#ff6a00]/10 p-3 text-sm">{message}</div>}
         {loading && <p className="rounded-2xl border border-white/10 p-4 text-sm text-slate-400">Loading local LifeOS data…</p>}
         {loadError && <div className="rounded-2xl border border-rose-400/30 p-4 text-sm text-rose-200">{loadError} <button onClick={() => void reload()} className="ml-2 underline">Retry</button></div>}
         {!loading && !loadError && !db && (
@@ -172,12 +173,12 @@ export default function PayrollForecastPage() {
                 <label className={labelClass}>Pay period start<input type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)} className={inputClass} /></label>
                 <label className={labelClass}>Pay period end<input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} className={inputClass} /></label>
               </div>
-              <div className="mt-4 rounded-xl border border-cyan-300/20 bg-cyan-300/5 p-3">
+              <div className="mt-4 rounded-xl border border-[#ffd54f]/25 bg-[#ffd54f]/5 p-3">
                 <div className="text-xs text-slate-400">Projected net amount used by cash forecast</div>
-                <div className="mt-1 text-2xl font-bold text-cyan-200">{money(netCents)}</div>
+                <div className="mt-1 text-2xl font-bold text-[#ffd54f]">{money(netCents)}</div>
                 <div className="mt-1 text-xs text-slate-500">Gross estimate: {money(estimate.grossPayCents)} · Net projection, not actual income</div>
               </div>
-              <button disabled={busy} onClick={() => void saveProjection()} className="mt-4 w-full rounded-xl bg-cyan-300 px-4 py-3 font-bold text-slate-950 disabled:opacity-50">Save paycheck projection</button>
+              <button disabled={busy} onClick={() => void saveProjection()} className="mt-4 w-full rounded-xl bg-gradient-to-r from-[#ff6a00] to-[#ffd54f] px-4 py-3 font-bold text-[#080b14] disabled:opacity-50">Save paycheck projection</button>
             </section>
 
             <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 sm:p-5">
@@ -201,7 +202,7 @@ export default function PayrollForecastPage() {
                           <option value="">Select imported income deposit…</option>
                           {transactions.map((t) => <option key={t.id} value={t.id}>{t.transactionDate} · {t.description || t.id} · {money(t.amountMinor)}</option>)}
                         </select>
-                        <button disabled={busy || transactions.length === 0} onClick={() => void reconcile(event.id)} className="rounded-xl border border-emerald-300/40 px-4 py-3 text-sm font-semibold text-emerald-200 disabled:opacity-40">Reconcile</button>
+                        <button disabled={busy || transactions.length === 0} onClick={() => void reconcile(event.id)} className="rounded-xl border border-[#ffd54f]/40 px-4 py-3 text-sm font-semibold text-[#ffd54f] disabled:opacity-40">Reconcile</button>
                       </div>}
                     </article>;
                   })}
@@ -212,6 +213,7 @@ export default function PayrollForecastPage() {
         )}
         <p className="text-xs leading-relaxed text-slate-500">Local-first: writes through LifeOS IndexedDB integrity validation. The forecast uses estimated net pay rather than gross. Once reconciled, the imported bank transaction is authoritative; the completed projection should not be counted as a second inflow. Tax and net-pay figures are estimates until matched to an actual deposit.</p>
       </div>
+      <FloatingLifeOSMenu />
     </main>
   );
 }
