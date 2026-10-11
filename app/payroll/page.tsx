@@ -65,7 +65,7 @@ export default function PayrollCalculatorPage() {
             <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
               {numberField("baseRate", "Base hourly rate ($)", "0.01")}
               {numberField("regularHours", "Regular hours", "0.25")}
-              {numberField("overtimeHours", "Overtime hours (1.5×)", "0.25")}
+              {numberField("overtimeHours", "Overtime premium hours (extra 0.5×)", "0.25", "Only the additional half-time premium; straight-time pay for these hours is already included in regular hours.")}
               {numberField("doubleTimeHours", "Double-time hours (2×)", "0.25")}
               {numberField("ptoHours", "PTO hours paid", "0.25")}
               {numberField("holidayBankHoursUsed", "Holiday-bank hours paid", "0.25")}
@@ -97,7 +97,7 @@ export default function PayrollCalculatorPage() {
         <section style={{ ...cardStyle, marginTop: 14 }}>
           <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>Paycheck estimate</h2>
           {line("Regular pay", result.regularPayCents)}
-          {line("Overtime pay", result.overtimePayCents)}
+          {line("Overtime premium (extra 0.5×)", result.overtimePayCents)}
           {line("Double-time pay", result.doubleTimePayCents)}
           {line("PTO pay", result.ptoPayCents)}
           {line("Holiday-bank pay", result.holidayBankPayCents)}
@@ -120,7 +120,7 @@ export default function PayrollCalculatorPage() {
             <span style={{ background: "rgba(255,106,0,.08)", color: "#ff9a52", padding: "7px 10px", borderRadius: 8, fontSize: 12 }}>Holiday bank used −{result.holidayBankHoursUsed}h</span>
             <span style={{ background: "rgba(255,255,255,.06)", color: "#edf4ff", padding: "7px 10px", borderRadius: 8, fontSize: 12 }}>Net bank change {result.holidayBankNetChangeHours >= 0 ? "+" : ""}{result.holidayBankNetChangeHours}h</span>
           </div>
-          <p style={{ color: "#74839c", fontSize: 11, lineHeight: 1.5, margin: "14px 0 0" }}>Planning tool only. Estimates currently use flat federal and Georgia rates; FICA wage-base caps and detailed W-4 / Georgia G-4 tables are not yet modeled. Double-time hours are separate from regular hours and must not be counted twice.</p>
+          <p style={{ color: "#74839c", fontSize: 11, lineHeight: 1.5, margin: "14px 0 0" }}>Planning tool only. Estimates currently use flat federal and Georgia rates; FICA wage-base caps and detailed W-4 / Georgia G-4 tables are not yet modeled. Overtime premium hours are hours over 40 in the Monday–Saturday workweek; their straight-time pay is included in regular hours. Sunday/eligible holiday double-time is entered separately.</p>
         </section>
       </div>
     </main>
