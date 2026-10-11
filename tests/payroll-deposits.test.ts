@@ -29,14 +29,15 @@ test("imports only posted payroll deposits, deduplicates them, and does not infl
  assert.equal(second.duplicates,7);
 });
 
-test("projects next biweekly payroll from regular deposits and ignores supplemental deposit timing",()=>{
- const db=createEmptyDatabase("2026-10-09T00:00:00.000Z");
- const imported=importPayrollDeposits(db,history,"2026-10-09T00:00:00.000Z");
- const flows=payrollForecastFlows(imported.transactions,"2026-10-09",30);
- assert.equal(flows[0]?.date,"2026-10-09");
+test("anchors contractual paydays to Oct 27 and estimates Friday USAA availability from regular deposits",()=>{
+ const db=createEmptyDatabase("2026-10-11T00:00:00.000Z");
+ const imported=importPayrollDeposits(db,history,"2026-10-11T00:00:00.000Z");
+ const flows=payrollForecastFlows(imported.transactions,"2026-10-11",30);
+ assert.equal(flows[0]?.date,"2026-10-23");
  assert.equal(flows[0]?.direction,"inflow");
  assert.equal(flows[0]?.amountMinor,298336);
- assert.match(flows[0]?.title??"",/historical median/);
+ assert.match(flows[0]?.title??"",/USAA early-availability estimate/);
+ assert.deepEqual(flows.map(flow=>flow.date),["2026-10-23","2026-11-06"]);
 });
 
 test("does not invent a cadence from fewer than three deposits",()=>{
