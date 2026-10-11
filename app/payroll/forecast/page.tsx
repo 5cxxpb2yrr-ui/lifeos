@@ -137,16 +137,20 @@ export default function PayrollForecastPage() {
   const labelClass = "block text-xs font-semibold uppercase tracking-wide text-slate-400";
 
   return (
-    <main className="min-h-screen bg-[#080b14] px-4 py-6 pb-28 text-[#edf4ff] sm:px-6">
-      <div className="mx-auto max-w-4xl space-y-5">
-        <header className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#ff6a00]">LifeOS / Finance</p>
-            <h1 className="mt-2 text-2xl font-bold">Payroll Forecast</h1>
-            <p className="mt-1 text-sm text-slate-400">Project net pay into the cash forecast, then reconcile the real deposit.</p>
+    <main className="payroll-forecast-page min-h-screen bg-[#080b14] px-4 py-6 pb-28 text-[#edf4ff] sm:px-6">
+      <div className="payroll-forecast-layout mx-auto max-w-4xl space-y-5">
+        <nav className="payroll-top-nav" aria-label="LifeOS finance navigation">
+          <a href="/" className="payroll-brand"><span className="payroll-brand-mark">L</span><span>LIFEOS <small>/ FINANCE</small></span></a>
+          <div className="payroll-nav-links"><a href="/">Mission Control</a><a href="/payroll">Payroll Calculator</a><a href="/payroll/forecast" aria-current="page">Payroll Forecast</a></div>
+        </nav>
+        <header className="payroll-hero">
+          <div className="payroll-hero-copy"><p className="payroll-eyebrow"><span className="payroll-live-dot" /> CASH FLOW PLANNING · BIWEEKLY</p>
+            <h1>Payroll <span>Forecast</span></h1>
+            <p>Turn your next paycheck into a cash-flow event. Project net pay, carry it into your forecast, and reconcile it when the real deposit arrives.</p>
           </div>
-          <a href="/payroll" className="rounded-xl border border-white/15 px-3 py-2 text-sm hover:border-[#ffd54f]">Calculator</a>
+          <div className="payroll-hero-mark" aria-hidden="true"><span>$</span><i>↗</i></div>
         </header>
+        <section className="payroll-stat-strip" aria-label="Forecast overview"><div><span>PAY CYCLE</span><strong>Biweekly</strong><small>14-day period</small></div><div><span>NET PAY</span><strong>{money(netCents)}</strong><small>Current projection</small></div><div><span>RECONCILIATION</span><strong>{projections.filter((event) => event.status === "completed" || event.metadata?.reconciliationState === "reconciled").length} / {projections.length}</strong><small>Deposits matched</small></div></section>
 
         {message && <div role="status" className="rounded-xl border border-[#ff6a00]/35 bg-[#ff6a00]/10 p-3 text-sm">{message}</div>}
         {loading && <p className="rounded-2xl border border-white/10 p-4 text-sm text-slate-400">Loading local LifeOS data…</p>}
