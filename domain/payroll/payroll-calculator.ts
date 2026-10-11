@@ -1,5 +1,5 @@
 /**
- * LifeOS Payroll Calculator — deterministic gross-pay and configurable net-pay estimate.
+ * LifeOS Payroll Calculator — straight-time earnings plus a separate half-time overtime premium.
  * All money inputs/outputs are integer cents. Tax percentages are planning estimates,
  * not payroll-provider calculations or tax advice.
  */
@@ -98,7 +98,8 @@ export function calculatePayroll(input: PayrollPeriodInput): PayrollCalculation 
     if (!Number.isFinite(value) || value < 0) throw new RangeError(name + " must be finite and non-negative");
   }
   const regularPayCents = centsForHours(regularHours, rate);
-  const overtimePayCents = centsForHours(overtimeHours, rate, 1.5);
+  // Monday–Saturday hours are paid at straight time in regularPayCents; only the additional half-time premium belongs here.
+  const overtimePayCents = centsForHours(overtimeHours, rate, 0.5);
   const doubleTimePayCents = centsForHours(doubleTimeHours, rate, 2);
   const ptoPayCents = centsForHours(ptoHours, rate);
   const holidayBankPayCents = centsForHours(holidayBankHoursUsed, rate);
@@ -126,7 +127,8 @@ export function calculatePayroll(input: PayrollPeriodInput): PayrollCalculation 
     "Federal and Georgia withholding are flat-rate planning estimates; configure them to match a recent paystub.",
     "FICA estimates use the configured rates and taxable wages; Social Security wage-base limits are not automatically applied.",
     "Filing status and qualifying-child count are recorded for future withholding refinement but do not alter these flat-rate estimates.",
-    "Double-time hours are counted only in the double-time line; do not also include those hours in regular hours.",
+    "Overtime hours here mean premium-eligible hours over 40 in the Monday–Saturday workweek; their straight-time pay must already be included in regular hours. This line adds only the extra 0.5× premium.",
+    "Sunday/eligible holiday double-time hours are entered separately and must not also be counted in regular hours.",
   ];
   return {
     baseHourlyRateCents: rate, regularPayCents, overtimePayCents, doubleTimePayCents, ptoPayCents,
