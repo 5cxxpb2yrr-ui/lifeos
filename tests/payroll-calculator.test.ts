@@ -62,11 +62,11 @@ test("biweekly cycle uses the Dec 29, 2025 anchor", () => {
   assert.equal(isBiweeklyPayPeriodStart("2026-01-15"), false);
 });
 
-test("paystub calibration reproduces gross, taxes, deductions, and net pay", () => {
+test("paystub calibration reconciles FICA wage rounding and net pay", () => {
   const result = calculatePayroll({
     baseHourlyRateCents: 4164, regularHours: 60, overtimeHours: 16, paidHolidayHours: 8, ptoHours: 20,
     flatGrossEntries: [{ id: "gtli", label: "EE GTLI taxable", amountCents: 858 }],
-    pretaxDeductionsCents: 25578, postTaxDeductionsCents: 11032,
+    pretaxDeductionsCents: 25578, postTaxDeductionsCents: 11032, ficaTaxableWageAdjustmentCents: 8,
     taxConfig: { federalWithholdingRate: 12849 / 375024, georgiaWithholdingRate: 9118 / 375024 },
   });
   assert.equal(result.grossPayCents, 400602);
