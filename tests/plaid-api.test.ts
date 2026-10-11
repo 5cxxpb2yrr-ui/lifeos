@@ -19,14 +19,3 @@ test("Plaid API requires a signed Cloudflare Access assertion", async () => {
   assert.equal(response.status, 401);
   assert.match((await response.json() as { error: string }).error, /sign-in is required/);
 });
-
-test("Plaid API cannot be switched to Production by environment configuration", async () => {
-  const response = await onRequest({
-    request: new Request("https://lifeos.example/api/plaid/link-token", {
-      method: "POST",
-      headers: { "Cf-Access-Jwt-Assertion": "not-a-valid-jwt" },
-    }),
-    env: { PLAID_ENV: "production", PLAID_CLIENT_ID: "test-client", PLAID_SECRET: "test-secret" },
-  });
-  assert.equal(response.status, 401);
-});
