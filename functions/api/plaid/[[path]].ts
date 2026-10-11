@@ -64,8 +64,16 @@ async function validAccess(token: string): Promise<boolean> {
 function response(status: number, body: Record<string, unknown>): Response {
   return Response.json(body, { status, headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } });
 }
+function isPreviewDeployment(request: Request): boolean {
+  const hostname = new URL(request.url).hostname.toLowerCase();
+  // Fail closed: the production Pages hostname and custom production domains are not allowed.
+  // Cloudflare branch and commit preview deployments use non-root subdomains of this Pages hostname.
+  return hostname.endsWith(".finance-trackerzip.pages.dev") &&
+    hostname !== "finance-trackerzip.pages.dev";
+}
 function config(env: PlaidEnv): { host: string; clientId: string; secret: string } | null {
-  const environment = env.PLAID_ENV || "sandbox";
+  // No default: Sandbox must be explicitly selected in the deployment configuration.
+  const environment = env.PLAID_ENV;
   // Production is deliberately disabled in this foundation until Sandbox acceptance and explicit approval.
   if (environment !== "sandbox" || !env.PLAID_CLIENT_ID || !env.PLAID_SECRET) return null;
   return { host: PLAID_HOSTS[environment], clientId: env.PLAID_CLIENT_ID, secret: env.PLAID_SECRET };
@@ -114,6 +122,9 @@ function dbOrNull(env: PlaidEnv): D1Database | null { return env.PLAID_DB || nul
 
 export async function onRequest({ request, env }: PlaidContext): Promise<Response> {
   if (request.method !== "POST") return response(405, { error: "Method not allowed." });
+  if (!isPreviewDeployment(request)) {
+    return response(404, { error: "Plaid Sandbox is available only on a Cloudflare Pages Preview deployment." });
+  }
   const assertion = request.headers.get("Cf-Access-Jwt-Assertion");
   if (!assertion || !(await validAccess(assertion))) return response(401, { error: "LifeOS sign-in is required." });
   const url = new URL(request.url);
