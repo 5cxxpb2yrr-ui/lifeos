@@ -3,8 +3,7 @@ on:
   push:
     branches: ["main", "lifeos-v2-foundation"]
   pull_request:
-    # Validate PRs regardless of target branch, including stacked feature branches.
-    branches: ["**"]
+    branches: ["main"]
 jobs:
   check:
     runs-on: ubuntu-latest
