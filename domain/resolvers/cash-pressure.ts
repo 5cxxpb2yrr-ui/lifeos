@@ -1,5 +1,5 @@
 import type {AttentionItem,LifeOSDatabase} from "@/domain/contracts/database";
-import {resolveCashForecast,type CashForecastView} from "./cash-forecast";
+import {resolveCashForecast,type CashForecastOptions,type CashForecastView} from "./cash-forecast";
 
 export type CashPressureState="healthy"|"watch"|"constrained"|"negative"|"unresolved";
 
@@ -24,7 +24,7 @@ function hasCashSource(db:LifeOSDatabase):boolean{
 
 export function resolveCashPressure(
  db:LifeOSDatabase,
- options:{startDate?:string;horizonDays?:number;startingCashMinor?:number}={}
+ options:CashForecastOptions={}
 ):CashPressureView{
  const forecast=resolveCashForecast(db,options);
  const explicitStartingCash=options.startingCashMinor!==undefined;
@@ -106,13 +106,13 @@ export function resolveCashPressure(
     firstNegativeDate:forecast.firstNegativeDate,
     forecastDate:forecast.lowestBalanceDate,
     obligations:obligations.map(obligation=>({
-     type:obligation.type==="loan_payment"?"loan_payment":obligation.type==="other_expense"?"event":"recurring_rule",
+     type:obligation.type==="loan_payment"?"loan_payment":obligation.type==="other_expense"?"event":obligation.type==="external"?"external":"recurring_rule",
      id:obligation.id,
      label:obligation.label,
      amountMinor:obligation.amountMinor
     })),
     highestPriorityObligation:highestPriorityObligation?{
-     type:highestPriorityObligation.type==="loan_payment"?"loan_payment":highestPriorityObligation.type==="other_expense"?"event":"recurring_rule",
+     type:highestPriorityObligation.type==="loan_payment"?"loan_payment":highestPriorityObligation.type==="other_expense"?"event":highestPriorityObligation.type==="external"?"external":"recurring_rule",
      id:highestPriorityObligation.id,
      label:highestPriorityObligation.label,
      amountMinor:highestPriorityObligation.amountMinor
