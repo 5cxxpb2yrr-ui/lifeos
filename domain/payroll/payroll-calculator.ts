@@ -24,6 +24,7 @@ export interface PayrollPeriodInput {
   overtimeHours?: number;
   doubleTimeHours?: number;
   ptoHours?: number;
+  paidHolidayHours?: number;
   holidayBankHoursUsed?: number;
   bankedWeekdayHolidayCount?: number;
   bonuses?: PayrollEntry[];
@@ -41,6 +42,7 @@ export interface PayrollCalculation {
   overtimePayCents: number;
   doubleTimePayCents: number;
   ptoPayCents: number;
+  paidHolidayPayCents: number;
   holidayBankPayCents: number;
   bonusPayCents: number;
   flatGrossPayCents: number;
@@ -89,9 +91,10 @@ export function calculatePayroll(input: PayrollPeriodInput): PayrollCalculation 
   const overtimeHours = input.overtimeHours ?? 0;
   const doubleTimeHours = input.doubleTimeHours ?? 0;
   const ptoHours = input.ptoHours ?? 0;
+  const paidHolidayHours = input.paidHolidayHours ?? 0;
   const holidayBankHoursUsed = input.holidayBankHoursUsed ?? 0;
   const bankedWeekdayHolidayCount = input.bankedWeekdayHolidayCount ?? 0;
-  for (const [name, value] of Object.entries({ rate, regularHours, overtimeHours, doubleTimeHours, ptoHours, holidayBankHoursUsed, bankedWeekdayHolidayCount })) validNonNegative(name, value);
+  for (const [name, value] of Object.entries({ rate, regularHours, overtimeHours, doubleTimeHours, ptoHours, paidHolidayHours, holidayBankHoursUsed, bankedWeekdayHolidayCount })) validNonNegative(name, value);
   if (!Number.isInteger(rate)) throw new RangeError("baseHourlyRateCents must be an integer");
   const tax = { ...DEFAULT_PAYROLL_TAX_CONFIG, ...input.taxConfig };
   for (const [name, value] of Object.entries(tax)) {
@@ -102,10 +105,11 @@ export function calculatePayroll(input: PayrollPeriodInput): PayrollCalculation 
   const overtimePayCents = centsForHours(overtimeHours, rate, 0.5);
   const doubleTimePayCents = centsForHours(doubleTimeHours, rate, 2);
   const ptoPayCents = centsForHours(ptoHours, rate);
+  const paidHolidayPayCents = centsForHours(paidHolidayHours, rate);
   const holidayBankPayCents = centsForHours(holidayBankHoursUsed, rate);
   const bonusPayCents = sumEntries(input.bonuses);
   const flatGrossPayCents = sumEntries(input.flatGrossEntries);
-  const grossPayCents = regularPayCents + overtimePayCents + doubleTimePayCents + ptoPayCents + holidayBankPayCents + bonusPayCents + flatGrossPayCents;
+  const grossPayCents = regularPayCents + overtimePayCents + doubleTimePayCents + ptoPayCents + paidHolidayPayCents + holidayBankPayCents + bonusPayCents + flatGrossPayCents;
   const pretaxDeductionsCents = Math.min(grossPayCents, Math.round(input.pretaxDeductionsCents ?? 0));
   const taxableWagesCents = grossPayCents - pretaxDeductionsCents;
   validNonNegative("pretaxDeductionsCents", input.pretaxDeductionsCents ?? 0);
@@ -131,7 +135,7 @@ export function calculatePayroll(input: PayrollPeriodInput): PayrollCalculation 
     "Sunday/eligible holiday double-time hours are entered separately and must not also be counted in regular hours.",
   ];
   return {
-    baseHourlyRateCents: rate, regularPayCents, overtimePayCents, doubleTimePayCents, ptoPayCents,
+    baseHourlyRateCents: rate, regularPayCents, overtimePayCents, doubleTimePayCents, ptoPayCents, paidHolidayPayCents,
     holidayBankPayCents, bonusPayCents, flatGrossPayCents, grossPayCents, pretaxDeductionsCents,
     taxableWagesCents, federalWithholdingCents, georgiaWithholdingCents, socialSecurityCents,
     medicareCents, additionalMedicareCents, postTaxDeductionsCents, estimatedNetPayCents,
