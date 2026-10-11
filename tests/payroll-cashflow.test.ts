@@ -85,7 +85,7 @@ test("reconciliation refuses to link non-income transactions", () => {
     ...withExpected,
     transactions: [...withExpected.transactions, {
     id: "txn-expense-1",
-    entityType: "financial_transaction",
+    entityType: "financial_transaction" as const,
     createdAt: "2026-10-16T13:00:00.000Z",
     updatedAt: "2026-10-16T13:00:00.000Z",
     transactionType: "expense" as const,
