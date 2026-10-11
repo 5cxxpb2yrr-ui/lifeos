@@ -78,8 +78,9 @@ export default function CashForecastCalendar({ db }: { db: LifeOSDatabase }) {
     });
   }, [forecast.points]);
 
+  const isDialogOpen = Boolean(selected);
   useEffect(() => {
-    if (!selected) return;
+    if (!isDialogOpen) return;
     const dialog = dialogRef.current;
     const previousFocus = returnFocusRef.current ?? (document.activeElement as HTMLElement | null);
     const focusable = () => dialog?.querySelectorAll<HTMLElement>(
@@ -111,9 +112,9 @@ export default function CashForecastCalendar({ db }: { db: LifeOSDatabase }) {
     document.addEventListener("keydown", onKeyDown);
     return () => {
       document.removeEventListener("keydown", onKeyDown);
-      if (!selectedDate) requestAnimationFrame(() => previousFocus?.focus());
+      requestAnimationFrame(() => previousFocus?.focus());
     };
-  }, [selectedDate, selected]);
+  }, [isDialogOpen]);
 
   const closeDetails = () => setSelectedDate(null);
   const selectDay = (date: string, trigger?: HTMLButtonElement | null) => {
