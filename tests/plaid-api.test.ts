@@ -13,7 +13,7 @@ test("Plaid API rejects methods other than POST", async () => {
 
 test("Plaid API requires a signed Cloudflare Access assertion", async () => {
   const response = await onRequest({
-    request: new Request("https://lifeos.example/api/plaid/link-token", { method: "POST" }),
+    request: new Request("https://feat-plaid-sandbox-foundatio.finance-trackerzip.pages.dev/api/plaid/link-token", { method: "POST" }),
     env: { PLAID_ENV: "sandbox", PLAID_CLIENT_ID: "test-client", PLAID_SECRET: "test-secret" },
   });
   assert.equal(response.status, 401);
