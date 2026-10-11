@@ -109,6 +109,9 @@ export function reconcileExpectedPaycheckEvent(
   if (event.source !== "payroll_forecast" || event.eventType !== "income") {
     throw new Error("Only expected payroll income Events can be reconciled");
   }
+  if (event.status === "completed" || event.metadata?.reconciliationState === "reconciled") {
+    throw new Error("Expected paycheck has already been reconciled; refusing a second deposit link");
+  }
   const transaction = db.transactions.find((item) => item.id === transactionId);
   if (!transaction) throw new Error("Actual bank transaction was not found");
   if (transaction.transactionType !== "income" && transaction.transactionType !== "refund") {
