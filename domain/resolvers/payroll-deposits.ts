@@ -10,7 +10,7 @@ export interface ConnectedTransactionRecord {
  category?:string|string[]; pending?:boolean; currency?:string; iso_currency_code?:string;
 }
 export interface DepositImportResult { transactions:FinancialTransaction[]; account?:FinancialAccount; imported:number; duplicates:number; ignored:number; accountId:string; }
-const payrollPattern=/\\b(payroll|payroll\\s*deposit|kia georgia inc)\\b/i;
+const payrollPattern=/\b(payroll|payroll\s*deposit|kia georgia inc)\b/i;
 const CONTRACTUAL_PAYDAY_ANCHOR="2026-10-27";
 const PAY_CADENCE_DAYS=14;
 const DAY_MS=86400000;
@@ -51,7 +51,7 @@ export function importPayrollDeposits(db:LifeOSDatabase,rows:ConnectedTransactio
  return {transactions:newTransactions,account,imported,duplicates,ignored:rows.length-matched.length+invalid,accountId:account.id};
 }
 export function payrollForecastFlows(transactions:FinancialTransaction[],startDate:string,horizonDays=30):NonNullable<CashForecastOptions["externalFlows"]> {
- const deposits=transactions.filter(t=>t.transactionType==="income"&&/\\b(payroll|payroll\\s*deposit|kia georgia inc)\\b/i.test([t.description,t.merchant].filter(Boolean).join(" "))&&t.amountMinor>0).sort((a,b)=>a.transactionDate.localeCompare(b.transactionDate));
+ const deposits=transactions.filter(t=>t.transactionType==="income"&&/\b(payroll|payroll\s*deposit|kia georgia inc)\b/i.test([t.description,t.merchant].filter(Boolean).join(" "))&&t.amountMinor>0).sort((a,b)=>a.transactionDate.localeCompare(b.transactionDate));
  if(deposits.length<3)return [];
  // Infer the regular 14-day deposit cadence first. A supplemental deposit such as
  // Sep 30 is not on that cadence and must not reset either the schedule or amount sample.
@@ -90,13 +90,11 @@ export function payrollForecastFlows(transactions:FinancialTransaction[],startDa
  while(contractual+PAY_CADENCE_DAYS*DAY_MS<start)contractual+=PAY_CADENCE_DAYS*DAY_MS;
  const flows:NonNullable<CashForecastOptions["externalFlows"]>=[];
  for(let guard=0;contractual<end+7*DAY_MS&&guard<30;guard++,contractual+=PAY_CADENCE_DAYS*DAY_MS){
-  const payday=dateFromDay(contractual/DAY_MS);
   let available=contractual;
   while(new Date(available).getUTCDay()!==depositWeekday)available-=DAY_MS;
   const date=dateFromDay(available/DAY_MS);
   if(available<start||available>=end||deposits.some(t=>t.transactionDate===date))continue;
   flows.push({date,amountMinor:median,direction:"inflow",sourceId:"payroll-estimate:"+date,title:"Expected Kia Georgia payroll (USAA early-availability estimate)",priority:1});
-  void payday;
  }
  return flows.sort((a,b)=>a.date.localeCompare(b.date));
 }
