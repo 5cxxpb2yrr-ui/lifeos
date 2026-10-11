@@ -27,7 +27,8 @@ export default function PayrollCalculatorPage() {
     bonuses: values.bonusDollars > 0 ? [{ id: "bonus", label: "Bonus", amountCents: Math.round(values.bonusDollars * 100) }] : [],
     flatGrossEntries: values.flatGrossDollars > 0 ? [{ id: "flat-gross", label: "Flat gross entry", amountCents: Math.round(values.flatGrossDollars * 100) }] : [],
     pretaxDeductionsCents: Math.round(values.pretaxDollars * 100),
-    postTaxDeductionsCents: Math.round(values.postTaxDollars * 100),\n    ficaTaxableWageAdjustmentCents: Math.round(values.ficaAdjustmentDollars * 100),
+    postTaxDeductionsCents: Math.round(values.postTaxDollars * 100),
+    ficaTaxableWageAdjustmentCents: Math.round(values.ficaAdjustmentDollars * 100),
     filingStatus, qualifyingChildrenUnder17: Math.floor(values.children),
     taxConfig: { federalWithholdingRate: values.federalRate / 100, georgiaWithholdingRate: values.georgiaRate / 100 },
   }), [values, filingStatus]);
@@ -67,7 +68,8 @@ export default function PayrollCalculatorPage() {
               {numberField("regularHours", "Regular hours", "0.25")}
               {numberField("overtimeHours", "Overtime premium hours (extra 0.5×)", "0.25", "Only the additional half-time premium; straight-time pay for these hours is already included in regular hours.")}
               {numberField("doubleTimeHours", "Double-time hours (2×)", "0.25")}
-              {numberField("ptoHours", "PTO hours paid", "0.25")}\n              {numberField("paidHolidayHours", "Paid holiday hours", "0.25", "Holiday pay is separate from hours banked for future use.")}
+              {numberField("ptoHours", "PTO hours paid", "0.25")}
+              {numberField("paidHolidayHours", "Paid holiday hours", "0.25", "Holiday pay is separate from hours banked for future use.")}
               {numberField("holidayBankHoursUsed", "Holiday-bank hours paid", "0.25")}
               {numberField("bankedWeekdayHolidayCount", "Weekday holidays banked", "1", "Adds 12 bank hours per holiday; no extra pay for the banked holiday.")}
               {numberField("bonusDollars", "Bonus ($)", "0.01")}
@@ -89,7 +91,8 @@ export default function PayrollCalculatorPage() {
               {numberField("federalRate", "Federal estimate (%)", "0.1")}
               {numberField("georgiaRate", "Georgia estimate (%)", "0.1")}
               {numberField("pretaxDollars", "Pre-tax deductions ($)", "0.01")}
-              {numberField("postTaxDollars", "Post-tax deductions ($)", "0.01")}\n              {numberField("ficaAdjustmentDollars", "FICA taxable wage adjustment ($)", "0.01", "Usually $0. Use only to reconcile taxable fringe benefits or payroll-specific FICA rounding from a paystub.")}
+              {numberField("postTaxDollars", "Post-tax deductions ($)", "0.01")}
+              {numberField("ficaAdjustmentDollars", "FICA taxable wage adjustment ($)", "0.01", "Usually $0. Use only to reconcile taxable fringe benefits or payroll-specific FICA rounding from a paystub.")}
             </div>
             <p style={{ color: "#74839c", fontSize: 11, lineHeight: 1.5, marginBottom: 0 }}>Federal and Georgia rates are editable flat-rate estimates, not official withholding calculations. Match these to a recent paystub for a closer planning estimate.</p>
           </section>
@@ -99,7 +102,8 @@ export default function PayrollCalculatorPage() {
           {line("Regular pay", result.regularPayCents)}
           {line("Overtime premium (extra 0.5×)", result.overtimePayCents)}
           {line("Double-time pay", result.doubleTimePayCents)}
-          {line("Paid holiday pay", result.paidHolidayPayCents)}\n          {line("PTO pay", result.ptoPayCents)}
+          {line("Paid holiday pay", result.paidHolidayPayCents)}
+          {line("PTO pay", result.ptoPayCents)}
           {line("Holiday-bank pay", result.holidayBankPayCents)}
           {line("Bonuses", result.bonusPayCents)}
           {line("Other flat gross", result.flatGrossPayCents)}
