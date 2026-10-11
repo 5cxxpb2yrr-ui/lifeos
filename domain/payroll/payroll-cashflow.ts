@@ -63,3 +63,75 @@ export function createExpectedPaycheckEvent(input: ExpectedPaycheckInput): Event
     },
   };
 }
+
+
+/**
+ * Insert or refresh one projected paycheck by stable Event ID. Returns a copied
+ * database object; callers remain responsible for persisting it through LifeOS storage.
+ */
+export function upsertExpectedPaycheckEvent(
+  db: import("@/domain/contracts/database").LifeOSDatabase,
+  input: ExpectedPaycheckInput,
+): import("@/domain/contracts/database").LifeOSDatabase {
+  const event = createExpectedPaycheckEvent(input);
+  const existingIndex = db.events.findIndex((item) => item.id === event.id);
+  const events = [...db.events];
+  if (existingIndex >= 0) {
+    const existing = events[existingIndex];
+    if (existing.source !== "payroll_forecast") {
+      throw new Error("Refusing to overwrite a non-payroll Event with this ID");
+    }
+    events[existingIndex] = { ...event, createdAt: existing.createdAt };
+  } else {
+    events.push(event);
+  }
+  return { ...db, events };
+}
+
+/**
+ * Reconcile a projected paycheck after the corresponding real deposit is imported.
+ * The transaction becomes the canonical actual record; completing the projection
+ * removes it from the cash forecast so it cannot be counted twice.
+ */
+export function reconcileExpectedPaycheckEvent(
+  db: import("@/domain/contracts/database").LifeOSDatabase,
+  eventId: string,
+  transactionId: string,
+  reconciledAt = new Date().toISOString(),
+): import("@/domain/contracts/database").LifeOSDatabase {
+  if (!transactionId.trim()) throw new RangeError("transactionId is required");
+  const eventIndex = db.events.findIndex((item) => item.id === eventId);
+  if (eventIndex < 0) throw new Error("Expected paycheck Event was not found");
+  const event = db.events[eventIndex];
+  if (event.source !== "payroll_forecast" || event.eventType !== "income") {
+    throw new Error("Only expected payroll income Events can be reconciled");
+  }
+  const transaction = db.transactions.find((item) => item.id === transactionId);
+  if (!transaction) throw new Error("Actual bank transaction was not found");
+  if (transaction.transactionType !== "income" && transaction.transactionType !== "refund") {
+    throw new Error("Actual transaction must be an income deposit");
+  }
+  if (transaction.eventId && transaction.eventId !== eventId) {
+    throw new Error("Actual transaction is already linked to another Event");
+  }
+  const events = [...db.events];
+  events[eventIndex] = {
+    ...event,
+    status: "completed",
+    completedAt: reconciledAt,
+    updatedAt: reconciledAt,
+    financialTransactionIds: [...new Set([...(event.financialTransactionIds ?? []), transactionId])],
+    metadata: {
+      ...(event.metadata ?? {}),
+      reconciliationState: "reconciled",
+      reconciledTransactionId: transactionId,
+      reconciledAt,
+      actualAmountMinor: transaction.amountMinor,
+      actualDate: transaction.transactionDate,
+    },
+  };
+  const transactions = db.transactions.map((item) =>
+    item.id === transactionId ? { ...item, eventId, updatedAt: reconciledAt } : item,
+  );
+  return { ...db, events, transactions };
+}
