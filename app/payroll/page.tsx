@@ -7,10 +7,10 @@ const money = (cents: number) => new Intl.NumberFormat("en-US", { style: "curren
 const fieldStyle: React.CSSProperties = { width: "100%", boxSizing: "border-box", background: "#101626", color: "#edf4ff", border: "1px solid rgba(255,255,255,.16)", borderRadius: 10, padding: "11px 12px", fontSize: 16 };
 const labelStyle: React.CSSProperties = { display: "block", color: "#aab6cb", fontSize: 12, marginBottom: 6 };
 const cardStyle: React.CSSProperties = { background: "rgba(255,255,255,.045)", border: "1px solid rgba(255,255,255,.10)", borderRadius: 16, padding: 16, minWidth: 0 };
-type NumericKey = "baseRate" | "regularHours" | "overtimeHours" | "doubleTimeHours" | "ptoHours" | "paidHolidayHours" | "holidayBankHoursUsed" | "bankedWeekdayHolidayCount" | "bonusDollars" | "flatGrossDollars" | "pretaxDollars" | "postTaxDollars" | "federalRate" | "georgiaRate" | "children";
+type NumericKey = "baseRate" | "regularHours" | "overtimeHours" | "doubleTimeHours" | "ptoHours" | "paidHolidayHours" | "holidayBankHoursUsed" | "bankedWeekdayHolidayCount" | "bonusDollars" | "flatGrossDollars" | "pretaxDollars" | "postTaxDollars" | "ficaAdjustmentDollars" | "federalRate" | "georgiaRate" | "children";
 const defaults: Record<NumericKey, number> = {
   baseRate: 41.64, regularHours: 72, overtimeHours: 0, doubleTimeHours: 12, ptoHours: 0, paidHolidayHours: 0, holidayBankHoursUsed: 0,
-  bankedWeekdayHolidayCount: 0, bonusDollars: 0, flatGrossDollars: 0, pretaxDollars: 0, postTaxDollars: 0,
+  bankedWeekdayHolidayCount: 0, bonusDollars: 0, flatGrossDollars: 0, pretaxDollars: 0, postTaxDollars: 0, ficaAdjustmentDollars: 0,
   federalRate: 10, georgiaRate: 5, children: 2,
 };
 export default function PayrollCalculatorPage() {
@@ -27,7 +27,7 @@ export default function PayrollCalculatorPage() {
     bonuses: values.bonusDollars > 0 ? [{ id: "bonus", label: "Bonus", amountCents: Math.round(values.bonusDollars * 100) }] : [],
     flatGrossEntries: values.flatGrossDollars > 0 ? [{ id: "flat-gross", label: "Flat gross entry", amountCents: Math.round(values.flatGrossDollars * 100) }] : [],
     pretaxDeductionsCents: Math.round(values.pretaxDollars * 100),
-    postTaxDeductionsCents: Math.round(values.postTaxDollars * 100),
+    postTaxDeductionsCents: Math.round(values.postTaxDollars * 100),\n    ficaTaxableWageAdjustmentCents: Math.round(values.ficaAdjustmentDollars * 100),
     filingStatus, qualifyingChildrenUnder17: Math.floor(values.children),
     taxConfig: { federalWithholdingRate: values.federalRate / 100, georgiaWithholdingRate: values.georgiaRate / 100 },
   }), [values, filingStatus]);
@@ -89,7 +89,7 @@ export default function PayrollCalculatorPage() {
               {numberField("federalRate", "Federal estimate (%)", "0.1")}
               {numberField("georgiaRate", "Georgia estimate (%)", "0.1")}
               {numberField("pretaxDollars", "Pre-tax deductions ($)", "0.01")}
-              {numberField("postTaxDollars", "Post-tax deductions ($)", "0.01")}
+              {numberField("postTaxDollars", "Post-tax deductions ($)", "0.01")}\n              {numberField("ficaAdjustmentDollars", "FICA taxable wage adjustment ($)", "0.01", "Usually $0. Use only to reconcile taxable fringe benefits or payroll-specific FICA rounding from a paystub.")}
             </div>
             <p style={{ color: "#74839c", fontSize: 11, lineHeight: 1.5, marginBottom: 0 }}>Federal and Georgia rates are editable flat-rate estimates, not official withholding calculations. Match these to a recent paystub for a closer planning estimate.</p>
           </section>
