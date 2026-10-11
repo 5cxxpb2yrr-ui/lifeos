@@ -35,6 +35,7 @@ export interface PayrollPeriodInput {
   qualifyingChildrenUnder17?: number;
   taxConfig?: Partial<PayrollTaxConfig>;
   yearToDateMedicareWagesCents?: number;
+  ficaTaxableWageAdjustmentCents?: number;
 }
 export interface PayrollCalculation {
   baseHourlyRateCents: number;
@@ -118,10 +119,14 @@ export function calculatePayroll(input: PayrollPeriodInput): PayrollCalculation 
   validNonNegative("yearToDateMedicareWagesCents", ytdMedicare);
   // The 2026 Social Security wage base is deliberately not hard-coded here;
   // users may supply year-to-date wages, while the estimate remains configurable.
-  const socialSecurityCents = withheld(taxableWagesCents, tax.socialSecurityRate);
-  const medicareCents = withheld(taxableWagesCents, tax.medicareRate);
+  // Some taxable fringe benefits or payroll rounding can make FICA wages differ slightly
+  // from federal/state withholding wages; allow an explicit reconciliation adjustment.
+  const ficaTaxableWagesCents = Math.max(0, taxableWagesCents + (input.ficaTaxableWageAdjustmentCents ?? 0));
+  validNonNegative("ficaTaxableWageAdjustmentCents", input.ficaTaxableWageAdjustmentCents ?? 0);
+  const socialSecurityCents = withheld(ficaTaxableWagesCents, tax.socialSecurityRate);
+  const medicareCents = withheld(ficaTaxableWagesCents, tax.medicareRate);
   const threshold = tax.additionalMedicareThresholdCents;
-  const additionalMedicareCents = withheld(Math.max(0, ytdMedicare + taxableWagesCents - threshold) - Math.max(0, ytdMedicare - threshold), tax.additionalMedicareRate);
+  const additionalMedicareCents = withheld(Math.max(0, ytdMedicare + ficaTaxableWagesCents - threshold) - Math.max(0, ytdMedicare - threshold), tax.additionalMedicareRate);
   const federalWithholdingCents = withheld(taxableWagesCents, tax.federalWithholdingRate);
   const georgiaWithholdingCents = withheld(taxableWagesCents, tax.georgiaWithholdingRate);
   const postTaxDeductionsCents = Math.round(input.postTaxDeductionsCents ?? 0);
