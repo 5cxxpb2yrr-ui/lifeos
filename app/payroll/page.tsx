@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { calculatePayroll } from "../../domain/payroll/payroll-calculator";
 import { MOST_RECENT_PAYSTUB, validatePayrollAgainstPaystub } from "../../domain/payroll/paystub-validation";
+import FloatingLifeOSMenu from "@/components/mission-control/FloatingLifeOSMenu";
 
 const money = (cents: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 const fieldStyle: React.CSSProperties = { width: "100%", boxSizing: "border-box", background: "#101626", color: "#edf4ff", border: "1px solid rgba(255,255,255,.16)", borderRadius: 10, padding: "11px 12px", fontSize: 16 };
@@ -61,13 +62,14 @@ export default function PayrollCalculatorPage() {
     </div>
   );
   return (
-    <main style={{ minHeight: "100vh", background: "#080b14", color: "#edf4ff", padding: "max(18px, env(safe-area-inset-top)) 16px 40px", fontFamily: "Arial, sans-serif" }}>
+    <main style={{ minHeight: "100vh", background: "#080b14", color: "#edf4ff", padding: "max(18px, env(safe-area-inset-top)) 16px 100px", fontFamily: "Arial, sans-serif" }}>
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <a href="/" style={{ color: "#00e5ff", textDecoration: "none", fontSize: 13 }}>← LifeOS Mission Control</a>
         <header style={{ margin: "20px 0 22px" }}>
           <p style={{ color: "#ff6a00", letterSpacing: 2, fontSize: 11, fontWeight: 700, margin: 0 }}>LIFEOS / FINANCE</p>
           <h1 style={{ fontSize: "clamp(28px, 6vw, 42px)", margin: "8px 0", letterSpacing: -1 }}>Payroll Calculator</h1>
           <p style={{ color: "#aab6cb", lineHeight: 1.55, margin: 0 }}>Biweekly pay planning · $41.64 base rate · 14-day cycle anchored Dec 29, 2025</p>
+          <a href="/payroll/forecast" style={{ display: "inline-block", marginTop: 12, border: "1px solid rgba(255,213,79,.42)", borderRadius: 10, padding: "10px 13px", color: "#ffd54f", textDecoration: "none", fontSize: 13, fontWeight: 700 }}>Open Payroll Forecast →</a>
         </header>
         <section style={{ ...cardStyle, marginBottom: 14, borderColor: "rgba(255,213,79,.38)" }}>
           <div style={{ color: "#ffd54f", fontSize: 11, letterSpacing: 1.2, fontWeight: 700 }}>STANDARD PAYCHECK BASELINE</div>
@@ -160,6 +162,7 @@ export default function PayrollCalculatorPage() {
           <p style={{ color: "#74839c", fontSize: 11, lineHeight: 1.5, margin: "12px 0 0" }}>Tolerance: {money(paystubValidation.toleranceCents)} per field. Federal and Georgia rates are calibrated to this check, and the 8¢ FICA wage adjustment models the observed rounding difference. Actual future withholding can differ.</p>
         </section>
       </div>
+      <FloatingLifeOSMenu />
     </main>
   );
 }
