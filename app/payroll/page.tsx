@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { calculatePayroll } from "../../domain/payroll/payroll-calculator";
+import { MOST_RECENT_PAYSTUB, validatePayrollAgainstPaystub } from "../../domain/payroll/paystub-validation";
 
 const money = (cents: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 const fieldStyle: React.CSSProperties = { width: "100%", boxSizing: "border-box", background: "#101626", color: "#edf4ff", border: "1px solid rgba(255,255,255,.16)", borderRadius: 10, padding: "11px 12px", fontSize: 16 };
@@ -19,6 +20,21 @@ export default function PayrollCalculatorPage() {
   const update = (key: NumericKey, value: string) => {
     setValues((current) => ({ ...current, [key]: value === "" ? 0 : Math.max(0, Number(value) || 0) }));
   };
+  const paystubValidation = useMemo(() => {
+    const taxableWagesCents = MOST_RECENT_PAYSTUB.grossPayCents - MOST_RECENT_PAYSTUB.pretaxDeductionsCents;
+    const referenceCalculation = calculatePayroll({
+      regularHours: 0,
+      flatGrossEntries: [{ id: "paystub-reference-gross", label: "Paystub reference gross", amountCents: MOST_RECENT_PAYSTUB.grossPayCents }],
+      pretaxDeductionsCents: MOST_RECENT_PAYSTUB.pretaxDeductionsCents,
+      postTaxDeductionsCents: MOST_RECENT_PAYSTUB.postTaxDeductionsCents,
+      taxConfig: {
+        federalWithholdingRate: MOST_RECENT_PAYSTUB.federalWithholdingCents / taxableWagesCents,
+        georgiaWithholdingRate: MOST_RECENT_PAYSTUB.georgiaWithholdingCents / taxableWagesCents,
+      },
+      ficaTaxableWageAdjustmentCents: 8,
+    });
+    return validatePayrollAgainstPaystub(referenceCalculation);
+  }, []);
   const result = useMemo(() => calculatePayroll({
     baseHourlyRateCents: Math.round(values.baseRate * 100),
     regularHours: values.regularHours, overtimeHours: values.overtimeHours, doubleTimeHours: values.doubleTimeHours,
@@ -126,6 +142,23 @@ export default function PayrollCalculatorPage() {
             <span style={{ background: "rgba(255,255,255,.06)", color: "#edf4ff", padding: "7px 10px", borderRadius: 8, fontSize: 12 }}>Net bank change {result.holidayBankNetChangeHours >= 0 ? "+" : ""}{result.holidayBankNetChangeHours}h</span>
           </div>
           <p style={{ color: "#74839c", fontSize: 11, lineHeight: 1.5, margin: "14px 0 0" }}>Planning tool only. Estimates currently use flat federal and Georgia rates; FICA wage-base caps and detailed W-4 / Georgia G-4 tables are not yet modeled. Overtime premium hours are hours over 40 in the Monday–Saturday workweek; their straight-time pay is included in regular hours. Sunday/eligible holiday double-time is entered separately.</p>
+        </section>
+        <section aria-labelledby="paystub-validation-title" style={{ ...cardStyle, marginTop: 14, borderColor: paystubValidation.passed ? "rgba(0,229,255,.3)" : "rgba(255,106,0,.45)" }}>
+          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+            <h2 id="paystub-validation-title" style={{ margin: 0, fontSize: 18 }}>Previous paystub validation</h2>
+            <span style={{ borderRadius: 8, padding: "7px 10px", fontSize: 12, fontWeight: 700, color: paystubValidation.passed ? "#00e5ff" : "#ffb36b", background: paystubValidation.passed ? "rgba(0,229,255,.08)" : "rgba(255,106,0,.10)" }}>
+              {paystubValidation.passed ? "REFERENCE MATCH" : "MISMATCH DETECTED"}
+            </span>
+          </div>
+          <p style={{ color: "#aab6cb", fontSize: 12, lineHeight: 1.5, margin: "9px 0 12px" }}>Reference: your September 29, 2026 paystub. This isolates the previous-check calibration from the editable estimate above, so a reference match does not falsely imply the next check is guaranteed.</p>
+          {paystubValidation.lines.map((item) => (
+            <div key={item.field} style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto auto", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,.06)", fontSize: 12 }}>
+              <span style={{ color: "#aab6cb" }}>{item.label}</span>
+              <span style={{ textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{money(item.actualCents)}</span>
+              <span style={{ minWidth: 52, textAlign: "right", color: item.withinTolerance ? "#00e5ff" : "#ffb36b", fontVariantNumeric: "tabular-nums" }}>{item.differenceCents === 0 ? "Match" : (item.differenceCents > 0 ? "+" : "−") + money(Math.abs(item.differenceCents))}</span>
+            </div>
+          ))}
+          <p style={{ color: "#74839c", fontSize: 11, lineHeight: 1.5, margin: "12px 0 0" }}>Tolerance: {money(paystubValidation.toleranceCents)} per field. Federal and Georgia rates are calibrated to this check, and the 8¢ FICA wage adjustment models the observed rounding difference. Actual future withholding can differ.</p>
         </section>
       </div>
     </main>
