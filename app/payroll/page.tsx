@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { calculatePayroll } from "../../domain/payroll/payroll-calculator";
 import { MOST_RECENT_PAYSTUB, validatePayrollAgainstPaystub } from "../../domain/payroll/paystub-validation";
+import FloatingLifeOSMenu from "@/components/mission-control/FloatingLifeOSMenu";
 
 const money = (cents: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100);
 const fieldStyle: React.CSSProperties = { width: "100%", boxSizing: "border-box", background: "#101626", color: "#edf4ff", border: "1px solid rgba(255,255,255,.16)", borderRadius: 10, padding: "11px 12px", fontSize: 16 };
@@ -61,7 +62,7 @@ export default function PayrollCalculatorPage() {
     </div>
   );
   return (
-    <main style={{ minHeight: "100vh", background: "#080b14", color: "#edf4ff", padding: "max(18px, env(safe-area-inset-top)) 16px 40px", fontFamily: "Arial, sans-serif" }}>
+    <main style={{ minHeight: "100vh", background: "#080b14", color: "#edf4ff", padding: "max(18px, env(safe-area-inset-top)) 16px 100px", fontFamily: "Arial, sans-serif" }}>
       <div style={{ maxWidth: 900, margin: "0 auto" }}>
         <a href="/" style={{ color: "#00e5ff", textDecoration: "none", fontSize: 13 }}>← LifeOS Mission Control</a>
         <header style={{ margin: "20px 0 22px" }}>
@@ -161,6 +162,7 @@ export default function PayrollCalculatorPage() {
           <p style={{ color: "#74839c", fontSize: 11, lineHeight: 1.5, margin: "12px 0 0" }}>Tolerance: {money(paystubValidation.toleranceCents)} per field. Federal and Georgia rates are calibrated to this check, and the 8¢ FICA wage adjustment models the observed rounding difference. Actual future withholding can differ.</p>
         </section>
       </div>
+      <FloatingLifeOSMenu />
     </main>
   );
 }
