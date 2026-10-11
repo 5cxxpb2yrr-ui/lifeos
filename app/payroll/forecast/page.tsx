@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { calculateStandardBiweeklyPayroll } from "@/domain/payroll/payroll-calculator";
+import { calculateStandardBiweeklyPayroll, getBiweeklyPeriodStart } from "@/domain/payroll/payroll-calculator";
 import {
   reconcileExpectedPaycheckEvent,
   upsertExpectedPaycheckEvent,
@@ -13,10 +13,29 @@ const money = (minor: unknown) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(
     typeof minor === "number" && Number.isFinite(minor) ? minor / 100 : 0,
   );
-const dateValue = (offset: number) => {
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  return d.toISOString().slice(0, 10);
+const localDateString = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+const addDays = (date: string, count: number) => {
+  const value = new Date(date + "T12:00:00.000Z");
+  value.setUTCDate(value.getUTCDate() + count);
+  return value.toISOString().slice(0, 10);
+};
+const currentPaySchedule = (today = localDateString(new Date())) => {
+  // The anchor defines biweekly period starts. Pay day is the Friday after the
+  // 14-day period closes on Sunday (period start + 18 days).
+  let start = getBiweeklyPeriodStart(today, "2025-12-29");
+  let end = addDays(start, 13);
+  let pay = addDays(start, 18);
+  if (pay < today) {
+    start = addDays(start, 14);
+    end = addDays(start, 13);
+    pay = addDays(start, 18);
+  }
+  return { payDate: pay, periodStart: start, periodEnd: end };
 };
 const payrollEvents = (events: Event[]) =>
   events.filter((e) => e.source === "payroll_forecast" && e.eventType === "income");
@@ -25,9 +44,9 @@ export default function PayrollForecastPage() {
   const [db, setDb] = useState<Awaited<ReturnType<typeof loadLocalDatabase>>>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
-  const [payDate, setPayDate] = useState("2026-10-16");
-  const [periodStart, setPeriodStart] = useState("2026-09-28");
-  const [periodEnd, setPeriodEnd] = useState("2026-10-11");
+  const [payDate, setPayDate] = useState("");
+  const [periodStart, setPeriodStart] = useState("");
+  const [periodEnd, setPeriodEnd] = useState("");
   const [netOverride, setNetOverride] = useState("");
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -46,7 +65,13 @@ export default function PayrollForecastPage() {
     }
   }, []);
 
-  useEffect(() => { void reload(); }, [reload]);
+  useEffect(() => {
+    void reload();
+    const schedule = currentPaySchedule();
+    setPayDate(schedule.payDate);
+    setPeriodStart(schedule.periodStart);
+    setPeriodEnd(schedule.periodEnd);
+  }, [reload]);
 
   const estimate = useMemo(() => calculateStandardBiweeklyPayroll(), []);
   const netCents = netOverride.trim() === ""
@@ -140,7 +165,7 @@ export default function PayrollForecastPage() {
                 <h2 className="font-semibold">Schedule expected paycheck</h2>
                 <span className="rounded-full bg-amber-300/10 px-3 py-1 text-xs font-semibold text-amber-200">Estimate</span>
               </div>
-              <p className="mt-2 text-sm text-slate-400">Default net estimate is calculated from the current standard biweekly payroll settings. You can override it to match your expected check.</p>
+              <p className="mt-2 text-sm text-slate-400">Pay dates are prefilled automatically from your Dec 29, 2025 biweekly anchor. The form selects the next payday relative to today and its matching 14-day pay period. You can still adjust dates if payroll changes.</p>
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <label className={labelClass}>Pay date<input type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} className={inputClass} /></label>
                 <label className={labelClass}>Estimated net pay (USD)<input inputMode="decimal" type="number" min="0" step="0.01" placeholder={(estimate.estimatedNetPayCents / 100).toFixed(2)} value={netOverride} onChange={(e) => setNetOverride(e.target.value)} className={inputClass} /></label>
