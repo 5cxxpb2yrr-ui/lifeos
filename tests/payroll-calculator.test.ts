@@ -10,12 +10,12 @@ test("standard biweekly gross is 72 regular plus 12 double-time hours", () => {
   assert.equal(result.estimatedNetPayCents, 399744 - result.federalWithholdingCents - result.georgiaWithholdingCents - result.socialSecurityCents - result.medicareCents);
 });
 
-test("overtime is 1.5x and double time is 2x; hours are not double-counted", () => {
+test("overtime line is the additional half-time premium; double time is separate", () => {
   const result = calculatePayroll({ regularHours: 10, overtimeHours: 2, doubleTimeHours: 3 });
   assert.equal(result.regularPayCents, 41640);
-  assert.equal(result.overtimePayCents, 12492);
+  assert.equal(result.overtimePayCents, 4164); // 2 hours × $20.82 premium
   assert.equal(result.doubleTimePayCents, 24984);
-  assert.equal(result.grossPayCents, 79116);
+  assert.equal(result.grossPayCents, 70788);
 });
 
 test("PTO, holiday-bank pay, bonuses, flat gross, and deductions are included", () => {
