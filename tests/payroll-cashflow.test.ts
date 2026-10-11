@@ -1,18 +1,21 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { createEmptyDatabase } from "../domain/services/empty-database.ts";
 import { calculateStandardBiweeklyPayroll } from "../domain/payroll/payroll-calculator.ts";
-import { createExpectedPaycheckEvent } from "../domain/payroll/payroll-cashflow.ts";
+import { createExpectedPaycheckEvent, reconcileExpectedPaycheckEvent, upsertExpectedPaycheckEvent } from "../domain/payroll/payroll-cashflow.ts";
+
+const input = () => ({
+  id: "paycheck-2026-10-16",
+  payDate: "2026-10-16",
+  payPeriodStart: "2026-09-28",
+  payPeriodEnd: "2026-10-11",
+  calculation: calculateStandardBiweeklyPayroll(),
+  createdAt: "2026-10-10T00:00:00.000Z",
+});
 
 test("expected paycheck Event contributes estimated net pay, not gross, to forecast", () => {
   const calculation = calculateStandardBiweeklyPayroll();
-  const event = createExpectedPaycheckEvent({
-    id: "paycheck-2026-10-16",
-    payDate: "2026-10-16",
-    payPeriodStart: "2026-09-28",
-    payPeriodEnd: "2026-10-11",
-    calculation,
-    createdAt: "2026-10-10T00:00:00.000Z",
-  });
+  const event = createExpectedPaycheckEvent({ ...input(), calculation });
   assert.equal(event.eventType, "income");
   assert.equal(event.status, "planned");
   assert.equal(event.dueAt, "2026-10-16T12:00:00.000Z");
@@ -25,12 +28,68 @@ test("expected paycheck Event contributes estimated net pay, not gross, to forec
 test("expected paycheck Event rejects invalid dates and negative pay", () => {
   const calculation = calculateStandardBiweeklyPayroll();
   assert.throws(() => createExpectedPaycheckEvent({
-    id: "bad-date", payDate: "2026-02-30", payPeriodStart: "2026-02-16",
-    payPeriodEnd: "2026-03-01", calculation,
+    ...input(), payDate: "2026-02-30",
   }), /valid YYYY-MM-DD/);
   assert.throws(() => createExpectedPaycheckEvent({
-    id: "bad-pay", payDate: "2026-10-16", payPeriodStart: "2026-09-28",
-    payPeriodEnd: "2026-10-11",
-    calculation: { estimatedNetPayCents: -1, grossPayCents: 100 },
+    ...input(), calculation: { estimatedNetPayCents: -1, grossPayCents: 100 },
   }), /non-negative integer cents/);
+});
+
+test("upsert keeps a single projected paycheck for a stable ID", () => {
+  const db = createEmptyDatabase("2026-10-10T00:00:00.000Z");
+  const first = upsertExpectedPaycheckEvent(db, input());
+  const refreshed = upsertExpectedPaycheckEvent(first, {
+    ...input(),
+    calculation: { estimatedNetPayCents: 250000, grossPayCents: 300000 },
+    createdAt: "2026-10-11T00:00:00.000Z",
+  });
+  assert.equal(refreshed.events.length, 1);
+  assert.equal(refreshed.events[0].metadata?.amountMinor, 250000);
+  assert.equal(refreshed.events[0].createdAt, "2026-10-10T00:00:00.000Z");
+  assert.equal(db.events.length, 0, "input database remains immutable");
+});
+
+test("reconciliation links actual deposit and completes projection to prevent duplicate forecast income", () => {
+  const db = createEmptyDatabase("2026-10-10T00:00:00.000Z");
+  const withExpected = upsertExpectedPaycheckEvent(db, input());
+  withExpected.transactions.push({
+    id: "txn-paycheck-1",
+    entityType: "financial_transaction",
+    createdAt: "2026-10-16T13:00:00.000Z",
+    updatedAt: "2026-10-16T13:00:00.000Z",
+    transactionType: "income",
+    transactionDate: "2026-10-16",
+    amountMinor: 313335,
+    currency: "USD",
+    accountId: "checking-1",
+    description: "Payroll deposit",
+  });
+  const reconciled = reconcileExpectedPaycheckEvent(
+    withExpected, "paycheck-2026-10-16", "txn-paycheck-1", "2026-10-16T14:00:00.000Z",
+  );
+  assert.equal(reconciled.events[0].status, "completed");
+  assert.equal(reconciled.events[0].metadata?.reconciliationState, "reconciled");
+  assert.equal(reconciled.events[0].metadata?.actualAmountMinor, 313335);
+  assert.equal(reconciled.transactions[0].eventId, "paycheck-2026-10-16");
+  assert.deepEqual(reconciled.events[0].financialTransactionIds, ["txn-paycheck-1"]);
+  assert.equal(withExpected.events[0].status, "planned");
+});
+
+test("reconciliation refuses to link non-income transactions", () => {
+  const db = createEmptyDatabase("2026-10-10T00:00:00.000Z");
+  const withExpected = upsertExpectedPaycheckEvent(db, input());
+  withExpected.transactions.push({
+    id: "txn-expense-1",
+    entityType: "financial_transaction",
+    createdAt: "2026-10-16T13:00:00.000Z",
+    updatedAt: "2026-10-16T13:00:00.000Z",
+    transactionType: "expense",
+    transactionDate: "2026-10-16",
+    amountMinor: 313335,
+    currency: "USD",
+    accountId: "checking-1",
+  });
+  assert.throws(() => reconcileExpectedPaycheckEvent(
+    withExpected, "paycheck-2026-10-16", "txn-expense-1",
+  ), /income deposit/);
 });
