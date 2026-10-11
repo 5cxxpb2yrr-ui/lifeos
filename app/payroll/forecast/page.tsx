@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { calculateStandardBiweeklyPayroll, getBiweeklyPeriodStart } from "@/domain/payroll/payroll-calculator";
+import { calculateStandardBiweeklyPayroll } from "@/domain/payroll/payroll-calculator";
 import {
   reconcileExpectedPaycheckEvent,
   upsertExpectedPaycheckEvent,
@@ -26,16 +26,16 @@ const addDays = (date: string, count: number) => {
   return value.toISOString().slice(0, 10);
 };
 const currentPaySchedule = (today = localDateString(new Date())) => {
-  // The anchor defines biweekly period starts. Pay day is the Friday after the
-  // 14-day period closes on Sunday (period start + 18 days).
-  let start = getBiweeklyPeriodStart(today, "2025-12-29");
-  let end = addDays(start, 13);
-  let pay = addDays(start, 18);
-  if (pay < today) {
-    start = addDays(start, 14);
-    end = addDays(start, 13);
-    pay = addDays(start, 18);
-  }
+  // User-confirmed payday anchor: Tuesday, October 27, 2026. Keep the
+  // biweekly cadence tied to payday rather than assuming a Friday deposit.
+  const anchorPayDate = "2026-10-27";
+  const toDayNumber = (value: string) => Math.floor(Date.parse(value + "T00:00:00.000Z") / 86_400_000);
+  const daysFromAnchor = toDayNumber(today) - toDayNumber(anchorPayDate);
+  const pay = daysFromAnchor <= 0
+    ? anchorPayDate
+    : addDays(anchorPayDate, Math.ceil(daysFromAnchor / 14) * 14);
+  const start = addDays(pay, -18);
+  const end = addDays(start, 13);
   return { payDate: pay, periodStart: start, periodEnd: end };
 };
 const payrollEvents = (events: Event[]) =>
@@ -170,7 +170,7 @@ export default function PayrollForecastPage() {
                 <h2 className="font-semibold">Schedule expected paycheck</h2>
                 <span className="rounded-full bg-amber-300/10 px-3 py-1 text-xs font-semibold text-amber-200">Estimate</span>
               </div>
-              <p className="mt-2 text-sm text-slate-400">Pay dates are prefilled automatically from your Dec 29, 2025 biweekly anchor. The form selects the next payday relative to today and its matching 14-day pay period. You can still adjust dates if payroll changes.</p>
+              <p className="mt-2 text-sm text-slate-400">Pay dates are prefilled from your confirmed October 27, 2026 payday and continue every 14 days. The form selects the next payday and its matching 14-day pay period. You can still adjust dates if payroll changes.</p>
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <label className={labelClass}>Pay date<input type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} className={inputClass} /></label>
                 <label className={labelClass}>Estimated net pay (USD)<input inputMode="decimal" type="number" min="0" step="0.01" placeholder={(estimate.estimatedNetPayCents / 100).toFixed(2)} value={netOverride} onChange={(e) => setNetOverride(e.target.value)} className={inputClass} /></label>
