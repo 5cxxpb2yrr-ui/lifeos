@@ -41,13 +41,12 @@ export default function FloatingLifeOSMenu() {
             </div>
             <div style={{ color: "#74839c", padding: "0 7px 7px", fontSize: 9, letterSpacing: 1.5, fontWeight: 700 }}>CORE</div>
             {destinations.map((item) => {
-              const active = typeof window !== "undefined" && window.location.pathname === item.href;
               return (
                 <a key={item.href} href={item.href} style={{
                   display: "grid", gridTemplateColumns: "24px minmax(0,1fr) auto", alignItems: "center", gap: 8,
-                  padding: "11px 9px", marginBottom: 3, border: active ? "1px solid rgba(0,229,255,.25)" : "1px solid transparent",
-                  borderRadius: 11, background: active ? "rgba(0,229,255,.08)" : "transparent",
-                  color: active ? "#00e5ff" : "#edf4ff", textDecoration: "none", fontSize: 13, fontWeight: 700,
+                  padding: "11px 9px", marginBottom: 3, border: "1px solid transparent",
+                  borderRadius: 11, background: "transparent",
+                  color: "#edf4ff", textDecoration: "none", fontSize: 13, fontWeight: 700,
                 }}>
                   <span aria-hidden="true">{item.href === "/" ? "⌂" : item.href === "/payroll" ? "＄" : "◷"}</span>
                   <span>{item.label}</span>
