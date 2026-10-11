@@ -81,6 +81,9 @@ export function upsertExpectedPaycheckEvent(
     if (existing.source !== "payroll_forecast") {
       throw new Error("Refusing to overwrite a non-payroll Event with this ID");
     }
+    if (existing.status === "completed" || existing.metadata?.reconciliationState === "reconciled") {
+      throw new Error("Refusing to refresh a reconciled paycheck; the actual deposit is now authoritative");
+    }
     events[existingIndex] = { ...event, createdAt: existing.createdAt };
   } else {
     events.push(event);
