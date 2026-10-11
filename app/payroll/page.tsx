@@ -52,6 +52,7 @@ export default function PayrollCalculatorPage() {
           <p style={{ color: "#ff6a00", letterSpacing: 2, fontSize: 11, fontWeight: 700, margin: 0 }}>LIFEOS / FINANCE</p>
           <h1 style={{ fontSize: "clamp(28px, 6vw, 42px)", margin: "8px 0", letterSpacing: -1 }}>Payroll Calculator</h1>
           <p style={{ color: "#aab6cb", lineHeight: 1.55, margin: 0 }}>Biweekly pay planning · $41.64 base rate · 14-day cycle anchored Dec 29, 2025</p>
+          <a href="/payroll/forecast" style={{ display: "inline-block", marginTop: 12, border: "1px solid rgba(0,229,255,.35)", borderRadius: 10, padding: "9px 12px", color: "#00e5ff", textDecoration: "none", fontSize: 13, fontWeight: 700 }}>Open Payroll Forecast →</a>
         </header>
         <section style={{ ...cardStyle, marginBottom: 14, borderColor: "rgba(255,213,79,.38)" }}>
           <div style={{ color: "#ffd54f", fontSize: 11, letterSpacing: 1.2, fontWeight: 700 }}>STANDARD PAYCHECK BASELINE</div>
