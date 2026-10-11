@@ -60,6 +60,7 @@ export default function MissionControl(){
  </div>
  <div className="sidebar-group"><div className="sidebar-group-label">Money</div>
   <button className={activeView==="finance"?"sidebar-link active":"sidebar-link"} onClick={()=>selectView("finance")}><span>$</span><strong>Finance</strong><em>{db.accounts.length+db.loans.length}</em></button>
+  <a className="sidebar-link" href="/payroll"><span>↗</span><strong>Payroll Calculator</strong><em>↗</em></a>
  </div>
  <div className="sidebar-group"><div className="sidebar-group-label">Property</div>
   <button className={activeView==="vehicles"?"sidebar-link active":"sidebar-link"} onClick={()=>selectView("vehicles")}><span>▣</span><strong>Vehicles</strong><em>{db.vehicles.length}</em></button>
