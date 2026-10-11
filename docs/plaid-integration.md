@@ -32,11 +32,15 @@ The four Plaid tables were applied and verified in D1. The migration uses `IF NO
 
 - D1 binding named `PLAID_DB`, attached to `financetracker-db`.
 - `PLAID_CLIENT_ID` and `PLAID_SECRET` stored as server-side secrets.
-- `PLAID_ENV=sandbox` for initial testing. The current API rejects non-Sandbox environments.
+- `PLAID_ENV=sandbox` explicitly for initial testing. The API fails closed if this value is missing or not `sandbox`.
 - `PLAID_TOKEN_ENCRYPTION_KEY`: base64 encoding of exactly 32 cryptographically random bytes, stored as a server-side secret. Never commit it or send it in chat.
 - Confirm the Pages Function runtime has the same Cloudflare Access issuer and audience as the deployed LifeOS Access app.
 
 Do not put API secrets, access tokens, webhook secrets, account numbers, or real bank data in source control, issue comments, build logs, or ChatGPT messages.
+
+## Preview-only guard
+
+The Plaid API is restricted to non-root subdomains of `finance-trackerzip.pages.dev` (Cloudflare Pages branch/commit Preview URLs). The root Pages hostname and custom production domains are rejected before Access authentication. This is a defense-in-depth guard, not a replacement for configuring secrets separately by environment. Keep the Preview deployment behind Cloudflare Access. If the Pages project name changes, update the hostname guard and its tests together.
 
 ## Known follow-up work
 
