@@ -1,71 +1,31 @@
 "use client";
 
 import { useState } from "react";
+import LifeOSNavigationShell from "@/components/mission-control/LifeOSNavigationShell";
 
 const destinations = [
-  { href: "/", label: "Mission Control", hint: "Home" },
-  { href: "/payroll", label: "Payroll Calculator", hint: "Finance" },
-  { href: "/payroll/forecast", label: "Payroll Forecast", hint: "Finance" },
+  { href: "/", label: "Mission Control", icon: "⌂", group: "Mission" },
+  { href: "/payroll", label: "Payroll Calculator", icon: "$", group: "Money" },
+  { href: "/payroll/forecast", label: "Payroll Forecast", icon: "◷", group: "Money" },
 ];
 
 export default function FloatingLifeOSMenu() {
   const [open, setOpen] = useState(false);
 
   return (
-    <>
-      {open && (
-        <>
-          <button
-            type="button"
-            aria-label="Close LifeOS navigation"
-            onClick={() => setOpen(false)}
-            style={{ position: "fixed", inset: 0, zIndex: 53, border: 0, background: "rgba(0,0,0,.28)" }}
-          />
-          <nav
-            aria-label="LifeOS navigation"
-            style={{
-              position: "fixed", left: 14, top: 88, bottom: 82,
-              zIndex: 54, width: "min(330px, calc(100vw - 28px))",
-              overflow: "auto", padding: 14, border: "1px solid rgba(255,255,255,.12)",
-              borderRadius: 20, background: "rgba(8,11,20,.96)",
-              boxShadow: "0 24px 80px rgba(0,0,0,.5)", backdropFilter: "blur(22px)",
-              color: "#edf4ff", fontFamily: "Arial, sans-serif",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-              <div>
-                <div style={{ color: "#00e5ff", fontSize: 9, letterSpacing: 2, fontWeight: 700 }}>LIFEOS / NAVIGATION</div>
-                <strong style={{ display: "block", marginTop: 4, fontSize: 16 }}>Mission Control</strong>
-              </div>
-              <button type="button" aria-label="Close navigation" onClick={() => setOpen(false)} style={{ width: 34, height: 34, border: "1px solid rgba(255,255,255,.12)", borderRadius: 10, background: "rgba(255,255,255,.06)", color: "#edf4ff", fontSize: 18 }}>×</button>
-            </div>
-            <div style={{ color: "#74839c", padding: "0 7px 7px", fontSize: 9, letterSpacing: 1.5, fontWeight: 700 }}>CORE</div>
-            {destinations.map((item) => {
-              return (
-                <a key={item.href} href={item.href} style={{
-                  display: "grid", gridTemplateColumns: "24px minmax(0,1fr) auto", alignItems: "center", gap: 8,
-                  padding: "11px 9px", marginBottom: 3, border: "1px solid transparent",
-                  borderRadius: 11, background: "transparent",
-                  color: "#edf4ff", textDecoration: "none", fontSize: 13, fontWeight: 700,
-                }}>
-                  <span aria-hidden="true">{item.href === "/" ? "⌂" : item.href === "/payroll" ? "＄" : "◷"}</span>
-                  <span>{item.label}</span>
-                  <span style={{ color: "#74839c", fontSize: 9, letterSpacing: 1, textTransform: "uppercase" }}>{item.hint}</span>
-                </a>
-              );
-            })}
-          </nav>
-        </>
-      )}
-      <button
-        type="button"
-        className="mission-menu-fab"
-        aria-expanded={open}
-        aria-label={open ? "Close LifeOS navigation" : "Open LifeOS navigation"}
-        onClick={() => setOpen((value) => !value)}
-      >
-        {open ? "×" : "☰"}
-      </button>
-    </>
+    <LifeOSNavigationShell open={open} onOpenChange={setOpen} heading="Navigate">
+      <div className="sidebar-group">
+        <div className="sidebar-group-label">Mission</div>
+        <a className="sidebar-link" href="/"><span>⌂</span><strong>Mission Control</strong></a>
+      </div>
+      <div className="sidebar-group">
+        <div className="sidebar-group-label">Money</div>
+        {destinations.filter((item) => item.group === "Money").map((item) => (
+          <a className="sidebar-link" href={item.href} key={item.href}>
+            <span>{item.icon}</span><strong>{item.label}</strong>
+          </a>
+        ))}
+      </div>
+    </LifeOSNavigationShell>
   );
 }
