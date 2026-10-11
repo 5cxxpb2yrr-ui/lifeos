@@ -520,3 +520,37 @@ button.cash-calendar-cell:hover,button.cash-calendar-cell:focus-visible{border-c
  .cash-calendar-modal-backdrop{padding:calc(8px + env(safe-area-inset-top)) 8px calc(8px + env(safe-area-inset-bottom))}
  .cash-calendar-modal{max-height:calc(100dvh - 16px - env(safe-area-inset-top) - env(safe-area-inset-bottom));padding:12px;border-radius:14px}
 }
+
+
+/* Payroll forecast: LifeOS dark glass dashboard */
+.payroll-forecast-page{position:relative;isolation:isolate;background:radial-gradient(ellipse at 12% 0%,rgba(106,0,255,.19),transparent 34rem),radial-gradient(ellipse at 94% 12%,rgba(0,229,255,.11),transparent 28rem),#080b14!important;font-family:Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}
+.payroll-forecast-layout{position:relative;z-index:1;width:min(100%,980px)!important;gap:22px!important}
+.payroll-top-nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0 16px;border-bottom:1px solid rgba(255,255,255,.11)}
+.payroll-brand{display:flex;align-items:center;gap:10px;color:#edf4ff;text-decoration:none;font:700 13px Orbitron,ui-sans-serif,sans-serif;letter-spacing:.1em;white-space:nowrap}
+.payroll-brand small{display:block;margin-top:3px;color:#8290a8;font:600 9px Inter,ui-sans-serif,sans-serif;letter-spacing:.16em}
+.payroll-brand-mark{display:grid;place-items:center;width:36px;height:36px;border:1px solid rgba(0,229,255,.45);border-radius:11px;background:linear-gradient(145deg,rgba(0,229,255,.18),rgba(106,0,255,.2));color:#00e5ff;font:700 20px Orbitron,sans-serif;box-shadow:0 0 24px rgba(0,229,255,.08)}
+.payroll-nav-links{display:flex;align-items:center;justify-content:flex-end;gap:5px;flex-wrap:wrap}
+.payroll-nav-links a{padding:9px 11px;border:1px solid transparent;border-radius:10px;color:#aab6cb;text-decoration:none;font-size:12px;font-weight:650;transition:background .15s,border-color .15s,color .15s}
+.payroll-nav-links a:hover,.payroll-nav-links a[aria-current=page]{color:#edf4ff;border-color:rgba(0,229,255,.26);background:rgba(0,229,255,.07)}
+.payroll-hero{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:190px;padding:26px 28px;border:1px solid rgba(0,229,255,.2);border-radius:22px;background:linear-gradient(112deg,rgba(255,255,255,.065),rgba(255,255,255,.018) 58%),linear-gradient(130deg,rgba(106,0,255,.11),transparent 55%);box-shadow:0 22px 70px rgba(0,0,0,.2)}
+.payroll-hero:after{content:"";position:absolute;width:260px;height:260px;right:-90px;top:-120px;border:1px solid rgba(0,229,255,.12);border-radius:50%;box-shadow:0 0 0 25px rgba(0,229,255,.025),0 0 0 55px rgba(106,0,255,.025);pointer-events:none}
+.payroll-hero-copy{position:relative;z-index:1;max-width:650px}
+.payroll-eyebrow{display:flex;align-items:center;gap:8px;margin:0 0 10px;color:#00e5ff;font:600 10px Orbitron,ui-sans-serif,sans-serif;letter-spacing:.14em}
+.payroll-live-dot{width:7px;height:7px;border-radius:50%;background:#00e5ff;box-shadow:0 0 12px rgba(0,229,255,.8)}
+.payroll-hero h1{margin:0;font:700 clamp(30px,5vw,48px) Orbitron,ui-sans-serif,sans-serif;letter-spacing:-.045em;line-height:1.15}
+.payroll-hero h1 span{color:#ffd54f}
+.payroll-hero-copy>p:last-child{max-width:590px;margin:12px 0 0;color:#aab6cb;font-size:14px;line-height:1.7}
+.payroll-hero-mark{position:relative;z-index:1;display:grid;place-items:center;flex:0 0 112px;width:112px;height:112px;border:1px solid rgba(255,213,79,.28);border-radius:30px;background:linear-gradient(145deg,rgba(255,213,79,.13),rgba(255,106,0,.04));color:#ffd54f;font:700 52px Orbitron,sans-serif;transform:rotate(3deg)}
+.payroll-hero-mark i{position:absolute;right:9px;top:5px;font:700 19px Inter,sans-serif;color:#00e5ff}
+.payroll-stat-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.payroll-stat-strip>div{display:flex;flex-direction:column;gap:6px;min-width:0;padding:15px 16px;border:1px solid rgba(255,255,255,.1);border-radius:15px;background:rgba(255,255,255,.035)}
+.payroll-stat-strip span{color:#8290a8;font-size:9px;font-weight:750;letter-spacing:.13em}
+.payroll-stat-strip strong{overflow-wrap:anywhere;color:#edf4ff;font:700 clamp(16px,2.5vw,22px) Orbitron,ui-sans-serif,sans-serif}
+.payroll-stat-strip>div:nth-child(2) strong{color:#ffd54f}
+.payroll-stat-strip small{color:#74839c;font-size:11px}
+.payroll-forecast-page section.rounded-2xl{box-shadow:0 14px 40px rgba(0,0,0,.14);transition:border-color .15s,transform .15s}
+.payroll-forecast-page section.rounded-2xl h2{font-family:Orbitron,ui-sans-serif,sans-serif;font-size:14px;letter-spacing:.015em}
+.payroll-forecast-page input:focus,.payroll-forecast-page select:focus{box-shadow:0 0 0 3px rgba(0,229,255,.09)}
+.payroll-forecast-page button:focus-visible,.payroll-forecast-page a:focus-visible{outline:2px solid #00e5ff;outline-offset:3px}
+@media(max-width:620px){.payroll-top-nav{align-items:flex-start;flex-direction:column}.payroll-nav-links{display:grid;width:100%;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.payroll-nav-links a{text-align:center;padding:9px 5px;font-size:10px}.payroll-hero{min-height:0;padding:21px 17px;border-radius:18px}.payroll-hero-mark{flex-basis:68px;width:68px;height:68px;border-radius:20px;font-size:32px}.payroll-hero-mark i{right:5px;top:2px;font-size:14px}.payroll-hero-copy>p:last-child{font-size:12px;line-height:1.6}.payroll-eyebrow{font-size:8px;letter-spacing:.1em}.payroll-stat-strip{gap:7px}.payroll-stat-strip>div{padding:11px 9px;border-radius:12px}.payroll-stat-strip span{font-size:8px;letter-spacing:.07em}.payroll-stat-strip strong{font-size:15px}.payroll-stat-strip small{font-size:9px}}
+@media(max-width:380px){.payroll-hero-mark{display:none}.payroll-stat-strip{grid-template-columns:1fr}.payroll-stat-strip>div{display:grid;grid-template-columns:1fr auto;align-items:center}.payroll-stat-strip small{grid-column:1/-1}}
