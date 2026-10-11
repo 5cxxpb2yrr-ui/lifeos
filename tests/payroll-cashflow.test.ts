@@ -52,7 +52,9 @@ test("upsert keeps a single projected paycheck for a stable ID", () => {
 test("reconciliation links actual deposit and completes projection to prevent duplicate forecast income", () => {
   const db = createEmptyDatabase("2026-10-10T00:00:00.000Z");
   const withExpected = upsertExpectedPaycheckEvent(db, input());
-  withExpected.transactions.push({
+  const withTransaction = {
+    ...withExpected,
+    transactions: [...withExpected.transactions, {
     id: "txn-paycheck-1",
     entityType: "financial_transaction",
     createdAt: "2026-10-16T13:00:00.000Z",
@@ -63,9 +65,10 @@ test("reconciliation links actual deposit and completes projection to prevent du
     currency: "USD",
     accountId: "checking-1",
     description: "Payroll deposit",
-  });
+  }],
+  };
   const reconciled = reconcileExpectedPaycheckEvent(
-    withExpected, "paycheck-2026-10-16", "txn-paycheck-1", "2026-10-16T14:00:00.000Z",
+    withTransaction, "paycheck-2026-10-16", "txn-paycheck-1", "2026-10-16T14:00:00.000Z",
   );
   assert.equal(reconciled.events[0].status, "completed");
   assert.equal(reconciled.events[0].metadata?.reconciliationState, "reconciled");
@@ -78,7 +81,9 @@ test("reconciliation links actual deposit and completes projection to prevent du
 test("reconciliation refuses to link non-income transactions", () => {
   const db = createEmptyDatabase("2026-10-10T00:00:00.000Z");
   const withExpected = upsertExpectedPaycheckEvent(db, input());
-  withExpected.transactions.push({
+  const withTransaction = {
+    ...withExpected,
+    transactions: [...withExpected.transactions, {
     id: "txn-expense-1",
     entityType: "financial_transaction",
     createdAt: "2026-10-16T13:00:00.000Z",
@@ -88,8 +93,37 @@ test("reconciliation refuses to link non-income transactions", () => {
     amountMinor: 313335,
     currency: "USD",
     accountId: "checking-1",
-  });
+  }],
+  };
   assert.throws(() => reconcileExpectedPaycheckEvent(
-    withExpected, "paycheck-2026-10-16", "txn-expense-1",
+    withTransaction, "paycheck-2026-10-16", "txn-expense-1",
   ), /income deposit/);
+});
+
+test("upsert refuses to refresh a reconciled paycheck projection", () => {
+  const db = createEmptyDatabase("2026-10-10T00:00:00.000Z");
+  const withExpected = upsertExpectedPaycheckEvent(db, input());
+  const withTransaction = {
+    ...withExpected,
+    transactions: [...withExpected.transactions, {
+      id: "txn-paycheck-1",
+      entityType: "financial_transaction" as const,
+      createdAt: "2026-10-16T13:00:00.000Z",
+      updatedAt: "2026-10-16T13:00:00.000Z",
+      transactionType: "income" as const,
+      transactionDate: "2026-10-16",
+      amountMinor: 313335,
+      currency: "USD",
+      accountId: "checking-1",
+      description: "Payroll deposit",
+    }],
+  };
+  const reconciled = reconcileExpectedPaycheckEvent(
+    withTransaction, "paycheck-2026-10-16", "txn-paycheck-1", "2026-10-16T14:00:00.000Z",
+  );
+  assert.throws(() => upsertExpectedPaycheckEvent(reconciled, {
+    ...input(), calculation: { estimatedNetPayCents: 250000, grossPayCents: 300000 },
+  }), /reconciled paycheck/);
+  assert.equal(reconciled.events[0].status, "completed");
+  assert.equal(reconciled.events[0].metadata?.actualAmountMinor, 313335);
 });
