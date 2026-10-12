@@ -4,7 +4,8 @@ import {usePlaidLink,type PlaidLinkOnSuccessMetadata} from "react-plaid-link";
 import type {LifeOSDatabase} from "@/domain/contracts/database";
 import {importPayrollDeposits,isLikelyPayrollDeposit,type ConnectedTransactionRecord} from "@/domain/resolvers/payroll-deposits";
 
-const PLAID_WORKER_URL=(process.env.NEXT_PUBLIC_PLAID_WORKER_URL||"https://lifeos-plaid-sandbox.phillipstg.workers.dev").replace(/\\/$/,"");
+const PLAID_WORKER_URL_RAW=process.env.NEXT_PUBLIC_PLAID_WORKER_URL||"https://lifeos-plaid-sandbox.phillipstg.workers.dev";
+const PLAID_WORKER_URL=PLAID_WORKER_URL_RAW.endsWith("/")?PLAID_WORKER_URL_RAW.slice(0,-1):PLAID_WORKER_URL_RAW;
 
 function parseRows(raw:string):ConnectedTransactionRecord[]{
  const parsed:unknown=JSON.parse(raw);
