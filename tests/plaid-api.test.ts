@@ -2,13 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { onRequest } from "../functions/api/plaid/[[path]]";
 
-test("Plaid API rejects methods other than POST", async () => {
+test("Plaid API rejects unauthenticated Preview requests before method handling", async () => {
   const response = await onRequest({
-    request: new Request("https://lifeos.example/api/plaid/link-token", { method: "GET" }),
+    request: new Request("https://feat-plaid-sandbox-foundatio.finance-trackerzip.pages.dev/api/plaid/link-token", { method: "GET" }),
     env: {},
   });
-  assert.equal(response.status, 405);
-  assert.match((await response.json() as { error: string }).error, /Method not allowed/);
+  assert.equal(response.status, 401);
+  assert.match((await response.json() as { error: string }).error, /sign-in is required/);
 });
 
 test("Plaid API requires a signed Cloudflare Access assertion", async () => {
