@@ -3,7 +3,9 @@
   "name": "lifeos-v2",
   "pages_build_output_dir": "./out",
   "compatibility_date": "2026-10-01",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "services": [
     {
       "binding": "ATTACHMENTS",
@@ -30,8 +32,16 @@
       ],
       "vars": {
         "PLAID_ENV": "sandbox"
-      }
+      },
+      "services": [
+        {
+          "binding": "PLAID_WORKER",
+          "service": "lifeos-plaid-sandbox"
+        }
+      ]
     }
   },
-  "observability": { "enabled": true }
+  "observability": {
+    "enabled": true
+  }
 }
