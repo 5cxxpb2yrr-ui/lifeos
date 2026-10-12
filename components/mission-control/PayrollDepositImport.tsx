@@ -35,11 +35,11 @@ export default function PayrollDepositImport({db,onPersist}:{db:LifeOSDatabase;o
   setLinkBusy(true);setLinkMessage("");setError("");
   try{
    const exchanged=await readJson(await fetch(`${PLAID_WORKER_URL}/api/item/public-token/exchange`,{
-    method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({public_token:publicToken})
+    method:"POST",credentials:"include",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify({public_token:publicToken})
    }));
    if(typeof exchanged.item_id!=="string"||!exchanged.item_id)throw new Error("Plaid linked the institution but the Worker did not return an item ID.");
    const transactions=await readJson(await fetch(`${PLAID_WORKER_URL}/api/transactions/get`,{
-    method:"POST",headers:{"Content-Type":"application/json"},
+    method:"POST",credentials:"include",headers:{"Content-Type":"text/plain;charset=UTF-8"},
     body:JSON.stringify({item_id:exchanged.item_id,start_date:dateDaysAgo(730),end_date:new Date().toISOString().slice(0,10)})
    }));
    if(!Array.isArray(transactions.transactions))throw new Error("The account was linked, but the Worker did not return a transactions array.");
@@ -65,7 +65,7 @@ export default function PayrollDepositImport({db,onPersist}:{db:LifeOSDatabase;o
   setError("");setLinkMessage("");setLinkBusy(true);setPendingOpen(true);
   try{
    const response=await readJson(await fetch(`${PLAID_WORKER_URL}/api/link/token/create`,{
-    method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({})
+    method:"POST",credentials:"include",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify({})
    }));
    if(typeof response.link_token!=="string"||!response.link_token)throw new Error("The Plaid Worker did not return a Link token.");
    setLinkToken(response.link_token);
