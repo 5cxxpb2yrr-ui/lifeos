@@ -1,5 +1,11 @@
-type PlaidWorker = Fetcher;
-type PlaidEnv = { PLAID_WORKER?: PlaidWorker };
+type PlaidWorker = { fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> };
+type PlaidEnv = {
+  PLAID_WORKER?: PlaidWorker;
+  PLAID_ENV?: string;
+  PLAID_CLIENT_ID?: string;
+  PLAID_SECRET?: string;
+  PLAID_TOKEN_ENCRYPTION_KEY?: string;
+};
 type PlaidContext = { request: Request; env: PlaidEnv };
 type AccessPayload = { iss?: string; aud?: string | string[]; exp?: number; nbf?: number };
 const ACCESS_ISSUER = "https://phoenix-65w-pages.cloudflareaccess.com";
