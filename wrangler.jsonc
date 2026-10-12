@@ -9,6 +9,18 @@
       "binding": "ATTACHMENTS",
       "service": "lifeos-attachments"
     }
+{
+  "previews": {
+    // ...
+    "d1_databases": [
+      {
+        "binding": "lifeos-plaid-sandbox",
+        "database_id": "6c1ca4a8-68d3-4d81-9ef7-24eed5642962"
+      }
+    ],
+    // ...
+  }
+}
   ],
   "observability": { "enabled": true }
 }
