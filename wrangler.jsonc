@@ -25,6 +25,13 @@
     // ...
   }
 }
+{
+  // ...
+  "vars": {
+    "PLAID_ENV": "sandbox"
+  },
+  // ...
+}
   ],
   "observability": { "enabled": true }
 }
