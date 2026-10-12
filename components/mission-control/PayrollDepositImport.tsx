@@ -34,18 +34,18 @@ export default function PayrollDepositImport({db,onPersist}:{db:LifeOSDatabase;o
   setLinkBusy(true);setLinkMessage("");setError("");
   try{
    const exchanged=await readJson(await fetch("/api/plaid/exchange",{
-    method:"POST",credentials:"include",headers:{"Content-Type":"text/plain;charset=UTF-8"},body:JSON.stringify({public_token:publicToken,institution_id:metadata.institution?.id,institution_name:metadata.institution?.name})
+    method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({public_token:publicToken,institution_id:metadata.institution?.id,institution_name:metadata.institution?.name})
    }));
-   if(typeof exchanged.item_id!=="string"||!exchanged.item_id)throw new Error("Plaid linked the institution but the Worker did not return an item ID.");
+   if(typeof exchanged.item_id!=="string"||!exchanged.item_id)throw new Error("Plaid linked the institution but the Pages API did not return an item ID.");
    await readJson(await fetch("/api/plaid/sync",{
     method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({item_id:exchanged.item_id})
    }));
    const transactions=await readJson(await fetch("/api/plaid/transactions",{
     method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({item_id:exchanged.item_id,start_date:dateDaysAgo(730),end_date:new Date().toISOString().slice(0,10)})
+    body:JSON.stringify({item_id:exchanged.item_id,start_date:dateDaysAgo(90),end_date:new Date().toISOString().slice(0,10)})
    }));
-   if(!Array.isArray(transactions.transactions))throw new Error("The account was linked, but the Worker did not return a transactions array.");
+   if(!Array.isArray(transactions.transactions))throw new Error("The account was linked, but the Pages API did not return a transactions array.");
    const rows=transactions.transactions as ConnectedTransactionRecord[];
    setRaw(JSON.stringify(rows,null,2));
    const institution=metadata.institution?.name;
@@ -104,7 +104,7 @@ export default function PayrollDepositImport({db,onPersist}:{db:LifeOSDatabase;o
   <p className="row-meta">Connect through Plaid Link to retrieve transactions from your linked institution. LifeOS reviews the returned transaction history, imports matching Kia Georgia payroll deposits, deduplicates them, and uses the history to estimate the next payday.</p>
   <button className="action primary" type="button" disabled={linkBusy} onClick={()=>void connectPlaid()}>{linkBusy?"Connecting…":"Connect bank with Plaid"}</button>
   {linkMessage&&<div className="row-meta" role="status">{linkMessage}</div>}
-  <p className="row-meta">If Plaid connection is not available, you can still use the manual import below. Your Plaid secret and access tokens remain on the protected Worker; they are not shown in this page.</p>
+  <p className="row-meta">If Plaid connection is not available, you can still use the manual import below. Your Plaid secret and access tokens remain on the protected server; they are not shown in this page.</p>
   <label className="field-label">Connected transaction JSON<textarea className="command-input capture-body" rows={5} value={raw} onChange={e=>setRaw(e.target.value)} placeholder={'[{"date":"2026-09-25","amount":-2983.35,"name":"KIA GEORGIA INC. PAYROLL","transaction_id":"..."}]'}/></label>
   <div className="row-meta">{parsed.error?parsed.error:`${parsed.rows.length} rows loaded · ${matches.length} posted payroll deposit matches`}</div>
   <label className="field-label">Current USAA checking balance (optional, dollars)<input className="command-input" inputMode="decimal" value={balance} onChange={e=>setBalance(e.target.value)} placeholder="Enter current available balance to anchor the cash forecast"/></label>
