@@ -207,5 +207,44 @@ export async function onRequest({ request, env }: PlaidContext): Promise<Respons
     } catch { return response(502, { error: "Plaid sync failed. Connection remains saved; retry after checking Sandbox status." }); }
   }
 
+  if (route === "transactions") {
+    const body = await bodyObject(request);
+    if (typeof body?.item_id !== "string" || body.item_id.length > 256) {
+      return response(400, { error: "A valid item_id is required." });
+    }
+    const db = dbOrNull(env);
+    if (!db) return response(503, { error: "Plaid database is not configured." });
+    const startDate = typeof body.start_date === "string" && /^\\d{4}-\\d{2}-\\d{2}$/.test(body.start_date) ? body.start_date : "0000-01-01";
+    const endDate = typeof body.end_date === "string" && /^\\d{4}-\\d{2}-\\d{2}$/.test(body.end_date) ? body.end_date : "9999-12-31";
+    try {
+      const item = await db.prepare("SELECT item_id FROM plaid_items WHERE item_id = ? AND status = 'active'")
+        .bind(body.item_id).first<{ item_id: string }>();
+      if (!item) return response(404, { error: "Active Plaid connection not found." });
+      const result = await db.prepare(`SELECT transaction_id, account_id, date, authorized_date, name, merchant_name, amount, iso_currency_code, pending, personal_finance_category_primary, personal_finance_category_detailed
+        FROM plaid_transactions
+        WHERE item_id = ? AND removed = 0 AND date >= ? AND date <= ?
+        ORDER BY date DESC LIMIT 5000`)
+        .bind(item.item_id, startDate, endDate).all<Record<string, unknown>>();
+      const transactions = (result.results || []).map((row) => ({
+        transaction_id: row.transaction_id,
+        account_id: row.account_id,
+        date: row.date,
+        posted_datetime: row.date,
+        authorized_date: row.authorized_date,
+        name: row.name,
+        merchant_name: row.merchant_name,
+        // Plaid uses positive amounts for money leaving the account and negative for deposits.
+        amount: row.amount,
+        iso_currency_code: row.iso_currency_code,
+        currency: row.iso_currency_code,
+        pending: row.pending === 1,
+        category: [row.personal_finance_category_primary, row.personal_finance_category_detailed].filter(Boolean),
+      }));
+      return response(200, { item_id: item.item_id, transactions, count: transactions.length });
+    } catch {
+      return response(502, { error: "Could not retrieve the saved transaction history." });
+    }
+  }
+
   return response(404, { error: "Unknown Plaid endpoint." });
 }
