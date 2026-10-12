@@ -82,7 +82,7 @@ export default function PayrollDepositImport({db,onPersist}:{db:LifeOSDatabase;o
    if(parsed.error)throw new Error(parsed.error);
    if(!matches.length)throw new Error("No posted payroll deposits found. The selected institution may not have payroll transactions in this date range.");
    const currentBalanceMinor=balance.trim()?Math.round(Number(balance)*100):undefined;
-   if(balance.trim()&&(!Number.isFinite(currentBalanceMinor)||currentBalanceMinor<0))throw new Error("Enter a valid non-negative current checking balance.");
+   if(balance.trim()&&(currentBalanceMinor==null||!Number.isFinite(currentBalanceMinor)||currentBalanceMinor<0))throw new Error("Enter a valid non-negative current checking balance.");
    const result=importPayrollDeposits(db,parsed.rows,new Date().toISOString(),currentBalanceMinor);
    const next=structuredClone(db);
    if(result.account){
