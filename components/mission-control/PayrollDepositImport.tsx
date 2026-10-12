@@ -37,10 +37,6 @@ export default function PayrollDepositImport({db,onPersist}:{db:LifeOSDatabase;o
     method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({public_token:publicToken,institution_id:metadata.institution?.institution_id,institution_name:metadata.institution?.name})
    }));
    if(typeof exchanged.item_id!=="string"||!exchanged.item_id)throw new Error("Plaid linked the institution but the Pages API did not return an item ID.");
-   await readJson(await fetch("/api/plaid/sync",{
-    method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({item_id:exchanged.item_id})
-   }));
    const transactions=await readJson(await fetch("/api/plaid/transactions",{
     method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},
     body:JSON.stringify({item_id:exchanged.item_id,start_date:dateDaysAgo(90),end_date:new Date().toISOString().slice(0,10)})
