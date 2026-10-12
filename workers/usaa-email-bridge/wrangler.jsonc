@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/cloudflare/workers-sdk/main/packages/wrangler/config-schema.json",
+  "name": "lifeos-usaa-email-bridge",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "observability": { "enabled": true },
+  "kv_namespaces": [
+    {
+      "binding": "DEPOSITS",
+      "id": "a4a3630963dc4ff7b285e57e38f39047"
+    }
+  ]
+}

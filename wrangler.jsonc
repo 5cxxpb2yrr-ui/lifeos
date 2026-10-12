@@ -8,6 +8,10 @@
     {
       "binding": "ATTACHMENTS",
       "service": "lifeos-attachments"
+    },
+    {
+      "binding": "USAA_BRIDGE",
+      "service": "lifeos-usaa-email-bridge"
     }
 {
   "previews": {
