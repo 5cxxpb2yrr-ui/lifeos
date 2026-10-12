@@ -121,12 +121,12 @@ function isoNow(): string { return new Date().toISOString(); }
 function dbOrNull(env: PlaidEnv): D1Database | null { return env.PLAID_DB || null; }
 
 export async function onRequest({ request, env }: PlaidContext): Promise<Response> {
-  if (request.method !== "POST") return response(405, { error: "Method not allowed." });
   if (!isPreviewDeployment(request)) {
     return response(404, { error: "Plaid Sandbox is available only on a Cloudflare Pages Preview deployment." });
   }
   const assertion = request.headers.get("Cf-Access-Jwt-Assertion");
   if (!assertion || !(await validAccess(assertion))) return response(401, { error: "LifeOS sign-in is required." });
+  if (request.method !== "POST") return response(405, { error: "Method not allowed." });
   const url = new URL(request.url);
   const route = url.pathname.replace(/^\/api\/plaid\/?/, "").replace(/\/$/, "");
   const cfg = config(env);
