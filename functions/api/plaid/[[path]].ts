@@ -214,8 +214,8 @@ export async function onRequest({ request, env }: PlaidContext): Promise<Respons
     }
     const db = dbOrNull(env);
     if (!db) return response(503, { error: "Plaid database is not configured." });
-    const startDate = typeof body.start_date === "string" && /^\\d{4}-\\d{2}-\\d{2}$/.test(body.start_date) ? body.start_date : "0000-01-01";
-    const endDate = typeof body.end_date === "string" && /^\\d{4}-\\d{2}-\\d{2}$/.test(body.end_date) ? body.end_date : "9999-12-31";
+    const startDate = typeof body.start_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.start_date) ? body.start_date : "0000-01-01";
+    const endDate = typeof body.end_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.end_date) ? body.end_date : "9999-12-31";
     try {
       const item = await db.prepare("SELECT item_id FROM plaid_items WHERE item_id = ? AND status = 'active'")
         .bind(body.item_id).first<{ item_id: string }>();
