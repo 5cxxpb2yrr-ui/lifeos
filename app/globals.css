@@ -634,3 +634,54 @@ select optgroup{
   border: 1px solid rgba(255,209,102,.65) !important;
   border-radius: 12px !important;
 }
+
+
+/* Payroll forecast mobile viewport containment and readable edge spacing. */
+.payroll-forecast-page {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+  overflow-x: clip;
+}
+.payroll-forecast-page *,
+.payroll-forecast-page *::before,
+.payroll-forecast-page *::after { box-sizing: border-box; }
+.payroll-forecast-layout {
+  width: 100%;
+  min-width: 0;
+  max-width: 56rem;
+  margin-inline: auto;
+}
+.payroll-forecast-page section,
+.payroll-forecast-page header,
+.payroll-forecast-page nav,
+.payroll-forecast-page label,
+.payroll-forecast-page article { min-width: 0; max-width: 100%; }
+.payroll-forecast-page input,
+.payroll-forecast-page select,
+.payroll-forecast-page textarea,
+.payroll-forecast-page button { max-width: 100%; min-width: 0; }
+.payroll-forecast-page input,
+.payroll-forecast-page select,
+.payroll-forecast-page textarea { width: 100%; }
+.payroll-forecast-page h1,
+.payroll-forecast-page h2,
+.payroll-forecast-page h3,
+.payroll-forecast-page p { overflow-wrap: anywhere; }
+@media (max-width: 520px) {
+  .payroll-forecast-page { padding-top: 16px; }
+  .payroll-forecast-layout { gap: 16px; }
+  .payroll-forecast-page .payroll-top-nav { gap: 10px; padding-bottom: 14px; }
+  .payroll-forecast-page .payroll-nav-links { max-width: 100%; gap: 8px 12px; }
+  .payroll-forecast-page .payroll-hero { align-items: flex-start; padding-top: 14px; }
+  .payroll-forecast-page .payroll-hero-copy { flex: 1 1 auto; width: 100%; }
+  .payroll-forecast-page .payroll-hero h1 { font-size: clamp(24px, 7vw, 34px); overflow-wrap: anywhere; }
+  .payroll-forecast-page .payroll-stat-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .payroll-forecast-page .payroll-stat-strip > div { min-width: 0; overflow-wrap: anywhere; }
+  .payroll-forecast-page .payroll-stat-strip strong { overflow-wrap: anywhere; }
+  .payroll-forecast-page .grid,
+  .payroll-forecast-page [class*="grid-cols-"] { grid-template-columns: minmax(0, 1fr); }
+}
