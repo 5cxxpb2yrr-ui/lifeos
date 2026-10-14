@@ -59,3 +59,33 @@ test("scenario adjustments change a derived forecast only and leave baseline poi
   assert.equal(result.points[1].scenarioClosingBalanceMinor, -3000);
   assert.equal(result.firstNegativeDate, "2026-10-02");
 });
+
+test("flags suspicious category and direction combinations without rewriting provider category", () => {
+  const parsed = parseConnectedTransactions([
+    { transaction_id: "flight-in", date: "2026-10-01", amount: -500, name: "Sandbox deposit", personal_finance_category: { primary: "TRAVEL", detailed: "TRAVEL_FLIGHTS" } },
+    { transaction_id: "payroll-out", date: "2026-10-02", amount: 100, name: "Store purchase", category: "INCOME_PAYROLL" },
+    { transaction_id: "normal-out", date: "2026-10-03", amount: 12, name: "Coffee", category: "FOOD_AND_DRINK_COFFEE" }
+  ]);
+  assert.equal(parsed[0].direction, "inflow");
+  assert.equal(parsed[0].category, "TRAVEL FLIGHTS");
+  assert.ok(parsed[0].signals.includes("category-direction-mismatch"));
+  assert.ok(parsed[1].signals.includes("category-direction-mismatch"));
+  assert.ok(!parsed[2].signals.includes("category-direction-mismatch"));
+  const review = summarizeTransactions(parsed).recommendations.filter(item => item.kind === "review");
+  assert.equal(review.length, 2);
+  assert.ok(review.every(item => item.title === "Review category and money direction"));
+  assert.ok(review.every(item => item.explanation.includes("original category is preserved")));
+});
+
+test("repeated merchant on distinct dates remains a review candidate even when amounts vary", () => {
+  const parsed = parseConnectedTransactions([
+    { transaction_id: "coffee-1", date: "2026-09-01", amount: 4.50, name: "Corner Coffee" },
+    { transaction_id: "coffee-2", date: "2026-09-08", amount: 7.25, name: "Corner Coffee" },
+    { transaction_id: "coffee-3", date: "2026-09-21", amount: 5.10, name: "Corner Coffee" }
+  ]);
+  const candidate = summarizeTransactions(parsed).recommendations.find(item => item.kind === "recurring_candidate");
+  assert.ok(candidate);
+  assert.equal(candidate?.confidence, "medium");
+  assert.ok(candidate?.explanation.includes("Confirm whether it is a bill or subscription"));
+  assert.ok(candidate?.evidence.some(item => item === "3 separate dates"));
+});
