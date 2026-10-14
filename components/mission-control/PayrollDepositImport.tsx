@@ -22,11 +22,10 @@ async function readJson(response:Response):Promise<Record<string,unknown>>{
  if(!value||typeof value!=="object")throw new Error("Unexpected response from the Plaid Worker.");
  return value as Record<string,unknown>;
 }
-function dateDaysAgo(days:number){const date=new Date();date.setDate(date.getDate()-days);return date.toISOString().slice(0,10);}
 
 export default function PayrollDepositImport({db,onPersist}:{db:LifeOSDatabase;onPersist:(next:LifeOSDatabase,message:string)=>Promise<void>|void}){
  const [raw,setRaw]=useState("");const [balance,setBalance]=useState("");const [error,setError]=useState("");const [busy,setBusy]=useState(false);
- const [linkToken,setLinkToken]=useState<string|null>(null);const [pendingOpen,setPendingOpen]=useState(false);const [linkBusy,setLinkBusy]=useState(false);const [linkMessage,setLinkMessage]=useState("");
+ const [linkToken,setLinkToken]=useState<string|null>(null);const [pendingOpen,setPendingOpen]=useState(false);const [linkBusy,setLinkBusy]=useState(false);const [linkMessage,setLinkMessage]=useState("");const [plaidItemId,setPlaidItemId]=useState("");const [syncBusy,setSyncBusy]=useState(false);const [syncMessage,setSyncMessage]=useState("");
  const parsed=useMemo(()=>{if(!raw.trim())return {rows:[] as ConnectedTransactionRecord[],error:""};try{return {rows:parseRows(raw),error:""}}catch(e){return {rows:[] as ConnectedTransactionRecord[],error:e instanceof Error?e.message:"Invalid JSON"}}},[raw]);
  const matches=parsed.rows.filter(isLikelyPayrollDeposit);
 
@@ -37,21 +36,31 @@ export default function PayrollDepositImport({db,onPersist}:{db:LifeOSDatabase;o
     method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({public_token:publicToken,institution_id:metadata.institution?.institution_id,institution_name:metadata.institution?.name})
    }));
    if(typeof exchanged.item_id!=="string"||!exchanged.item_id)throw new Error("Plaid linked the institution but the Pages API did not return an item ID.");
-   const transactions=await readJson(await fetch("/api/plaid/transactions",{
-    method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({item_id:exchanged.item_id,start_date:dateDaysAgo(90),end_date:new Date().toISOString().slice(0,10)})
-   }));
-   if(!Array.isArray(transactions.transactions))throw new Error("The account was linked, but the Pages API did not return a transactions array.");
-   const rows=transactions.transactions as ConnectedTransactionRecord[];
-   setRaw(JSON.stringify(rows,null,2));
+   setPlaidItemId(exchanged.item_id);
+   setSyncMessage("");
    const institution=metadata.institution?.name;
-   setLinkMessage(`Connected${institution?` to ${institution}`:""}; loaded ${rows.length} transactions for review. Select Import payroll deposits to add matching posted payroll entries to LifeOS.`);
+   setLinkMessage(`Connected${institution?` to ${institution}`:""}. Use Sync transactions to parse and summarize the change batch without retaining individual transaction rows.`);
   }catch(e){
    setLinkMessage(e instanceof Error?e.message:"Plaid connection failed.");
   }finally{
    setLinkBusy(false);setLinkToken(null);
   }
  },[]);
+
+ async function syncTransactions(){
+  if(!plaidItemId)return;
+  setSyncBusy(true);setSyncMessage("");setError("");
+  try{
+   const result=await readJson(await fetch("/api/plaid/sync",{
+    method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({item_id:plaidItemId})
+   }));
+   if(result.complete!==true||result.cursor_committed!==true||!result.summary||typeof result.summary!=="object")throw new Error("Sync did not confirm a complete summary and cursor commit. No completed sync will be reported.");
+   const summary=result.summary as Record<string,unknown>;
+   const money=(value:unknown)=>typeof value==="number"?(value/100).toLocaleString(undefined,{style:"currency",currency:"USD"}):"—";
+   syncMessage=`Sync complete · ${String(result.added??0)} added, ${String(result.modified??0)} modified, ${String(result.removed??0)} removed · ${String(summary.transactionCount??0)} transactions summarized · inflow ${money(summary.inflowMinor)} · outflow ${money(summary.outflowMinor)}. Individual transaction rows were not persisted. This batch summary is not a cumulative ledger and has not been imported into the cash forecast.`;
+  }catch(e){setSyncMessage(e instanceof Error?e.message:"Transaction sync failed.");}
+  finally{setSyncBusy(false);}
+ }
 
  const {open,ready}=usePlaidLink({
   token:linkToken,
@@ -100,6 +109,8 @@ export default function PayrollDepositImport({db,onPersist}:{db:LifeOSDatabase;o
   <p className="row-meta">Connect through Plaid Link to retrieve transactions from your linked institution. LifeOS reviews the returned transaction history, imports matching Kia Georgia payroll deposits, deduplicates them, and uses the history to estimate the next payday.</p>
   <button className="action primary" type="button" disabled={linkBusy} onClick={()=>void connectPlaid()}>{linkBusy?"Connecting…":"Connect bank with Plaid"}</button>
   {linkMessage&&<div className="row-meta" role="status">{linkMessage}</div>}
+  {plaidItemId&&<button className="action primary" type="button" disabled={syncBusy} onClick={()=>void syncTransactions()}>{syncBusy?"Syncing transactions…":"Sync transactions"}</button>}
+  {syncMessage&&<div className="row-meta" role="status">{syncMessage}</div>}
   <p className="row-meta">If Plaid connection is not available, you can still use the manual import below. Your Plaid secret and access tokens remain on the protected server; they are not shown in this page.</p>
   <label className="field-label">Connected transaction JSON<textarea className="command-input capture-body" rows={5} value={raw} onChange={e=>setRaw(e.target.value)} placeholder={'[{"date":"2026-09-25","amount":-2983.35,"name":"KIA GEORGIA INC. PAYROLL","transaction_id":"..."}]'}/></label>
   <div className="row-meta">{parsed.error?parsed.error:`${parsed.rows.length} rows loaded · ${matches.length} posted payroll deposit matches`}</div>
