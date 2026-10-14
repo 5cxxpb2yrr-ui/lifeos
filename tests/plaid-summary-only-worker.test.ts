@@ -247,3 +247,86 @@ test("retry resumes from the last committed cursor after a failed page", async (
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("completed change batch summarizes modified records and counts removals without storing rows", async () => {
+  const secret = "test-value";
+  const nonce = new Uint8Array(12).fill(13);
+  const material = await webcrypto.subtle.digest("SHA-256", new TextEncoder().encode(secret));
+  const key = await webcrypto.subtle.importKey("raw", material, { name: "AES-GCM" }, false, ["encrypt"]);
+  const cipher = await webcrypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, key, new TextEncoder().encode("sandbox-placeholder"));
+  const writes: string[] = [];
+  let savedSummaryJson = "";
+  const db = {
+    prepare(sql: string) {
+      return {
+        sql,
+        values: [] as unknown[],
+        bind(...values: unknown[]) { this.values = values; return this; },
+        async first() {
+          if (sql.includes("SELECT access_token_ciphertext")) return {
+            access_token_ciphertext: Buffer.from(cipher).toString("base64"),
+            access_token_nonce: Buffer.from(nonce).toString("base64"),
+            token_key_version: 1
+          };
+          return null;
+        },
+        async run() { writes.push(sql); return {}; }
+      };
+    },
+    async batch(statements: Array<{ sql: string; values?: unknown[] }>) {
+      writes.push(...statements.map(statement => statement.sql));
+      const summaryInsert = statements.find(statement => statement.sql.includes("INSERT OR IGNORE INTO plaid_sync_summaries"));
+      savedSummaryJson = String(summaryInsert?.values?.[7] ?? "");
+      return [];
+    }
+  };
+  const env = { DB: db, PLAID_ENV: "sandbox", PLAID_CLIENT_ID: "test", PLAID_SECRET: "test", PLAID_TOKEN_ENCRYPTION_KEY: secret };
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const path = String(input);
+    if (path.endsWith("/accounts/get")) {
+      return new Response(JSON.stringify({ accounts: [{ account_id: "sandbox-account", name: "Sandbox checking" }] }), { status: 200 });
+    }
+    if (path.endsWith("/transactions/sync")) {
+      return new Response(JSON.stringify({
+        added: [],
+        modified: [{
+          transaction_id: "synthetic-modified-id",
+          account_id: "sandbox-account",
+          date: "2026-10-01",
+          amount: 12.34,
+          name: "Synthetic test entry",
+          personal_finance_category: { primary: "GENERAL_MERCHANDISE", detailed: "GENERAL_MERCHANDISE_OTHER" }
+        }],
+        removed: [{ transaction_id: "synthetic-removed-id" }],
+        next_cursor: "cursor-after-changes",
+        has_more: false
+      }), { status: 200 });
+    }
+    throw new Error("Unexpected mocked endpoint");
+  }) as typeof fetch;
+  try {
+    const response = await worker.fetch(new Request("https://worker.test/api/transactions/sync", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ item_id: "mock-item" })
+    }), env);
+    const body = await response.json() as {
+      complete?: boolean;
+      raw_transactions_persisted?: boolean;
+      summary?: { changeCounts?: { added?: number; modified?: number; removed?: number }; transactionCount?: number; interpretation?: { cumulativeLedger?: boolean }; retention?: { rawTransactionsPersisted?: boolean } }
+    };
+    assert.equal(response.status, 200);
+    assert.equal(body.complete, true);
+    assert.equal(body.raw_transactions_persisted, false);
+    assert.deepEqual(body.summary?.changeCounts, { added: 0, modified: 1, removed: 1 });
+    assert.equal(body.summary?.transactionCount, 1);
+    assert.equal(body.summary?.interpretation?.cumulativeLedger, false);
+    assert.equal(body.summary?.retention?.rawTransactionsPersisted, false);
+    assert.ok(savedSummaryJson.length > 0, "aggregate JSON summary should be the only persisted transaction result");
+    assert.equal(savedSummaryJson.includes("synthetic-modified-id"), false);
+    assert.equal(savedSummaryJson.includes("Synthetic test entry"), false);
+    assert.equal(writes.some(sql => /INSERT INTO plaid_transactions/i.test(sql)), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
