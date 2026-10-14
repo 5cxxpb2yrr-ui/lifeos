@@ -1,3 +1,5 @@
+import { parseConnectedTransactions, summarizeTransactions } from "../../domain/resolvers/transaction-intelligence.ts";
+
 const PLAID_HOSTS = {
   sandbox: "https://sandbox.plaid.com",
 };
@@ -341,76 +343,119 @@ async function handleRequest(request, env) {
       const accessToken = await getStoredAccessToken(env, body.item_id);
       if (!accessToken) return json({ error: "Item not found" }, 404);
 
-      // Populate account rows first so transaction foreign keys are satisfied.
       const accountResult = await plaid(env, "/accounts/get", { access_token: accessToken });
       await persistAccounts(env, body.item_id, accountResult.accounts || []);
-
+      const accountNames = new Map((accountResult.accounts || []).map(a => [a.account_id, a.name]));
       const cursorRow = await env.DB.prepare(
         "SELECT cursor FROM plaid_transaction_cursors WHERE item_id = ?"
       ).bind(body.item_id).first();
-      let cursor = cursorRow?.cursor ?? undefined;
+      const originalCursor = cursorRow?.cursor ?? undefined;
+      let cursor = originalCursor;
       let addedCount = 0;
       let modifiedCount = 0;
       let removedCount = 0;
       let hasMore = false;
       let pages = 0;
+      const changedTransactions = [];
 
+      // Keep pages transient in memory. Do not commit a cursor or summary until
+      // every page succeeds, so a failed/incomplete run can safely be replayed.
       do {
         const syncBody = { access_token: accessToken, count: 500 };
         if (cursor) syncBody.cursor = cursor;
         const result = await plaid(env, "/transactions/sync", syncBody);
-        const now = new Date().toISOString();
+        const added = result.added || [];
+        const modified = result.modified || [];
+        const removed = result.removed || [];
 
-        for (const transaction of [...(result.added || []), ...(result.modified || [])]) {
+        for (const transaction of [...added, ...modified]) {
           if (!transaction.transaction_id || !transaction.account_id ||
-              !transaction.date || !transaction.name ||
-              typeof transaction.amount !== "number") {
-            throw new Error("Plaid returned a transaction missing required database fields");
+              !transaction.date || typeof transaction.amount !== "number") {
+            throw new Error("Plaid returned a transaction missing required fields");
           }
-          await env.DB.prepare(
-            "INSERT INTO plaid_transactions (transaction_id, item_id, account_id, date, authorized_date, name, merchant_name, amount, iso_currency_code, pending, removed, personal_finance_category_primary, personal_finance_category_detailed, raw_json, first_seen_at, last_seen_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?) ON CONFLICT(transaction_id) DO UPDATE SET item_id=excluded.item_id, account_id=excluded.account_id, date=excluded.date, authorized_date=excluded.authorized_date, name=excluded.name, merchant_name=excluded.merchant_name, amount=excluded.amount, iso_currency_code=excluded.iso_currency_code, pending=excluded.pending, removed=0, personal_finance_category_primary=excluded.personal_finance_category_primary, personal_finance_category_detailed=excluded.personal_finance_category_detailed, raw_json=excluded.raw_json, last_seen_at=excluded.last_seen_at"
-          ).bind(
-            transaction.transaction_id,
-            body.item_id,
-            transaction.account_id,
-            transaction.date,
-            transaction.authorized_date ?? null,
-            transaction.name,
-            transaction.merchant_name ?? null,
-            transaction.amount,
-            transaction.iso_currency_code ?? null,
-            transaction.pending ? 1 : 0,
-            transaction.personal_finance_category?.primary ?? null,
-            transaction.personal_finance_category?.detailed ?? null,
-            JSON.stringify(transaction),
-            now,
-            now
-          ).run();
+          changedTransactions.push({
+            transaction_id: transaction.transaction_id,
+            date: transaction.date,
+            posted_datetime: transaction.datetime ?? transaction.authorized_datetime ?? transaction.date,
+            amount: transaction.amount,
+            name: transaction.name ?? transaction.merchant_name ?? "Unknown merchant",
+            merchant_name: transaction.merchant_name ?? null,
+            account_id: transaction.account_id,
+            account_name: accountNames.get(transaction.account_id) ?? null,
+            pending: Boolean(transaction.pending),
+            iso_currency_code: transaction.iso_currency_code ?? "USD",
+            personal_finance_category: transaction.personal_finance_category ?? undefined,
+            category: transaction.personal_finance_category?.primary ?? transaction.category?.[0] ?? null,
+            institution: "Plaid-connected institution"
+          });
         }
 
-        addedCount += (result.added || []).length;
-        modifiedCount += (result.modified || []).length;
-        for (const removed of result.removed || []) {
-          if (!removed.transaction_id) continue;
-          await env.DB.prepare(
-            "UPDATE plaid_transactions SET removed=1, last_seen_at=? WHERE transaction_id=? AND item_id=?"
-          ).bind(now, removed.transaction_id, body.item_id).run();
-        }
-        removedCount += (result.removed || []).length;
-
+        addedCount += added.length;
+        modifiedCount += modified.length;
+        removedCount += removed.length;
         cursor = result.next_cursor;
         hasMore = Boolean(result.has_more);
         if (typeof cursor !== "string" || !cursor) {
           throw new Error("Plaid sync response did not include a cursor");
         }
-        await env.DB.prepare(
-          "INSERT INTO plaid_transaction_cursors (item_id, cursor, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(item_id) DO UPDATE SET cursor=excluded.cursor, updated_at=CURRENT_TIMESTAMP"
-        ).bind(body.item_id, cursor).run();
-        await env.DB.prepare(
-          "UPDATE plaid_items SET sync_cursor=?, last_synced_at=?, updated_at=? WHERE item_id=?"
-        ).bind(cursor, now, now, body.item_id).run();
         pages += 1;
-      } while (hasMore && pages < 10);
+        if (hasMore && pages >= 100) {
+          // Intentionally leave the durable cursor unchanged; a partial summary
+          // must never be mistaken for a completed sync.
+          return json({
+            error: "Sync exceeded the safe page limit; no summary or cursor was committed. Retry the sync.",
+            pages,
+            complete: false,
+            cursor_committed: false
+          }, 503);
+        }
+      } while (hasMore);
+
+      const parsed = parseConnectedTransactions(changedTransactions);
+      const generatedAt = new Date().toISOString();
+      const calculated = summarizeTransactions(parsed, generatedAt);
+      // Persist only aggregates. Recommendation evidence can contain merchant-
+      // level details, so it is reduced to counts before writing the JSON summary.
+      const recommendationCounts = {};
+      for (const recommendation of calculated.recommendations) {
+        recommendationCounts[recommendation.kind] = (recommendationCounts[recommendation.kind] || 0) + 1;
+      }
+      const summary = {
+        schemaVersion: calculated.schemaVersion,
+        generatedAt: calculated.generatedAt,
+        period: calculated.period,
+        source: calculated.source,
+        transactionCount: calculated.transactionCount,
+        pendingCount: calculated.pendingCount,
+        inflowMinor: calculated.inflowMinor,
+        outflowMinor: calculated.outflowMinor,
+        transferMinor: calculated.transferMinor,
+        netFlowMinor: calculated.netFlowMinor,
+        categoryTotals: calculated.categoryTotals,
+        recommendationCounts,
+        retention: { rawTransactionsPersisted: false, policy: "discard-by-default", archiveCreated: false }
+      };
+      const cursorFingerprint = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(body.item_id + "|" + (originalCursor ?? "INITIAL") + "|" + cursor)
+      );
+      const syncId = [...new Uint8Array(cursorFingerprint)]
+        .map(byte => byte.toString(16).padStart(2, "0")).join("");
+      const now = new Date().toISOString();
+
+      // D1 batch is transactional: summary and cursor move forward together.
+      // The unique sync ID makes retries idempotent for the same cursor range.
+      await env.DB.batch([
+        env.DB.prepare(
+          "INSERT OR IGNORE INTO plaid_sync_summaries (sync_id, item_id, cursor_from, cursor_to, added_count, modified_count, removed_count, summary_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+        ).bind(syncId, body.item_id, originalCursor ?? null, cursor, addedCount, modifiedCount, removedCount, JSON.stringify(summary), now),
+        env.DB.prepare(
+          "INSERT INTO plaid_transaction_cursors (item_id, cursor, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(item_id) DO UPDATE SET cursor=excluded.cursor, updated_at=CURRENT_TIMESTAMP"
+        ).bind(body.item_id, cursor),
+        env.DB.prepare(
+          "UPDATE plaid_items SET sync_cursor=?, last_synced_at=?, updated_at=? WHERE item_id=?"
+        ).bind(cursor, now, now, body.item_id)
+      ]);
 
       return json({
         item_id: body.item_id,
@@ -418,9 +463,11 @@ async function handleRequest(request, env) {
         modified: modifiedCount,
         removed: removedCount,
         pages,
-        has_more: hasMore,
-        complete: !hasMore,
-      }, hasMore ? 202 : 200);
+        complete: true,
+        cursor_committed: true,
+        raw_transactions_persisted: false,
+        summary
+      });
     }
 
     if (request.method === "POST" && url.pathname === "/webhook") {
