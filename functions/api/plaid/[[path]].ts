@@ -71,6 +71,7 @@ export async function onRequest({ request, env }: PlaidContext): Promise<Respons
     "link-token": "/api/link/token/create",
     "exchange": "/api/item/public-token/exchange",
     "transactions": "/api/transactions/get",
+    "sync": "/api/transactions/sync",
   };
   const targetPath = workerPath[route];
   if (!targetPath) return response(404, { error: "Unknown Plaid endpoint." });
