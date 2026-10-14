@@ -180,3 +180,67 @@ test("incomplete pagination never commits a partial summary or cursor", async ()
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("retry resumes from the last committed cursor after a failed page", async () => {
+  const secret = "test-value";
+  const nonce = new Uint8Array(12).fill(11);
+  const material = await webcrypto.subtle.digest("SHA-256", new TextEncoder().encode(secret));
+  const key = await webcrypto.subtle.importKey("raw", material, { name: "AES-GCM" }, false, ["encrypt"]);
+  const cipher = await webcrypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, key, new TextEncoder().encode("sandbox-placeholder"));
+  let syncAttempts = 0;
+  const requestedCursors: Array<string | undefined> = [];
+  let batchCalls = 0;
+  const db = {
+    prepare(sql: string) {
+      return {
+        bind() { return this; },
+        async first() {
+          if (sql.includes("SELECT access_token_ciphertext")) return {
+            access_token_ciphertext: Buffer.from(cipher).toString("base64"),
+            access_token_nonce: Buffer.from(nonce).toString("base64"),
+            token_key_version: 1
+          };
+          if (sql.includes("SELECT cursor FROM plaid_transaction_cursors")) return { cursor: "last-committed" };
+          return null;
+        },
+        async run() { return {}; }
+      };
+    },
+    async batch() { batchCalls += 1; return []; }
+  };
+  const env = { DB: db, PLAID_ENV: "sandbox", PLAID_CLIENT_ID: "test", PLAID_SECRET: "test", PLAID_TOKEN_ENCRYPTION_KEY: secret };
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+    const path = String(input);
+    if (path.endsWith("/accounts/get")) return new Response(JSON.stringify({ accounts: [] }), { status: 200 });
+    if (path.endsWith("/transactions/sync")) {
+      const payload = JSON.parse(String(init?.body ?? "{}")) as { cursor?: string };
+      requestedCursors.push(payload.cursor);
+      syncAttempts += 1;
+      if (syncAttempts === 1) return new Response(JSON.stringify({ error_code: "TEMPORARY_FAILURE" }), { status: 500 });
+      return new Response(JSON.stringify({
+        added: [], modified: [], removed: [], next_cursor: "next-committed", has_more: false
+      }), { status: 200 });
+    }
+    throw new Error("Unexpected mocked endpoint");
+  }) as typeof fetch;
+  try {
+    const makeRequest = () => new Request("https://worker.test/api/transactions/sync", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ item_id: "mock-item" })
+    });
+    const failed = await worker.fetch(makeRequest(), env);
+    assert.equal(failed.status, 500);
+    assert.equal(batchCalls, 0, "failed attempt must not commit the cursor or summary");
+
+    const retried = await worker.fetch(makeRequest(), env);
+    const body = await retried.json() as { complete?: boolean; cursor_committed?: boolean };
+    assert.equal(retried.status, 200);
+    assert.equal(body.complete, true);
+    assert.equal(body.cursor_committed, true);
+    assert.deepEqual(requestedCursors, ["last-committed", "last-committed"]);
+    assert.equal(batchCalls, 1, "only the successful retry commits");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
