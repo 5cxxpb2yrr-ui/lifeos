@@ -97,6 +97,15 @@ const normalizeCategory = (row: TransactionInput): string => {
   return (asText(provider) || category || "Uncategorized").replace(/_/g, " ").trim();
 };
 
+function hasCategoryDirectionMismatch(category: string, direction: TransactionDirection): boolean {
+  const value = category.toLowerCase().replace(/[_/]+/g, " ");
+  const expenseTerms = ["food", "drink", "coffee", "fast food", "merchandise", "shopping", "gift", "transportation", "taxi", "ride share", "utility", "rent", "mortgage", "loan payment", "bill", "fee", "travel", "flight", "entertainment", "subscription"];
+  const incomeTerms = ["income", "payroll", "salary", "wages", "interest earned", "dividend", "deposit"];
+  const expenseLike = expenseTerms.some(term => value.includes(term));
+  const incomeLike = incomeTerms.some(term => value.includes(term));
+  return (direction === "inflow" && expenseLike) || (direction === "outflow" && incomeLike);
+}
+
 export function parseConnectedTransactions(rows: TransactionInput[]): ParsedTransaction[] {
   const parsed: ParsedTransaction[] = [];
   for (const row of rows) {
@@ -115,6 +124,7 @@ export function parseConnectedTransactions(rows: TransactionInput[]): ParsedTran
     if (isRefund) signals.push("refund-language");
     if (row.pending === true) signals.push("pending");
     if (row.personal_finance_category?.detailed || row.personal_finance_category?.primary || row.category) signals.push("provider-category");
+    if (hasCategoryDirectionMismatch(normalizeCategory(row), direction)) signals.push("category-direction-mismatch");
     const hasStableId = Boolean(row.transaction_id || row.transactionId || row.id);
     if (hasStableId) signals.push("source-id");
     parsed.push({
@@ -170,14 +180,17 @@ export function buildTransactionRecommendations(rows: ParsedTransaction[]): Tran
       evidence: [row.date, row.merchant, row.category, row.amountMinor + " minor units"]
     });
   }
-  for (const row of rows.filter(item => item.direction === "unknown" || item.category === "Uncategorized")) {
+  for (const row of rows.filter(item => item.direction === "unknown" || item.category === "Uncategorized" || item.signals.includes("category-direction-mismatch"))) {
+    const mismatch = row.signals.includes("category-direction-mismatch");
     recommendations.push({
       id: "review:" + (row.sourceTransactionId ?? row.date + ":" + row.amountMinor),
       kind: "review",
-      title: "Review transaction classification",
-      explanation: "The available bank fields are not enough to confidently classify this item. It is excluded from category-based recommendations until reviewed.",
+      title: mismatch ? "Review category and money direction" : "Review transaction classification",
+      explanation: mismatch
+        ? "The provider category looks unusual for the parsed money direction. The original category is preserved; verify it before using it in a forecast."
+        : "The available bank fields are not enough to confidently classify this item. It is excluded from category-based recommendations until reviewed.",
       confidence: "low",
-      evidence: [row.date, row.merchant, row.category]
+      evidence: [row.date, row.merchant, row.category, "direction: " + row.direction]
     });
   }
   return recommendations;
