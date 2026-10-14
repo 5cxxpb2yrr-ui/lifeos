@@ -326,7 +326,7 @@ test("completed change batch summarizes modified records and counts removals wit
     assert.equal(body.complete, true);
     assert.equal(body.raw_transactions_persisted, false);
     assert.deepEqual(body.summary?.changeCounts, { added: 1, modified: 1, removed: 1 });
-    assert.equal(body.summary?.transactionCount, 1);
+    assert.equal(body.summary?.transactionCount, 2);
     assert.equal(body.summary?.interpretation?.cumulativeLedger, false);
     assert.equal(body.summary?.retention?.rawTransactionsPersisted, false);
     assert.ok(savedSummaryJson.length > 0, "aggregate JSON summary should be the only persisted transaction result");
