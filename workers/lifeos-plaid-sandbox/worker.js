@@ -423,6 +423,14 @@ async function handleRequest(request, env) {
       const summary = {
         schemaVersion: calculated.schemaVersion,
         generatedAt: calculated.generatedAt,
+        aggregationScope: "completed-change-batch",
+        interpretation: {
+          transactionCountMeaning: "valid added and modified records parsed in this sync batch",
+          flowTotalsMeaning: "flows represented by those changed records, not net account-balance changes",
+          removals: "counted as change events; not subtracted from earlier summaries",
+          cumulativeLedger: false
+        },
+        changeCounts: { added: addedCount, modified: modifiedCount, removed: removedCount },
         period: calculated.period,
         source: calculated.source,
         transactionCount: calculated.transactionCount,
