@@ -67,3 +67,62 @@ test("sync failures do not commit summary or cursor", async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("completed empty sync commits only summary and cursor metadata", async () => {
+  const writes: string[] = [];
+  const secret = "test-value";
+  const nonce = new Uint8Array(12).fill(3);
+  const material = await webcrypto.subtle.digest("SHA-256", new TextEncoder().encode(secret));
+  const key = await webcrypto.subtle.importKey("raw", material, { name: "AES-GCM" }, false, ["encrypt"]);
+  const cipher = await webcrypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, key, new TextEncoder().encode("sandbox-placeholder"));
+  const db = {
+    prepare(sql: string) {
+      return {
+        sql,
+        bind() { return this; },
+        async first() {
+          if (sql.includes("SELECT access_token_ciphertext")) return {
+            access_token_ciphertext: Buffer.from(cipher).toString("base64"),
+            access_token_nonce: Buffer.from(nonce).toString("base64"),
+            token_key_version: 1
+          };
+          return null;
+        },
+        async run() { return {}; }
+      };
+    },
+    async batch(statements: Array<{sql: string}>) {
+      writes.push(...statements.map(statement => statement.sql));
+      return [];
+    }
+  };
+  const env = { DB: db, PLAID_ENV: "sandbox", PLAID_CLIENT_ID: "test", PLAID_SECRET: "test", PLAID_TOKEN_ENCRYPTION_KEY: secret };
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const path = String(input);
+    if (path.endsWith("/accounts/get")) return new Response(JSON.stringify({ accounts: [] }), { status: 200 });
+    if (path.endsWith("/transactions/sync")) return new Response(JSON.stringify({
+      added: [], modified: [], removed: [], next_cursor: "cursor-after", has_more: false
+    }), { status: 200 });
+    throw new Error("Unexpected mocked endpoint");
+  }) as typeof fetch;
+  try {
+    const response = await worker.fetch(new Request("https://worker.test/api/transactions/sync", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ item_id: "mock-item" })
+    }), env);
+    const body = await response.json() as { complete?: boolean; cursor_committed?: boolean; raw_transactions_persisted?: boolean; summary?: { transactionCount?: number } };
+    assert.equal(response.status, 200);
+    assert.equal(body.complete, true);
+    assert.equal(body.cursor_committed, true);
+    assert.equal(body.raw_transactions_persisted, false);
+    assert.equal(body.summary?.transactionCount, 0);
+    assert.equal(writes.length, 3);
+    assert.ok(writes.some(sql => sql.includes("INSERT OR IGNORE INTO plaid_sync_summaries")));
+    assert.ok(writes.some(sql => sql.includes("plaid_transaction_cursors")));
+    assert.ok(writes.some(sql => sql.includes("UPDATE plaid_items SET sync_cursor")));
+    assert.equal(writes.some(sql => /INSERT INTO plaid_transactions/i.test(sql)), false);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
