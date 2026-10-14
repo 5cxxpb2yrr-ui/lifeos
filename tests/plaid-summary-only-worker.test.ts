@@ -126,3 +126,57 @@ test("completed empty sync commits only summary and cursor metadata", async () =
     globalThis.fetch = originalFetch;
   }
 });
+
+
+test("incomplete pagination never commits a partial summary or cursor", async () => {
+  const secret = "test-value";
+  const nonce = new Uint8Array(12).fill(9);
+  const material = await webcrypto.subtle.digest("SHA-256", new TextEncoder().encode(secret));
+  const key = await webcrypto.subtle.importKey("raw", material, { name: "AES-GCM" }, false, ["encrypt"]);
+  const cipher = await webcrypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, key, new TextEncoder().encode("sandbox-placeholder"));
+  let syncPages = 0;
+  let batchCalls = 0;
+  const db = {
+    prepare(sql: string) {
+      return {
+        bind() { return this; },
+        async first() {
+          if (sql.includes("SELECT access_token_ciphertext")) return {
+            access_token_ciphertext: Buffer.from(cipher).toString("base64"),
+            access_token_nonce: Buffer.from(nonce).toString("base64"),
+            token_key_version: 1
+          };
+          return null;
+        },
+        async run() { return {}; }
+      };
+    },
+    async batch() { batchCalls += 1; return []; }
+  };
+  const env = { DB: db, PLAID_ENV: "sandbox", PLAID_CLIENT_ID: "test", PLAID_SECRET: "test", PLAID_TOKEN_ENCRYPTION_KEY: secret };
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = (async (input: string | URL | Request) => {
+    const path = String(input);
+    if (path.endsWith("/accounts/get")) return new Response(JSON.stringify({ accounts: [] }), { status: 200 });
+    if (path.endsWith("/transactions/sync")) {
+      syncPages += 1;
+      return new Response(JSON.stringify({
+        added: [], modified: [], removed: [], next_cursor: `cursor-${syncPages}`, has_more: true
+      }), { status: 200 });
+    }
+    throw new Error("Unexpected mocked endpoint");
+  }) as typeof fetch;
+  try {
+    const response = await worker.fetch(new Request("https://worker.test/api/transactions/sync", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ item_id: "mock-item" })
+    }), env);
+    const body = await response.json() as { complete?: boolean; cursor_committed?: boolean };
+    assert.equal(response.status, 503);
+    assert.equal(syncPages, 100, "pagination should stop at the configured safety limit");
+    assert.equal(body.complete, false);
+    assert.equal(body.cursor_committed, false);
+    assert.equal(batchCalls, 0, "partial sync must not commit summary or cursor");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
