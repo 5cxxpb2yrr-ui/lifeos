@@ -111,12 +111,15 @@ test("completed empty sync commits only summary and cursor metadata", async () =
     const response = await worker.fetch(new Request("https://worker.test/api/transactions/sync", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ item_id: "mock-item" })
     }), env);
-    const body = await response.json() as { complete?: boolean; cursor_committed?: boolean; raw_transactions_persisted?: boolean; summary?: { transactionCount?: number } };
+    const body = await response.json() as { complete?: boolean; cursor_committed?: boolean; raw_transactions_persisted?: boolean; summary?: { transactionCount?: number; aggregationScope?: string; changeCounts?: { added?: number; modified?: number; removed?: number }; interpretation?: { cumulativeLedger?: boolean } } };
     assert.equal(response.status, 200);
     assert.equal(body.complete, true);
     assert.equal(body.cursor_committed, true);
     assert.equal(body.raw_transactions_persisted, false);
     assert.equal(body.summary?.transactionCount, 0);
+    assert.equal(body.summary?.aggregationScope, "completed-change-batch");
+    assert.deepEqual(body.summary?.changeCounts, { added: 0, modified: 0, removed: 0 });
+    assert.equal(body.summary?.interpretation?.cumulativeLedger, false);
     assert.equal(writes.length, 3);
     assert.ok(writes.some(sql => sql.includes("INSERT OR IGNORE INTO plaid_sync_summaries")));
     assert.ok(writes.some(sql => sql.includes("plaid_transaction_cursors")));
