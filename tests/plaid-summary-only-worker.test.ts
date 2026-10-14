@@ -290,7 +290,14 @@ test("completed change batch summarizes modified records and counts removals wit
     }
     if (path.endsWith("/transactions/sync")) {
       return new Response(JSON.stringify({
-        added: [],
+        added: [{
+          transaction_id: "synthetic-added-id",
+          account_id: "sandbox-account",
+          date: "2026-10-02",
+          amount: 5.67,
+          name: "Synthetic added entry",
+          personal_finance_category: { primary: "GENERAL_MERCHANDISE", detailed: "GENERAL_MERCHANDISE_OTHER" }
+        }],
         modified: [{
           transaction_id: "synthetic-modified-id",
           account_id: "sandbox-account",
@@ -318,11 +325,13 @@ test("completed change batch summarizes modified records and counts removals wit
     assert.equal(response.status, 200);
     assert.equal(body.complete, true);
     assert.equal(body.raw_transactions_persisted, false);
-    assert.deepEqual(body.summary?.changeCounts, { added: 0, modified: 1, removed: 1 });
+    assert.deepEqual(body.summary?.changeCounts, { added: 1, modified: 1, removed: 1 });
     assert.equal(body.summary?.transactionCount, 1);
     assert.equal(body.summary?.interpretation?.cumulativeLedger, false);
     assert.equal(body.summary?.retention?.rawTransactionsPersisted, false);
     assert.ok(savedSummaryJson.length > 0, "aggregate JSON summary should be the only persisted transaction result");
+    assert.equal(savedSummaryJson.includes("synthetic-added-id"), false);
+    assert.equal(savedSummaryJson.includes("Synthetic added entry"), false);
     assert.equal(savedSummaryJson.includes("synthetic-modified-id"), false);
     assert.equal(savedSummaryJson.includes("Synthetic test entry"), false);
     assert.equal(writes.some(sql => /INSERT INTO plaid_transactions/i.test(sql)), false);
