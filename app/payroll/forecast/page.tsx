@@ -175,17 +175,17 @@ export default function PayrollForecastPage() {
               </div>
               <p className="mt-2 text-sm text-slate-400">Pay dates are prefilled from your confirmed October 27, 2026 payday and continue every 14 days. The form selects the next payday and its matching 14-day pay period. You can still adjust dates if payroll changes.</p>
               <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <label className={labelClass}>Pay date<input type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} className={inputClass} /></label>
+                <label className={labelClass}>Pay date<input type="date" value={payDate} onChange={(e) => setPayDate(e.target.value)} className={`payroll-date-input ${inputClass}`} /></label>
                 <label className={labelClass}>Estimated net pay (USD)<input inputMode="decimal" type="number" min="0" step="0.01" placeholder={(estimate.estimatedNetPayCents / 100).toFixed(2)} value={netOverride} onChange={(e) => setNetOverride(e.target.value)} className={inputClass} /></label>
-                <label className={labelClass}>Pay period start<input type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)} className={inputClass} /></label>
-                <label className={labelClass}>Pay period end<input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} className={inputClass} /></label>
+                <label className={labelClass}>Pay period start<input type="date" value={periodStart} onChange={(e) => setPeriodStart(e.target.value)} className={`payroll-date-input ${inputClass}`} /></label>
+                <label className={labelClass}>Pay period end<input type="date" value={periodEnd} onChange={(e) => setPeriodEnd(e.target.value)} className={`payroll-date-input ${inputClass}`} /></label>
               </div>
               <div className="mt-4 rounded-xl border border-[#ffd54f]/25 bg-[#ffd54f]/5 p-3">
                 <div className="text-xs text-slate-400">Projected net amount used by cash forecast</div>
                 <div className="mt-1 text-2xl font-bold text-[#ffd54f]">{money(netCents)}</div>
                 <div className="mt-1 text-xs text-slate-500">Gross estimate: {money(estimate.grossPayCents)} · Net projection, not actual income</div>
               </div>
-              <button disabled={busy} onClick={() => void saveProjection()} className="mt-4 w-full rounded-xl bg-gradient-to-r from-[#ff6a00] to-[#ffd54f] px-4 py-3 font-bold text-[#080b14] disabled:opacity-50">Save paycheck projection</button>
+              <button disabled={busy} onClick={() => void saveProjection()} className="payroll-primary-action mt-4 w-full rounded-xl bg-gradient-to-r from-[#ff6a00] to-[#ffd54f] px-4 py-3 font-bold text-[#080b14] disabled:opacity-50">Save paycheck projection</button>
             </section>
 
             <section className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 sm:p-5">
