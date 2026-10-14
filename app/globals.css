@@ -551,3 +551,65 @@ select optgroup{
 .payroll-stat-strip strong{font:700 clamp(14px,3vw,20px) Orbitron,sans-serif;overflow-wrap:anywhere}
 .payroll-stat-strip small{color:var(--muted);font-size:11px}
 @media(max-width:520px){.payroll-top-nav{align-items:flex-start;flex-direction:column}.payroll-nav-links{justify-content:flex-start;gap:12px}.payroll-hero-mark{display:none}.payroll-stat-strip{gap:6px}.payroll-stat-strip>div{padding:10px 8px}.payroll-stat-strip span{font-size:8px}.payroll-stat-strip strong{font-size:13px}.payroll-stat-strip small{font-size:9px}}
+
+
+/* Paycheck forecast controls: native iOS date fields must stay in the dark LifeOS palette. */
+.payroll-forecast-page { color-scheme: dark; }
+.payroll-forecast-page input,
+.payroll-forecast-page select,
+.payroll-forecast-page textarea {
+  color-scheme: dark;
+  color: #f3f5fc;
+  background-color: #111b2b;
+  border: 1px solid rgba(255,213,79,.24);
+  border-radius: 12px;
+  accent-color: #ff9a36;
+}
+.payroll-forecast-page input[type="date"] {
+  appearance: none;
+  -webkit-appearance: none;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 11px 13px;
+  color: #f3f5fc;
+  background: #111b2b;
+  border: 1px solid rgba(255,213,79,.3);
+  border-radius: 12px;
+  font: inherit;
+  font-size: 15px;
+  color-scheme: dark;
+}
+.payroll-forecast-page input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(.82) sepia(.7) saturate(2.4) hue-rotate(350deg);
+  opacity: .9;
+}
+.payroll-forecast-page input:focus,
+.payroll-forecast-page select:focus,
+.payroll-forecast-page textarea:focus {
+  outline: 2px solid rgba(255,154,54,.28);
+  outline-offset: 1px;
+  border-color: #ff9a36;
+}
+.payroll-forecast-page button {
+  border-radius: 12px;
+  transition: filter .15s ease, border-color .15s ease, background-color .15s ease;
+}
+.payroll-forecast-page button:not(:disabled) { cursor: pointer; }
+.payroll-forecast-page button:disabled { cursor: not-allowed; }
+.payroll-forecast-page .payroll-primary-action {
+  background: linear-gradient(110deg,#ff6a00,#ffd166);
+  color: #10131b;
+  border: 1px solid rgba(255,209,102,.65);
+  box-shadow: 0 7px 24px rgba(255,106,0,.12);
+}
+.payroll-forecast-page .payroll-secondary-action {
+  background: rgba(17,27,43,.85);
+  color: #ffd166;
+  border: 1px solid rgba(255,213,79,.38);
+}
+.payroll-forecast-page button:hover:not(:disabled) { filter: brightness(1.08); }
+@media(max-width:520px) {
+  .payroll-forecast-page input[type="date"] { min-height: 46px; padding: 10px 11px; font-size: 14px; }
+}
