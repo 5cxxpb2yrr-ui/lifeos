@@ -57,7 +57,7 @@ export default function PayrollDepositImport({db,onPersist}:{db:LifeOSDatabase;o
    if(result.complete!==true||result.cursor_committed!==true||!result.summary||typeof result.summary!=="object")throw new Error("Sync did not confirm a complete summary and cursor commit. No completed sync will be reported.");
    const summary=result.summary as Record<string,unknown>;
    const money=(value:unknown)=>typeof value==="number"?(value/100).toLocaleString(undefined,{style:"currency",currency:"USD"}):"—";
-   syncMessage=`Sync complete · ${String(result.added??0)} added, ${String(result.modified??0)} modified, ${String(result.removed??0)} removed · ${String(summary.transactionCount??0)} transactions summarized · inflow ${money(summary.inflowMinor)} · outflow ${money(summary.outflowMinor)}. Individual transaction rows were not persisted. This batch summary is not a cumulative ledger and has not been imported into the cash forecast.`;
+   setSyncMessage(`Sync complete · ${String(result.added??0)} added, ${String(result.modified??0)} modified, ${String(result.removed??0)} removed · ${String(summary.transactionCount??0)} transactions summarized · inflow ${money(summary.inflowMinor)} · outflow ${money(summary.outflowMinor)}. Individual transaction rows were not persisted. This batch summary is not a cumulative ledger and has not been imported into the cash forecast.`);
   }catch(e){setSyncMessage(e instanceof Error?e.message:"Transaction sync failed.");}
   finally{setSyncBusy(false);}
  }
