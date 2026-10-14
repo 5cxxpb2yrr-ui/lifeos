@@ -613,3 +613,24 @@ select optgroup{
 @media(max-width:520px) {
   .payroll-forecast-page input[type="date"] { min-height: 46px; padding: 10px 11px; font-size: 14px; }
 }
+
+
+/* Explicit class wins over utility styles and native iOS date-field defaults. */
+.payroll-forecast-page input.payroll-date-input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: #111b2b !important;
+  color: #f3f5fc !important;
+  border: 1px solid rgba(255,213,79,.32) !important;
+  border-radius: 12px !important;
+  color-scheme: dark;
+}
+.payroll-forecast-page input.payroll-date-input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+}
+.payroll-forecast-page button.payroll-primary-action {
+  background: linear-gradient(110deg,#ff6a00,#ffd166) !important;
+  color: #10131b !important;
+  border: 1px solid rgba(255,209,102,.65) !important;
+  border-radius: 12px !important;
+}
