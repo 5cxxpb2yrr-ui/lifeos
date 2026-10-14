@@ -420,6 +420,12 @@ async function handleRequest(request, env) {
       for (const recommendation of calculated.recommendations) {
         recommendationCounts[recommendation.kind] = (recommendationCounts[recommendation.kind] || 0) + 1;
       }
+      const categoryDirectionMismatchCount = parsed.filter(transaction =>
+        transaction.signals.includes("category-direction-mismatch")
+      ).length;
+      if (categoryDirectionMismatchCount > 0) {
+        recommendationCounts["category-direction-mismatch"] = categoryDirectionMismatchCount;
+      }
       const summary = {
         schemaVersion: calculated.schemaVersion,
         generatedAt: calculated.generatedAt,
@@ -440,6 +446,7 @@ async function handleRequest(request, env) {
         transferMinor: calculated.transferMinor,
         netFlowMinor: calculated.netFlowMinor,
         categoryTotals: calculated.categoryTotals,
+        categoryDirectionMismatchCount,
         recommendationCounts,
         retention: { rawTransactionsPersisted: false, policy: "discard-by-default", archiveCreated: false }
       };
