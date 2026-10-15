@@ -75,7 +75,7 @@ export function resolveMissionControl(db:LifeOSDatabase,now=new Date()):MissionC
  const today=db.events.filter(e=>eventDay(e)===currentDay);
  const horizon72=now.getTime()+72*60*60*1000;
  const next72Hours=db.events.filter(e=>{
-  if(["completed","cancelled","skipped"].includes(e.status))return false;
+  if(!["planned","scheduled","in_progress"].includes(e.status))return false;
   const value=e.startAt??e.dueAt;
   if(!value)return false;
   const time=new Date(value).getTime();
