@@ -35,6 +35,10 @@
       },
       "services": [
         {
+          "binding": "ATTACHMENTS",
+          "service": "lifeos-attachments"
+        },
+        {
           "binding": "PLAID_WORKER",
           "service": "lifeos-plaid-sandbox"
         }
