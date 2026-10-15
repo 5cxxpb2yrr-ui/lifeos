@@ -74,7 +74,7 @@ export function resolveMissionControl(db:LifeOSDatabase,now=new Date()):MissionC
  ].filter(x=>x.attention!=="none").sort((a,b)=>(b.priority??0)-(a.priority??0)||((a.dueAt??"").localeCompare(b.dueAt??"")));
  const today=db.events.filter(e=>eventDay(e)===currentDay);
  const activeLoops=db.openLoops.filter(o=>!["resolved","cancelled"].includes(o.status));
- const overdueLoops=activeLoops.filter(o=>{if(!o.dueAt)return false;const due=o.dueAt.slice(0,10);return /^\\d{4}-\\d{2}-\\d{2}$/.test(o.dueAt)?due<currentDay:new Date(o.dueAt).getTime()<now.getTime()});
+ const overdueLoops=activeLoops.filter(o=>{if(!o.dueAt)return false;const due=o.dueAt.slice(0,10);return /^\d{4}-\d{2}-\d{2}$/.test(o.dueAt)?due<currentDay:new Date(o.dueAt).getTime()<now.getTime()});
  const staleCutoff=now.getTime()-3*24*60*60*1000;
  const staleLoops=activeLoops.filter(o=>new Date(o.updatedAt).getTime()<staleCutoff);
  const resolvedCutoff=now.getTime()-24*60*60*1000;
