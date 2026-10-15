@@ -90,9 +90,14 @@ export default function TransactionImportCenter({ db, onPersist }: Props) {
     finally { setBusy(false); }
   }
   async function setBatchStatus(id: string, status: "reviewed" | "discarded") {
+    setError("");
     const next = structuredClone(db);
     next.transactionImports = (next.transactionImports ?? []).map(item => item.id === id ? { ...item, status, updatedAt: new Date().toISOString() } : item);
-    await onPersist(next, status === "reviewed" ? "Transaction summary marked reviewed. No ledger or forecast changes were made." : "Transaction summary marked discarded. No raw rows were retained.");
+    try {
+      await onPersist(next, status === "reviewed" ? "Transaction summary marked reviewed. No ledger or forecast changes were made." : "Transaction summary marked discarded. No raw rows were retained.");
+    } catch {
+      setError("Could not update the summary status. The current database was left unchanged.");
+    }
   }
   function loadFile(file: File) {
     const isCsv = file.name.toLowerCase().endsWith(".csv");
