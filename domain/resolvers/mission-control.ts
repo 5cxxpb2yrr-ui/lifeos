@@ -6,7 +6,7 @@ export interface AttentionItem {
  dueAt?:string; priority?:number; reason?:string; context?:Record<string,unknown>;
 }
 export interface MissionControlViewModel {
- attention:AttentionItem[]; today:Event[]; openLoops:OpenLoop[];
+ attention:AttentionItem[]; today:Event[]; next72Hours:Event[]; openLoops:OpenLoop[];
  finance:{accounts:number;loans:number;upcomingPayments:number};
  assets:{vehicles:number;properties:number}; recent:Event[];
 }
@@ -73,9 +73,18 @@ export function resolveMissionControl(db:LifeOSDatabase,now=new Date()):MissionC
   })
  ].filter(x=>x.attention!=="none").sort((a,b)=>(b.priority??0)-(a.priority??0)||((a.dueAt??"").localeCompare(b.dueAt??"")));
  const today=db.events.filter(e=>eventDay(e)===currentDay);
+ const horizon72=now.getTime()+72*60*60*1000;
+ const next72Hours=db.events.filter(e=>{
+  if(["completed","cancelled","skipped"].includes(e.status))return false;
+  const value=e.startAt??e.dueAt;
+  if(!value)return false;
+  const time=new Date(value).getTime();
+  return Number.isFinite(time)&&time>=now.getTime()&&time<=horizon72;
+ }).sort((a,b)=>new Date(a.startAt??a.dueAt??0).getTime()-new Date(b.startAt??b.dueAt??0).getTime());
  return{
   attention,
   today,
+  next72Hours,
   openLoops:db.openLoops.filter(o=>!["resolved","cancelled"].includes(o.status)),
   finance:{accounts:db.accounts.length,loans:db.loans.length,upcomingPayments:db.loanPayments.filter(p=>p.status==="scheduled").length},
   assets:{vehicles:db.vehicles.length,properties:db.properties.length},
