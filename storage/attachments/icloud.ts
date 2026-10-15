@@ -1,12 +1,7 @@
 import type {Attachment,AttachmentEntityType} from "@/domain/contracts/database";
 
-/**
- * iCloud Drive is intentionally modeled as a user-owned storage provider.
- * Safari/Next.js cannot directly authenticate to or write arbitrary iCloud
- * Drive files, so LifeOS stores a deterministic destination path plus an
- * optional user/Shortcuts-provided share URL.
- */
 export const ICLOUD_ATTACHMENT_ROOT="iCloud Drive/LifeOS/Attachments";
+export const ICLOUD_VEHICLE_MANUAL_ROOT="iCloud Drive/LifeOS/Vehicle Manuals";
 
 export function createICloudAttachmentPath(input:{
  attachmentId:string;
@@ -32,6 +27,16 @@ export function iCloudPathForAttachment(attachment:Attachment):string{
       name:attachment.name,
     })
   : `${ICLOUD_ATTACHMENT_ROOT}/other/${attachment.id}-${attachment.name}`;
+}
+
+export function iCloudVehicleManualPath(input:{
+ year:number;
+ make:string;
+ model:string;
+ archiveFileName:string;
+}):string{
+ const folder=`${input.year} ${input.make} ${input.model}`.trim();
+ return `${ICLOUD_VEHICLE_MANUAL_ROOT}/${folder}/${input.archiveFileName}`;
 }
 
 export function isICloudShareUrl(value?:string):boolean{
