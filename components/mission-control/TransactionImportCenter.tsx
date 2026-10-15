@@ -69,6 +69,7 @@ export default function TransactionImportCenter({ db, onPersist }: Props) {
   }, [raw, format]);
   const money = (minor: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(minor / 100);
   const history = db.transactionImports ?? [];
+  const mixedCurrencies = (parsed.summary?.source.currencies.length ?? 0) > 1;
   const sourceHash = raw.trim() ? fingerprint(format + ":" + raw) : "";
   const duplicate = Boolean(sourceHash && history.some(item => item.sourceFingerprint === sourceHash));
   async function saveSummary() {
@@ -116,7 +117,7 @@ export default function TransactionImportCenter({ db, onPersist }: Props) {
     {parsed.error && <div className="notice" role="status">{parsed.error}</div>}
     {parsed.summary && <div className="transaction-intelligence-preview" aria-live="polite">
       <div className="section-title"><div><div className="kicker">Review before saving</div><h3>Import analysis</h3></div><span className="badge">Preview only</span></div>
-      <div className="transaction-summary-grid">
+      {mixedCurrencies ? <div className="notice">Multiple currencies detected. LifeOS does not convert currencies, so combined monetary totals are hidden and saving this batch is disabled. Import one currency at a time.</div> : <><div className="transaction-summary-grid">
         <div><span className="row-meta">Rows received</span><strong>{parsed.rows.length}</strong></div>
         <div><span className="row-meta">Parsed</span><strong>{parsed.summary.transactionCount}</strong></div>
         <div><span className="row-meta">Money in</span><strong>{money(parsed.summary.inflowMinor)}</strong></div>
@@ -127,9 +128,9 @@ export default function TransactionImportCenter({ db, onPersist }: Props) {
         <div><span className="row-meta">Review signals</span><strong>{parsed.summary.recommendations.length}</strong></div>
       </div>
       <div className="row-meta">Categories: {parsed.summary.categoryTotals.length ? parsed.summary.categoryTotals.map(item => item.category + " · " + item.direction + " · " + money(item.totalMinor)).join(" | ") : "No categorized inflows or outflows."}</div>
-      {parsed.summary.recommendations.length > 0 && <div className="list">{parsed.summary.recommendations.slice(0, 8).map(item => <div className="row" key={item.id}><div className="row-main"><div className="row-title">{item.title}</div><div className="row-meta">{item.explanation}</div></div></div>)}</div>}
+      </>}{parsed.summary.recommendations.length > 0 && <div className="list">{parsed.summary.recommendations.slice(0, 8).map(item => <div className="row" key={item.id}><div className="row-main"><div className="row-title">{item.title}</div><div className="row-meta">{item.explanation}</div></div></div>)}</div>}
       {duplicate && <div className="notice">This exact input was already summarized. Duplicate save is blocked.</div>}
-      <button className="action primary" type="button" disabled={busy || !parsed.parsed.length || duplicate || Boolean(parsed.error)} onClick={() => void saveSummary()}>{busy ? "Saving summary…" : "Save summary only"}</button>
+      <button className="action primary" type="button" disabled={busy || !parsed.parsed.length || duplicate || mixedCurrencies || Boolean(parsed.error)} onClick={() => void saveSummary()}>{busy ? "Saving summary…" : "Save summary only"}</button>
     </div>}
     {error && <div className="notice" role="status">{error}</div>}
     <div className="data-preview"><div className="section-title"><div><div className="kicker">Saved import history</div><h3>Summary records</h3></div><span className="badge">{history.length}</span></div>
