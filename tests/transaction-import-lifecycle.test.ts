@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createEmptyDatabase } from "../domain/services/empty-database.ts";
 import { validateDatabaseIntegrity } from "../domain/resolvers/integrity.ts";
-import { parseConnectedTransactions, summarizeTransactions } from "../domain/resolvers/transaction-intelligence.ts";
+import { buildPersistableTransactionSummary, parseConnectedTransactions, summarizeTransactions } from "../domain/resolvers/transaction-intelligence.ts";
 
 test("transaction import history persists aggregate summaries only", () => {
   const db = createEmptyDatabase("2026-10-15T12:00:00.000Z");
@@ -14,7 +14,7 @@ test("transaction import history persists aggregate summaries only", () => {
   db.transactionImports = [{
     id: "txn-import-test", entityType: "transaction_import_batch", createdAt: "2026-10-15T12:00:00.000Z",
     updatedAt: "2026-10-15T12:00:00.000Z", source: "manual-json", status: "analyzed",
-    summary: summary as unknown as Record<string, unknown>, sourceFingerprint: "fnv1a32-test",
+    summary: buildPersistableTransactionSummary(summary) as unknown as Record<string, unknown>, sourceFingerprint: "fnv1a32-test",
     rawTransactionsPersisted: false, notes: "Manual test"
   }];
   assert.equal(db.transactions.length, 0, "analysis must not add canonical ledger rows");
