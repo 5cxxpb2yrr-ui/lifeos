@@ -64,3 +64,12 @@ The Plaid API is restricted to non-root subdomains of `finance-trackerzip.pages.
 ## Current status
 
 The server-side API foundation and D1 schema are committed to the draft PR, and the four Plaid tables exist in the finance D1 database. Pages secrets, verified Access configuration, Link UI, webhook verification, and Sandbox acceptance testing remain incomplete. No bank connection is active.
+
+
+## Source-independent transaction intake and retention
+
+The Finance view includes a Transaction Import & Archive panel that accepts manual JSON or CSV without requiring Plaid Link or a connected bank. Parsing and classification happen in the browser; the persisted LifeOS record contains the aggregate summary, import label/source, status, and a non-cryptographic duplicate fingerprint only. It does not contain raw transaction rows or source transaction identifiers.
+
+Saving an analysis summary does not create canonical financial transactions, alter account balances, or feed the cash forecast. Payroll deposit import remains a separate reviewed workflow. Full backups/restores include the optional `transactionImports` collection, Data Control Center can export summary records separately, and the integrity resolver checks retention flags and import metadata. Legacy database snapshots without this optional collection remain readable.
+
+Individual-transaction archives are not implemented by this panel. If added later, they must be an explicit user choice and stored only in private encrypted storage with an archive manifest and retention/deletion metadata.
