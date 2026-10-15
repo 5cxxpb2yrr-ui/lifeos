@@ -64,6 +64,54 @@ export interface TransactionIntelligenceSummary {
   };
 }
 
+export interface PersistableTransactionSummary {
+  schemaVersion: "lifeos-transaction-summary.v1";
+  generatedAt: string;
+  period: { startDate: string; endDate: string };
+  source: { institution?: string; accountNames: string[]; currencies: string[] };
+  transactionCount: number;
+  pendingCount: number;
+  inflowMinor: number;
+  outflowMinor: number;
+  transferMinor: number;
+  netFlowMinor: number;
+  categoryTotals: TransactionIntelligenceSummary["categoryTotals"];
+  recommendationCounts: Record<string, number>;
+  retention: {
+    rawTransactionsPersisted: false;
+    policy: "discard-by-default";
+    archiveCreated: false;
+    archiveManifestRequired: true;
+  };
+}
+
+/** Removes row-level recommendation evidence before a summary is persisted. */
+export function buildPersistableTransactionSummary(summary: TransactionIntelligenceSummary): PersistableTransactionSummary {
+  const recommendationCounts: Record<string, number> = {};
+  for (const recommendation of summary.recommendations) {
+    recommendationCounts[recommendation.kind] = (recommendationCounts[recommendation.kind] ?? 0) + 1;
+  }
+  return {
+    schemaVersion: summary.schemaVersion,
+    generatedAt: summary.generatedAt,
+    period: { ...summary.period },
+    source: {
+      institution: summary.source.institution,
+      accountNames: [...summary.source.accountNames],
+      currencies: [...summary.source.currencies]
+    },
+    transactionCount: summary.transactionCount,
+    pendingCount: summary.pendingCount,
+    inflowMinor: summary.inflowMinor,
+    outflowMinor: summary.outflowMinor,
+    transferMinor: summary.transferMinor,
+    netFlowMinor: summary.netFlowMinor,
+    categoryTotals: summary.categoryTotals.map(item => ({ ...item })),
+    recommendationCounts,
+    retention: { rawTransactionsPersisted: false, policy: "discard-by-default", archiveCreated: false, archiveManifestRequired: true }
+  };
+}
+
 export interface ArchiveManifest {
   schemaVersion: "lifeos-transaction-archive-manifest.v1";
   createdAt: string;
