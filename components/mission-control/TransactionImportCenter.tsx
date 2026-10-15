@@ -89,6 +89,11 @@ export default function TransactionImportCenter({ db, onPersist }: Props) {
     } catch { setError("Could not save the summary. The current database was left unchanged."); }
     finally { setBusy(false); }
   }
+  async function setBatchStatus(id: string, status: "reviewed" | "discarded") {
+    const next = structuredClone(db);
+    next.transactionImports = (next.transactionImports ?? []).map(item => item.id === id ? { ...item, status, updatedAt: new Date().toISOString() } : item);
+    await onPersist(next, status === "reviewed" ? "Transaction summary marked reviewed. No ledger or forecast changes were made." : "Transaction summary marked discarded. No raw rows were retained.");
+  }
   function loadFile(file: File) {
     const isCsv = file.name.toLowerCase().endsWith(".csv");
     file.text().then(text => { setFormat(isCsv ? "csv" : "json"); setSourceName(file.name); setRaw(text); setError(""); }).catch(() => setError("Could not read the selected file."));
@@ -123,7 +128,7 @@ export default function TransactionImportCenter({ db, onPersist }: Props) {
     </div>}
     {error && <div className="notice" role="status">{error}</div>}
     <div className="data-preview"><div className="section-title"><div><div className="kicker">Saved import history</div><h3>Summary records</h3></div><span className="badge">{history.length}</span></div>
-      {history.length ? <div className="list">{history.slice().sort((a,b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 10).map(item => <div className="row" key={item.id}><div className="row-main"><div className="row-title">{item.notes || item.source} · {String(item.summary.transactionCount ?? 0)} rows</div><div className="row-meta">{item.createdAt} · {item.status} · raw rows not retained</div></div></div>)}</div> : <div className="row-meta">No transaction import summaries saved yet.</div>}
+      {history.length ? <div className="list">{history.slice().sort((a,b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 10).map(item => <div className="row" key={item.id}><div className="row-main"><div className="row-title">{item.notes || item.source} · {String(item.summary.transactionCount ?? 0)} rows</div><div className="row-meta">{item.createdAt} · {item.status} · raw rows not retained</div></div><div className="data-preview-actions">{item.status === "analyzed" && <button className="mini-action" type="button" onClick={() => void setBatchStatus(item.id, "reviewed")}>Mark reviewed</button>}{item.status !== "discarded" && <button className="mini-action" type="button" onClick={() => void setBatchStatus(item.id, "discarded")}>Discard summary</button>}</div></div>)}</div> : <div className="row-meta">No transaction import summaries saved yet.</div>}
     </div>
   </section>;
 }
