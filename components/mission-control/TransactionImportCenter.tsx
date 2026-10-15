@@ -78,7 +78,7 @@ export default function TransactionImportCenter({ db, onPersist }: Props) {
     const batch: TransactionImportBatch = {
       id: "txn-import-" + crypto.randomUUID(), entityType: "transaction_import_batch",
       createdAt: now, updatedAt: now, source: format === "csv" ? "manual-csv" : "manual-json",
-      status: "analyzed", summary: structuredClone(parsed.summary), sourceFingerprint: sourceHash,
+      status: "analyzed", summary: structuredClone(parsed.summary) as unknown as Record<string, unknown>, sourceFingerprint: sourceHash,
       rawTransactionsPersisted: false, notes: sourceName.trim() || "Manual import"
     };
     const next = structuredClone(db);
