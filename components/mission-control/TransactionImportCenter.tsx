@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import type { LifeOSDatabase, TransactionImportBatch } from "@/domain/contracts/database";
-import { parseConnectedTransactions, summarizeTransactions, type TransactionInput } from "@/domain/resolvers/transaction-intelligence";
+import { buildPersistableTransactionSummary, parseConnectedTransactions, summarizeTransactions, type TransactionInput } from "@/domain/resolvers/transaction-intelligence";
 
 type Props = { db: LifeOSDatabase; onPersist: (next: LifeOSDatabase, message: string) => Promise<void> | void };
 
@@ -78,7 +78,7 @@ export default function TransactionImportCenter({ db, onPersist }: Props) {
     const batch: TransactionImportBatch = {
       id: "txn-import-" + crypto.randomUUID(), entityType: "transaction_import_batch",
       createdAt: now, updatedAt: now, source: format === "csv" ? "manual-csv" : "manual-json",
-      status: "analyzed", summary: structuredClone(parsed.summary) as unknown as Record<string, unknown>, sourceFingerprint: sourceHash,
+      status: "analyzed", summary: buildPersistableTransactionSummary(parsed.summary) as unknown as Record<string, unknown>, sourceFingerprint: sourceHash,
       rawTransactionsPersisted: false, notes: sourceName.trim() || "Manual import"
     };
     const next = structuredClone(db);
