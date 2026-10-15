@@ -34,31 +34,6 @@ CREATE TABLE IF NOT EXISTS plaid_accounts (
   updated_at TEXT NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS plaid_transactions (
-  transaction_id TEXT PRIMARY KEY,
-  item_id TEXT NOT NULL REFERENCES plaid_items(item_id) ON DELETE CASCADE,
-  account_id TEXT NOT NULL REFERENCES plaid_accounts(account_id) ON DELETE CASCADE,
-  date TEXT NOT NULL,
-  authorized_date TEXT,
-  name TEXT NOT NULL,
-  merchant_name TEXT,
-  amount REAL NOT NULL,
-  iso_currency_code TEXT,
-  pending INTEGER NOT NULL DEFAULT 0 CHECK (pending IN (0, 1)),
-  removed INTEGER NOT NULL DEFAULT 0 CHECK (removed IN (0, 1)),
-  personal_finance_category_primary TEXT,
-  personal_finance_category_detailed TEXT,
-  raw_json TEXT NOT NULL,
-  first_seen_at TEXT NOT NULL,
-  last_seen_at TEXT NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_plaid_transactions_item_date
-  ON plaid_transactions(item_id, date);
-
-CREATE INDEX IF NOT EXISTS idx_plaid_transactions_account_date
-  ON plaid_transactions(account_id, date);
-
 CREATE TABLE IF NOT EXISTS plaid_webhook_events (
   event_key TEXT PRIMARY KEY,
   item_id TEXT,
