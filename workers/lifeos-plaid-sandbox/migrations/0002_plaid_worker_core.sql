@@ -1,0 +1,45 @@
+-- Core tables required by the Sandbox-only Plaid Worker.
+-- IF NOT EXISTS supports Sandbox databases where these tables were provisioned earlier.
+-- This migration lives outside the root migrations directory to avoid touching production D1.
+PRAGMA foreign_keys = ON;
+
+CREATE TABLE IF NOT EXISTS plaid_items (
+  item_id TEXT PRIMARY KEY,
+  institution_id TEXT,
+  institution_name TEXT,
+  access_token_ciphertext TEXT NOT NULL,
+  access_token_nonce TEXT NOT NULL,
+  token_key_version INTEGER NOT NULL DEFAULT 1,
+  sync_cursor TEXT,
+  status TEXT NOT NULL DEFAULT 'active'
+    CHECK (status IN ('active', 'login_required', 'error', 'disconnected')),
+  consented_at TEXT NOT NULL,
+  last_synced_at TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS plaid_accounts (
+  account_id TEXT PRIMARY KEY,
+  item_id TEXT NOT NULL REFERENCES plaid_items(item_id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  official_name TEXT,
+  mask TEXT,
+  type TEXT,
+  subtype TEXT,
+  iso_currency_code TEXT,
+  linked_lifeos_account_id TEXT,
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS plaid_webhook_events (
+  event_key TEXT PRIMARY KEY,
+  item_id TEXT,
+  webhook_type TEXT NOT NULL,
+  webhook_code TEXT NOT NULL,
+  received_at TEXT NOT NULL,
+  processed_at TEXT,
+  status TEXT NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'processing', 'processed', 'failed'))
+);
