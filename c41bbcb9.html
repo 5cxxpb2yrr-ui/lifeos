@@ -1,0 +1,3495 @@
+<!DOCTYPE html>
+
+<html lang="en" class="dark">
+	<head>
+		<meta charset="UTF-8" />
+
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+		/>
+
+		<title>LifeOS v2 - Master Mission Control</title>
+
+		<!-- Tailwind CSS CDN -->
+
+		<script src="https://cdn.tailwindcss.com"></script>
+
+		<!-- FontAwesome Icons -->
+
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+		/>
+
+		<script>
+			tailwind.config = {
+				darkMode: "class",
+
+				theme: {
+					extend: {
+						colors: {
+							app: "#09090b",
+
+							card: "#121215",
+
+							cardElevated: "#1c1c21",
+
+							cardBorder: "#27272a",
+
+							accent: "#0a84ff",
+
+							success: "#30d158",
+
+							warning: "#ffd60a",
+
+							danger: "#ff453a",
+
+							purpleAccent: "#bf5af2",
+						},
+
+						fontFamily: {
+							sans: [
+								"-apple-system",
+
+								"BlinkMacSystemFont",
+
+								'"SF Pro Display"',
+
+								'"SF Pro Text"',
+
+								"sans-serif",
+							],
+						},
+					},
+				},
+			};
+		</script>
+
+		<style>
+			:root {
+				--safe-top: env(safe-area-inset-top, 16px);
+
+				--safe-bottom: env(safe-area-inset-bottom, 16px);
+			}
+
+			body {
+				background-color: #09090b;
+
+				color: #f4f4f5;
+
+				font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display",
+					"SF Pro Text", sans-serif;
+
+				-webkit-font-smoothing: antialiased;
+
+				user-select: none;
+
+				-webkit-user-select: none;
+
+				overflow-x: hidden;
+			}
+
+			/* Glassmorphism utilities */
+
+			.glass-panel {
+				background: rgba(18, 18, 21, 0.75);
+
+				backdrop-filter: blur(20px);
+
+				-webkit-backdrop-filter: blur(20px);
+
+				border: 1px solid rgba(255, 255, 255, 0.08);
+			}
+
+			.glass-card {
+				background: rgba(28, 28, 33, 0.6);
+
+				backdrop-filter: blur(12px);
+
+				-webkit-backdrop-filter: blur(12px);
+
+				border: 1px solid rgba(255, 255, 255, 0.07);
+			}
+
+			/* Custom Scrollbars */
+
+			::-webkit-scrollbar {
+				width: 6px;
+
+				height: 6px;
+			}
+
+			::-webkit-scrollbar-track {
+				background: transparent;
+			}
+
+			::-webkit-scrollbar-thumb {
+				background: rgba(255, 255, 255, 0.15);
+
+				border-radius: 9999px;
+			}
+
+			::-webkit-scrollbar-thumb:hover {
+				background: rgba(255, 255, 255, 0.25);
+			}
+
+			/* Pulse glow effects */
+
+			@keyframes pulseGlow {
+				0%,
+				100% {
+					opacity: 0.4;
+				}
+
+				50% {
+					opacity: 0.8;
+				}
+			}
+
+			.animate-pulse-glow {
+				animation: pulseGlow 3s infinite ease-in-out;
+			}
+
+			/* LLI Radial Progress Gauge */
+
+			.gauge-circle {
+				transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1),
+					stroke 0.5s ease;
+			}
+
+			.layer-transition {
+				transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+			}
+
+			/* Interactive touch swipe effect simulation */
+
+			.swipe-card {
+				touch-action: pan-y;
+
+				transition: transform 0.2s ease, opacity 0.2s ease;
+			}
+		</style>
+	</head>
+
+	<body
+		class="min-h-screen flex flex-col antialiased text-zinc-100 bg-app selection:bg-accent selection:text-white"
+	>
+		<!-- Top Navigation & Universal Capture Bar -->
+
+		<header
+			class="sticky top-0 z-40 glass-panel border-b border-cardBorder px-4 py-3 sm:px-6"
+		>
+			<div
+				class="max-w-7xl mx-auto flex items-center justify-between gap-3"
+			>
+				<!-- Brand & Status Tag -->
+
+				<div class="flex items-center gap-3">
+					<div
+						class="h-9 w-9 rounded-xl bg-gradient-to-br from-accent to-blue-700 flex items-center justify-center shadow-lg shadow-accent/20"
+					>
+						<i class="fa-solid fa-brain text-white text-base"></i>
+					</div>
+
+					<div>
+						<div class="flex items-center gap-2">
+							<h1
+								class="font-bold text-base tracking-tight text-white leading-none"
+							>
+								LifeOS
+							</h1>
+
+							<span
+								class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-accent/20 text-accent border border-accent/30 uppercase tracking-widest"
+								>v2.0</span
+							>
+						</div>
+
+						<p class="text-[11px] text-zinc-400 font-medium">
+							Local-First Cognitive Engine
+						</p>
+					</div>
+				</div>
+
+				<!-- Quick Search Bar -->
+
+				<div class="flex-1 max-w-md hidden sm:block relative">
+					<div class="relative flex items-center">
+						<i
+							class="fa-solid fa-magnifying-glass absolute left-3 text-zinc-400 text-xs"
+						></i>
+
+						<input
+							id="searchInput"
+							type="text"
+							placeholder="Search or query (e.g. is:loop p1 #launch +work)..."
+							class="w-full bg-cardElevated/80 border border-cardBorder text-xs rounded-xl pl-9 pr-8 py-2 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
+						/>
+
+						<span
+							class="absolute right-2.5 text-[10px] font-mono text-zinc-500 bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700"
+							>⌘K</span
+						>
+					</div>
+				</div>
+
+				<!-- Header Quick Controls -->
+
+				<div class="flex items-center gap-2">
+					<!-- Quick Capture Trigger -->
+
+					<button
+						id="btnQuickCapture"
+						class="flex items-center gap-2 bg-accent hover:bg-blue-600 text-white text-xs font-semibold px-3.5 py-2 rounded-xl shadow-md shadow-accent/20 active:scale-95 transition-all cursor-pointer"
+					>
+						<i class="fa-solid fa-plus text-xs"></i>
+
+						<span class="hidden sm:inline">Universal Capture</span>
+					</button>
+
+					<!-- LLI Math Simulator Toggle -->
+
+					<button
+						id="btnOpenSimulator"
+						title="Open LLI Math Breakdown & System Controls"
+						class="p-2 bg-cardElevated hover:bg-zinc-800 text-zinc-300 rounded-xl border border-cardBorder text-xs transition-all active:scale-95"
+					>
+						<i class="fa-solid fa-sliders"></i>
+					</button>
+
+					<!-- Refresh Data -->
+
+					<button
+						id="btnResetData"
+						title="Reset to Baseline Seed Data"
+						class="p-2 bg-cardElevated hover:bg-zinc-800 text-zinc-400 hover:text-white rounded-xl border border-cardBorder text-xs transition-all active:scale-95"
+					>
+						<i class="fa-solid fa-rotate"></i>
+					</button>
+				</div>
+			</div>
+
+			<!-- Mobile Search input bar -->
+
+			<div class="sm:hidden mt-2 pt-2 border-t border-cardBorder/50">
+				<div class="relative flex items-center">
+					<i
+						class="fa-solid fa-magnifying-glass absolute left-3 text-zinc-400 text-xs"
+					></i>
+
+					<input
+						id="searchInputMobile"
+						type="text"
+						placeholder="Query (is:loop, p1, #tag)..."
+						class="w-full bg-cardElevated border border-cardBorder text-xs rounded-xl pl-9 pr-3 py-1.5 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-accent"
+					/>
+				</div>
+			</div>
+		</header>
+
+		<!-- Zen Mode Emergency Overload Banner -->
+
+		<div
+			id="zenModeBanner"
+			class="hidden bg-gradient-to-r from-danger/90 via-red-600 to-orange-600 text-white px-4 py-2.5 shadow-xl border-b border-red-500/30"
+		>
+			<div
+				class="max-w-7xl mx-auto flex items-center justify-between text-xs"
+			>
+				<div class="flex items-center gap-2 font-medium">
+					<i
+						class="fa-solid fa-triangle-exclamation animate-bounce"
+					></i>
+
+					<span
+						><strong>ZEN MODE ACTIVE:</strong> Cognitive Load Engine
+						at maximum (<span id="zenScoreVal">92</span> LLI).
+						Unessential layers suppressed. Focus exclusively on
+						urgent loops.</span
+					>
+				</div>
+
+				<button
+					id="btnOverrideZen"
+					class="bg-black/30 hover:bg-black/50 text-white font-semibold text-[11px] px-2.5 py-1 rounded-lg border border-white/20 transition-all"
+				>
+					Temporary Override
+				</button>
+			</div>
+		</div>
+
+		<!-- Search Filter Active Bar -->
+
+		<div
+			id="activeFilterBar"
+			class="hidden bg-cardElevated/90 border-b border-cardBorder px-4 py-2 text-xs"
+		>
+			<div class="max-w-7xl mx-auto flex items-center justify-between">
+				<div class="flex items-center gap-2 text-zinc-400">
+					<i class="fa-solid fa-filter text-accent"></i>
+
+					<span>Active Search AST Filter:</span>
+
+					<span
+						id="filterDescription"
+						class="font-mono text-accent font-semibold"
+					></span>
+				</div>
+
+				<button
+					id="btnClearFilter"
+					class="text-zinc-400 hover:text-white underline text-[11px]"
+				>
+					Clear Filter
+				</button>
+			</div>
+		</div>
+
+		<!-- Main Scrollable Dashboard Container -->
+
+		<main
+			class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 md:grid-cols-12 gap-5"
+		>
+			<!-- ================= LAYER 1: SYSTEM STATUS & LLI (Col 12 or 4) ================= -->
+
+			<section
+				id="layer1Container"
+				class="md:col-span-4 flex flex-col gap-5 layer-transition"
+			>
+				<!-- LLI Radial Meter Card -->
+
+				<div
+					class="glass-panel rounded-2xl p-5 border border-cardBorder relative overflow-hidden flex flex-col justify-between shadow-xl"
+				>
+					<div class="flex items-center justify-between mb-2">
+						<div class="flex items-center gap-2">
+							<span
+								class="text-xs font-bold text-zinc-400 uppercase tracking-wider"
+								>Layer 1</span
+							>
+
+							<span class="text-xs text-zinc-500"
+								>• System Load</span
+							>
+						</div>
+
+						<span
+							id="lliBandBadge"
+							class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-success/20 text-success border border-success/30"
+						>
+							OPTIMAL
+						</span>
+					</div>
+
+					<div class="flex items-center justify-around my-3">
+						<!-- SVG Radial Gauge -->
+
+						<div
+							class="relative w-36 h-36 flex items-center justify-center"
+						>
+							<svg
+								class="w-full h-full transform -rotate-90"
+								viewBox="0 0 100 100"
+							>
+								<!-- Background Circle -->
+
+								<circle
+									cx="50"
+									cy="50"
+									r="42"
+									stroke="currentColor"
+									stroke-width="8"
+									class="text-zinc-800"
+									fill="transparent"
+								/>
+
+								<!-- Progress Circle -->
+
+								<circle
+									id="lliGaugeCircle"
+									cx="50"
+									cy="50"
+									r="42"
+									stroke="currentColor"
+									stroke-width="8"
+									stroke-dasharray="263.89"
+									stroke-dashoffset="200"
+									stroke-linecap="round"
+									class="text-success gauge-circle"
+									fill="transparent"
+								/>
+							</svg>
+
+							<div
+								class="absolute inset-0 flex flex-col items-center justify-center text-center"
+							>
+								<span
+									id="lliScoreText"
+									class="text-3xl font-black tracking-tight text-white"
+									>24</span
+								>
+
+								<span
+									class="text-[10px] text-zinc-400 font-semibold uppercase tracking-widest mt-0.5"
+									>LLI Score</span
+								>
+							</div>
+						</div>
+
+						<!-- Quick Metrics List -->
+
+						<div class="flex flex-col gap-2 text-xs">
+							<div
+								class="flex items-center justify-between gap-3 bg-cardElevated/60 px-2.5 py-1.5 rounded-xl border border-cardBorder/50"
+							>
+								<span class="text-zinc-400 text-[11px]"
+									><i
+										class="fa-solid fa-inbox text-blue-400 mr-1.5"
+									></i
+									>Inbox</span
+								>
+
+								<span
+									id="metricInbox"
+									class="font-bold text-zinc-200"
+									>2</span
+								>
+							</div>
+
+							<div
+								class="flex items-center justify-between gap-3 bg-cardElevated/60 px-2.5 py-1.5 rounded-xl border border-cardBorder/50"
+							>
+								<span class="text-zinc-400 text-[11px]"
+									><i
+										class="fa-solid fa-clock-rotate-left text-amber-400 mr-1.5"
+									></i
+									>Overdue</span
+								>
+
+								<span
+									id="metricOverdue"
+									class="font-bold text-amber-400"
+									>1</span
+								>
+							</div>
+
+							<div
+								class="flex items-center justify-between gap-3 bg-cardElevated/60 px-2.5 py-1.5 rounded-xl border border-cardBorder/50"
+							>
+								<span class="text-zinc-400 text-[11px]"
+									><i
+										class="fa-solid fa-diagram-project text-purple-400 mr-1.5"
+									></i
+									>Drift Ratio</span
+								>
+
+								<span
+									id="metricDrift"
+									class="font-bold text-purple-400"
+									>12%</span
+								>
+							</div>
+						</div>
+					</div>
+
+					<div
+						class="pt-3 border-t border-cardBorder/60 flex items-center justify-between text-[11px]"
+					>
+						<span class="text-zinc-400"
+							><i class="fa-solid fa-bolt text-warning mr-1"></i
+							>24h Momentum:
+							<strong id="metricMomentum" class="text-zinc-200"
+								>+3 loops</strong
+							></span
+						>
+
+						<button
+							id="btnViewLliDetails"
+							class="text-accent hover:underline font-medium"
+						>
+							Math Details →
+						</button>
+					</div>
+				</div>
+
+				<!-- System Health & Engine Monitor -->
+
+				<div
+					class="glass-panel rounded-2xl p-4 border border-cardBorder flex flex-col gap-3"
+				>
+					<div class="flex items-center justify-between">
+						<span
+							class="text-xs font-bold text-zinc-400 uppercase tracking-wider"
+							>Storage & Sync Pipeline</span
+						>
+
+						<span
+							class="flex items-center gap-1.5 text-[11px] text-success"
+						>
+							<span
+								class="w-2 h-2 rounded-full bg-success animate-ping"
+							></span>
+
+							OPFS Local Connected
+						</span>
+					</div>
+
+					<div class="grid grid-cols-3 gap-2 text-center text-xs">
+						<div
+							class="p-2 bg-cardElevated/50 rounded-xl border border-cardBorder/40"
+						>
+							<div
+								id="statEntities"
+								class="font-bold text-base text-zinc-100"
+							>
+								0
+							</div>
+
+							<div class="text-[10px] text-zinc-500">
+								Entities
+							</div>
+						</div>
+
+						<div
+							class="p-2 bg-cardElevated/50 rounded-xl border border-cardBorder/40"
+						>
+							<div
+								id="statEdges"
+								class="font-bold text-base text-accent"
+							>
+								0
+							</div>
+
+							<div class="text-[10px] text-zinc-500">Edges</div>
+						</div>
+
+						<div
+							class="p-2 bg-cardElevated/50 rounded-xl border border-cardBorder/40"
+						>
+							<div
+								id="statTags"
+								class="font-bold text-base text-purpleAccent"
+							>
+								0
+							</div>
+
+							<div class="text-[10px] text-zinc-500">
+								Tags/Trackers
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- ================= LAYER 2: IMMEDIATE ATTENTION "NOW" (Col 8) ================= -->
+
+			<section
+				id="layer2Container"
+				class="md:col-span-8 flex flex-col gap-5 layer-transition"
+			>
+				<div
+					class="glass-panel rounded-2xl p-5 border border-cardBorder flex flex-col gap-4 shadow-xl"
+				>
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-2">
+							<div
+								class="w-2.5 h-2.5 rounded-full bg-danger animate-pulse"
+							></div>
+
+							<h2
+								class="text-sm font-bold text-zinc-200 uppercase tracking-wider"
+							>
+								Layer 2 • Immediate Attention ("Now")
+							</h2>
+						</div>
+
+						<span class="text-xs text-zinc-400"
+							><strong id="openLoopCount" class="text-white"
+								>0</strong
+							>
+							Open Loops</span
+						>
+					</div>
+
+					<!-- Focal Primary Entity Card (Calculated via Highest Attention Score A(e)) -->
+
+					<div
+						id="focalCard"
+						class="relative overflow-hidden bg-gradient-to-br from-cardElevated via-zinc-900 to-zinc-900 rounded-2xl p-4 border-2 border-accent/40 shadow-lg"
+					>
+						<div
+							class="flex items-start justify-between gap-3 mb-2"
+						>
+							<div class="flex items-center gap-2">
+								<span
+									class="text-[10px] font-bold px-2 py-0.5 rounded bg-accent/20 text-accent border border-accent/30"
+								>
+									FOCAL ITEM • A(e)
+									<span id="focalScore">0.00</span>
+								</span>
+
+								<span
+									id="focalPriority"
+									class="text-[10px] font-bold px-2 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30"
+								>
+									P1 URGENT
+								</span>
+							</div>
+
+							<span
+								id="focalDue"
+								class="text-xs text-amber-400 font-medium"
+							></span>
+						</div>
+
+						<h3
+							id="focalTitle"
+							class="text-base font-bold text-white mb-2"
+						>
+							Loading top attention priority loop...
+						</h3>
+
+						<p
+							id="focalDescription"
+							class="text-xs text-zinc-400 mb-4 line-clamp-2"
+						>
+							System analyzing edge centrality weights and neglect
+							decay factors...
+						</p>
+
+						<div
+							class="flex items-center justify-between pt-3 border-t border-cardBorder/60 gap-2 flex-wrap"
+						>
+							<!-- Context Tags & Nomie Badges for Focal Card -->
+
+							<div
+								id="focalTags"
+								class="flex items-center gap-1.5 flex-wrap text-[11px]"
+							>
+								<!-- Injected dynamically -->
+							</div>
+
+							<!-- Action Buttons -->
+
+							<div class="flex items-center gap-2">
+								<button
+									id="btnDeferFocal"
+									class="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl text-xs font-semibold border border-cardBorder transition-all"
+								>
+									<i
+										class="fa-solid fa-clock text-amber-400 mr-1.5"
+									></i
+									>Defer +24h
+								</button>
+
+								<button
+									id="btnResolveFocal"
+									class="px-4 py-1.5 bg-success/20 hover:bg-success/30 text-success rounded-xl text-xs font-bold border border-success/40 transition-all flex items-center gap-1.5"
+								>
+									<i class="fa-solid fa-check text-xs"></i
+									>Resolve Loop
+								</button>
+							</div>
+						</div>
+					</div>
+
+					<!-- Overdue & Immediate Open Loops Stack -->
+
+					<div>
+						<div class="flex items-center justify-between mb-3">
+							<span class="text-xs font-semibold text-zinc-400"
+								>Attention Queue (Sorted by $A(e)$ Score)</span
+							>
+
+							<span class="text-[11px] text-zinc-500"
+								><i
+									class="fa-solid fa-hand-pointer text-zinc-500 mr-1"
+								></i
+								>Click card to inspect</span
+							>
+						</div>
+
+						<div
+							id="loopStackContainer"
+							class="flex flex-col gap-2.5"
+						>
+							<!-- Loop items rendered dynamically -->
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- ================= LAYER 3: UPCOMING 72H TIMELINE "NEXT" (Col 12) ================= -->
+
+			<section
+				id="layer3Container"
+				class="md:col-span-12 layer-transition"
+			>
+				<div
+					class="glass-panel rounded-2xl p-5 border border-cardBorder flex flex-col gap-4 shadow-xl"
+				>
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-2">
+							<i
+								class="fa-solid fa-calendar-day text-accent text-sm"
+							></i>
+
+							<h2
+								class="text-sm font-bold text-zinc-200 uppercase tracking-wider"
+							>
+								Layer 3 • Upcoming 72-Hour Timeline ("Next")
+							</h2>
+						</div>
+
+						<button
+							id="btnAddEvent"
+							class="text-xs font-medium text-accent hover:underline flex items-center gap-1"
+						>
+							<i class="fa-solid fa-plus"></i> Schedule Event
+						</button>
+					</div>
+
+					<!-- 3-Day Chronological Columns Grid -->
+
+					<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+						<!-- Day 1: Today -->
+
+						<div
+							class="bg-cardElevated/40 rounded-xl p-3 border border-cardBorder/60 flex flex-col gap-2"
+						>
+							<div
+								class="flex items-center justify-between border-b border-cardBorder pb-2"
+							>
+								<span
+									id="day1Title"
+									class="text-xs font-bold text-accent"
+									>Today</span
+								>
+
+								<span
+									id="day1Count"
+									class="text-[10px] text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded-full"
+									>0 events</span
+								>
+							</div>
+
+							<div
+								id="day1Stream"
+								class="flex flex-col gap-2 min-h-[100px]"
+							>
+								<!-- Event items inserted dynamically -->
+							</div>
+						</div>
+
+						<!-- Day 2: Tomorrow -->
+
+						<div
+							class="bg-cardElevated/40 rounded-xl p-3 border border-cardBorder/60 flex flex-col gap-2"
+						>
+							<div
+								class="flex items-center justify-between border-b border-cardBorder pb-2"
+							>
+								<span
+									id="day2Title"
+									class="text-xs font-bold text-zinc-300"
+									>Tomorrow</span
+								>
+
+								<span
+									id="day2Count"
+									class="text-[10px] text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded-full"
+									>0 events</span
+								>
+							</div>
+
+							<div
+								id="day2Stream"
+								class="flex flex-col gap-2 min-h-[100px]"
+							>
+								<!-- Event items inserted dynamically -->
+							</div>
+						</div>
+
+						<!-- Day 3: Day After -->
+
+						<div
+							class="bg-cardElevated/40 rounded-xl p-3 border border-cardBorder/60 flex flex-col gap-2"
+						>
+							<div
+								class="flex items-center justify-between border-b border-cardBorder pb-2"
+							>
+								<span
+									id="day3Title"
+									class="text-xs font-bold text-zinc-400"
+									>In 2 Days</span
+								>
+
+								<span
+									id="day3Count"
+									class="text-[10px] text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded-full"
+									>0 events</span
+								>
+							</div>
+
+							<div
+								id="day3Stream"
+								class="flex flex-col gap-2 min-h-[100px]"
+							>
+								<!-- Event items inserted dynamically -->
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- ================= LAYER 4: ACTIVE CONTEXT & RELATIONSHIPS (Col 6) ================= -->
+
+			<section
+				id="layer4Container"
+				class="md:col-span-6 layer-transition"
+			>
+				<div
+					class="glass-panel rounded-2xl p-5 border border-cardBorder flex flex-col gap-4 h-full shadow-xl"
+				>
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-2">
+							<i
+								class="fa-solid fa-users-viewfinder text-purpleAccent text-sm"
+							></i>
+
+							<h2
+								class="text-sm font-bold text-zinc-200 uppercase tracking-wider"
+							>
+								Layer 4 • Context & Relationships
+							</h2>
+						</div>
+
+						<button
+							id="btnOpenGraphModal"
+							class="text-xs text-purpleAccent hover:underline font-medium flex items-center gap-1"
+						>
+							<i class="fa-solid fa-circle-nodes"></i> Graph View
+						</button>
+					</div>
+
+					<!-- People Entities List -->
+
+					<div>
+						<span
+							class="text-[11px] font-semibold text-zinc-400 block mb-2 uppercase tracking-wide"
+							>Key Context People (@People)</span
+						>
+
+						<div id="peopleContainer" class="flex flex-wrap gap-2">
+							<!-- People Pills injected dynamically -->
+						</div>
+					</div>
+
+					<!-- Streams / Tags List -->
+
+					<div class="mt-2">
+						<span
+							class="text-[11px] font-semibold text-zinc-400 block mb-2 uppercase tracking-wide"
+							>Active Streams & Trackers (#Streams)</span
+						>
+
+						<div id="streamsContainer" class="flex flex-wrap gap-2">
+							<!-- Stream Pills injected dynamically -->
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- ================= LAYER 5: MEMORY PROMPTS & REFLECTIONS (Col 6) ================= -->
+
+			<section
+				id="layer5Container"
+				class="md:col-span-6 layer-transition"
+			>
+				<div
+					class="glass-panel rounded-2xl p-5 border border-cardBorder flex flex-col gap-4 h-full shadow-xl"
+				>
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-2">
+							<i
+								class="fa-solid fa-box-archive text-amber-400 text-sm"
+							></i>
+
+							<h2
+								class="text-sm font-bold text-zinc-200 uppercase tracking-wider"
+							>
+								Layer 5 • Memory & Reflection Surface
+							</h2>
+						</div>
+
+						<span class="text-[11px] text-zinc-500"
+							>Resurfaced Entities</span
+						>
+					</div>
+
+					<!-- Orphan Entities Surface (Zero Edges - Drivers of Context Drift M_drift) -->
+
+					<div
+						id="orphanAlertSection"
+						class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex flex-col gap-2"
+					>
+						<div class="flex items-center justify-between">
+							<span
+								class="text-xs font-bold text-amber-400 flex items-center gap-1.5"
+							>
+								<i class="fa-solid fa-triangle-exclamation"></i>
+
+								Context Drift Repair (<span id="orphanCount"
+									>0</span
+								>
+								Orphans)
+							</span>
+
+							<span class="text-[10px] text-amber-300/80"
+								>Lacks graph links</span
+							>
+						</div>
+
+						<p class="text-[11px] text-zinc-300">
+							Orphaned items increase your System Load index
+							($M_{\text{drift}}$). Link them to people or streams
+							below.
+						</p>
+
+						<div id="orphanList" class="flex flex-col gap-1.5 mt-1">
+							<!-- Orphan cards injected dynamically -->
+						</div>
+					</div>
+
+					<!-- Reflection Prompt Card -->
+
+					<div
+						class="bg-cardElevated/60 rounded-xl p-3.5 border border-cardBorder/60 flex flex-col gap-2"
+					>
+						<div class="flex items-center justify-between">
+							<span class="text-xs font-bold text-zinc-300"
+								><i
+									class="fa-solid fa-feather-pointed text-accent mr-1.5"
+								></i
+								>On This Day Reflection</span
+							>
+
+							<span class="text-[10px] text-zinc-500"
+								>Daily Capture</span
+							>
+						</div>
+
+						<p class="text-xs text-zinc-400 italic">
+							"What single action taken today provided the highest
+							leverage towards your long-term primary stream?"
+						</p>
+
+						<div class="flex gap-2 mt-1">
+							<input
+								id="reflectionInput"
+								type="text"
+								placeholder="Log brief reflection note e.g. #focus(45) +work..."
+								class="flex-1 bg-card border border-cardBorder text-xs rounded-xl px-3 py-1.5 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-accent"
+							/>
+
+							<button
+								id="btnSaveReflection"
+								class="bg-accent/20 hover:bg-accent/30 text-accent font-semibold text-xs px-3 py-1.5 rounded-xl border border-accent/40 transition-all"
+							>
+								Save
+							</button>
+						</div>
+					</div>
+				</div>
+			</section>
+		</main>
+
+		<!-- ================= MODAL 1: UNIVERSAL CAPTURE (WITH NOMIE PARSER & MODIFIERS) ================= -->
+
+		<div
+			id="modalCapture"
+			class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4"
+		>
+			<div
+				class="glass-panel w-full max-w-lg rounded-2xl p-5 border border-cardBorder shadow-2xl flex flex-col gap-4"
+			>
+				<div
+					class="flex items-center justify-between border-b border-cardBorder pb-3"
+				>
+					<h3
+						class="text-sm font-bold text-white flex items-center gap-2"
+					>
+						<i class="fa-solid fa-plus-circle text-accent"></i>
+						Universal Capture
+					</h3>
+
+					<button
+						id="btnCloseCaptureModal"
+						class="text-zinc-400 hover:text-white"
+					>
+						<i class="fa-solid fa-xmark text-sm"></i>
+					</button>
+				</div>
+
+				<div class="flex flex-col gap-3">
+					<div>
+						<label
+							class="text-[11px] font-semibold text-zinc-400 mb-1 block"
+							>Entity Type</label
+						>
+
+						<div class="grid grid-cols-4 gap-2">
+							<button
+								data-type="OpenLoop"
+								class="type-btn active bg-accent text-white py-1.5 rounded-xl text-xs font-semibold"
+							>
+								Loop
+							</button>
+
+							<button
+								data-type="Notebook"
+								class="type-btn bg-cardElevated text-zinc-300 py-1.5 rounded-xl text-xs font-semibold border border-cardBorder"
+							>
+								Note
+							</button>
+
+							<button
+								data-type="Person"
+								class="type-btn bg-cardElevated text-zinc-300 py-1.5 rounded-xl text-xs font-semibold border border-cardBorder"
+							>
+								Person
+							</button>
+
+							<button
+								data-type="Event"
+								class="type-btn bg-cardElevated text-zinc-300 py-1.5 rounded-xl text-xs font-semibold border border-cardBorder"
+							>
+								Event
+							</button>
+						</div>
+					</div>
+
+					<!-- Input Template Multi-Select Modifiers & Quick Trackers -->
+
+					<div>
+						<label
+							class="text-[11px] font-semibold text-zinc-400 mb-1 flex items-center justify-between"
+						>
+							<span>Multi-Select Modifiers & Quick Trackers</span>
+
+							<span class="text-[10px] text-accent/80 font-mono"
+								>Nomie Syntax (#tracker(val), +context)</span
+							>
+						</label>
+
+						<div
+							id="quickModifierChips"
+							class="flex flex-wrap gap-1.5 p-2 bg-cardElevated/50 rounded-xl border border-cardBorder/60 max-h-24 overflow-y-auto"
+						>
+							<!-- Quick Trackers -->
+
+							<button
+								type="button"
+								data-macro="#water(500)"
+								class="chip-btn text-[10px] px-2 py-1 rounded-lg bg-cardElevated hover:bg-zinc-800 border border-cardBorder text-blue-400 transition-all"
+							>
+								+ #water(500)
+							</button>
+
+							<button
+								type="button"
+								data-macro="#mood(8)"
+								class="chip-btn text-[10px] px-2 py-1 rounded-lg bg-cardElevated hover:bg-zinc-800 border border-cardBorder text-amber-400 transition-all"
+							>
+								+ #mood(8)
+							</button>
+
+							<button
+								type="button"
+								data-macro="#coffee(1)"
+								class="chip-btn text-[10px] px-2 py-1 rounded-lg bg-cardElevated hover:bg-zinc-800 border border-cardBorder text-orange-400 transition-all"
+							>
+								+ #coffee(1)
+							</button>
+
+							<button
+								type="button"
+								data-macro="#focus(30)"
+								class="chip-btn text-[10px] px-2 py-1 rounded-lg bg-cardElevated hover:bg-zinc-800 border border-cardBorder text-purpleAccent transition-all"
+							>
+								+ #focus(30)
+							</button>
+
+							<!-- Quick Contexts -->
+
+							<button
+								type="button"
+								data-macro="+work"
+								class="chip-btn text-[10px] px-2 py-1 rounded-lg bg-cardElevated hover:bg-zinc-800 border border-cardBorder text-emerald-400 transition-all"
+							>
+								+ +work
+							</button>
+
+							<button
+								type="button"
+								data-macro="+home"
+								class="chip-btn text-[10px] px-2 py-1 rounded-lg bg-cardElevated hover:bg-zinc-800 border border-cardBorder text-emerald-400 transition-all"
+							>
+								+ +home
+							</button>
+
+							<!-- Quick Priority Modifiers -->
+
+							<button
+								type="button"
+								data-macro="p1"
+								class="chip-btn text-[10px] px-2 py-1 rounded-lg bg-cardElevated hover:bg-zinc-800 border border-cardBorder text-red-400 font-bold transition-all"
+							>
+								+ p1
+							</button>
+
+							<button
+								type="button"
+								data-macro="p2"
+								class="chip-btn text-[10px] px-2 py-1 rounded-lg bg-cardElevated hover:bg-zinc-800 border border-cardBorder text-amber-400 font-bold transition-all"
+							>
+								+ p2
+							</button>
+						</div>
+					</div>
+
+					<div>
+						<label
+							class="text-[11px] font-semibold text-zinc-400 mb-1 block"
+							>Title / Quick String</label
+						>
+
+						<input
+							id="captureTitle"
+							type="text"
+							placeholder="e.g. Finalize report p1 #water(500) #mood(8) +work @Sarah"
+							class="w-full bg-card border border-cardBorder text-xs rounded-xl p-2.5 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-accent"
+						/>
+					</div>
+
+					<div class="grid grid-cols-2 gap-3">
+						<div>
+							<label
+								class="text-[11px] font-semibold text-zinc-400 mb-1 block"
+								>Priority Level (Auto-parsed if p1-p5 in
+								text)</label
+							>
+
+							<select
+								id="capturePriority"
+								class="w-full bg-card border border-cardBorder text-xs rounded-xl p-2 text-zinc-200 focus:outline-none focus:border-accent"
+							>
+								<option value="1">P1 - Critical Urgent</option>
+
+								<option value="2">P2 - High Priority</option>
+
+								<option value="3" selected>
+									P3 - Normal Priority
+								</option>
+
+								<option value="4">P4 - Low Priority</option>
+
+								<option value="5">
+									P5 - Someday / Backlog
+								</option>
+							</select>
+						</div>
+
+						<div>
+							<label
+								class="text-[11px] font-semibold text-zinc-400 mb-1 block"
+								>Due / Scheduled Date</label
+							>
+
+							<input
+								id="captureDate"
+								type="datetime-local"
+								class="w-full bg-card border border-cardBorder text-xs rounded-xl p-2 text-zinc-200 focus:outline-none focus:border-accent"
+							/>
+						</div>
+					</div>
+
+					<div>
+						<label
+							class="text-[11px] font-semibold text-zinc-400 mb-1 block"
+							>Attributes / Body Content</label
+						>
+
+						<textarea
+							id="captureBody"
+							rows="3"
+							placeholder="Add detailed context, execution steps, or extended tracking notes..."
+							class="w-full bg-card border border-cardBorder text-xs rounded-xl p-2.5 text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-accent"
+						></textarea>
+					</div>
+				</div>
+
+				<div
+					class="flex items-center justify-end gap-2 pt-3 border-t border-cardBorder"
+				>
+					<button
+						id="btnCancelCapture"
+						class="px-4 py-2 bg-zinc-800 text-zinc-300 text-xs rounded-xl hover:bg-zinc-700"
+					>
+						Cancel
+					</button>
+
+					<button
+						id="btnSubmitCapture"
+						class="px-5 py-2 bg-accent text-white text-xs font-bold rounded-xl hover:bg-blue-600 shadow-md shadow-accent/20"
+					>
+						Create Entity
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- ================= MODAL 2: LLI MATHEMATICAL BREAKDOWN & SIMULATOR ================= -->
+
+		<div
+			id="modalLli"
+			class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4"
+		>
+			<div
+				class="glass-panel w-full max-w-2xl rounded-2xl p-6 border border-cardBorder shadow-2xl flex flex-col gap-5 max-h-[90vh] overflow-y-auto"
+			>
+				<div
+					class="flex items-center justify-between border-b border-cardBorder pb-3"
+				>
+					<div>
+						<h3
+							class="text-base font-bold text-white flex items-center gap-2"
+						>
+							<i class="fa-solid fa-calculator text-warning"></i>
+							Life Load Index (LLI) Mathematical Logic Engine
+						</h3>
+
+						<p class="text-xs text-zinc-400">
+							Deterministic scalar friction metric equation
+							calculation
+						</p>
+					</div>
+
+					<button
+						id="btnCloseLliModal"
+						class="text-zinc-400 hover:text-white"
+					>
+						<i class="fa-solid fa-xmark text-sm"></i>
+					</button>
+				</div>
+
+				<!-- Formula Equation Banner -->
+
+				<div
+					class="bg-cardElevated/80 rounded-xl p-3.5 border border-cardBorder/60 font-mono text-xs text-accent"
+				>
+					$$\text{LLI} = \min\left(100, \max\left(0,
+					\text{round}(\beta_0 + 2.5 M_{\text{inbox}} + 4.0
+					M_{\text{overdue}} + 1.5 M_{\text{stale}} + 1.0
+					M_{\text{72h}} + 15.0 M_{\text{drift}} - 2.0
+					M_{\text{momentum}})\right)\right)$$
+				</div>
+
+				<!-- Live Metric Contribution Table -->
+
+				<div class="flex flex-col gap-2 text-xs">
+					<span class="font-bold text-zinc-300"
+						>Current Real-Time Metric Contributions:</span
+					>
+
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+						<div
+							class="p-3 bg-card rounded-xl border border-cardBorder flex items-center justify-between"
+						>
+							<div>
+								<div class="font-semibold text-zinc-200">
+									Baseline Floor ($\beta_0$)
+								</div>
+
+								<div class="text-[10px] text-zinc-500">
+									Fixed constant System Floor
+								</div>
+							</div>
+
+							<span class="font-mono font-bold text-zinc-400"
+								>+5.0</span
+							>
+						</div>
+
+						<div
+							class="p-3 bg-card rounded-xl border border-cardBorder flex items-center justify-between"
+						>
+							<div>
+								<div class="font-semibold text-zinc-200">
+									Unprocessed Inbox ($M_{\text{inbox}}$)
+								</div>
+
+								<div class="text-[10px] text-zinc-500">
+									Weight: 2.5 per raw capture
+								</div>
+							</div>
+
+							<span
+								id="calcInboxVal"
+								class="font-mono font-bold text-blue-400"
+								>+5.0</span
+							>
+						</div>
+
+						<div
+							class="p-3 bg-card rounded-xl border border-cardBorder flex items-center justify-between"
+						>
+							<div>
+								<div class="font-semibold text-zinc-200">
+									Overdue Loops ($M_{\text{overdue}}$)
+								</div>
+
+								<div class="text-[10px] text-zinc-500">
+									Weight: 4.0 per past-due loop
+								</div>
+							</div>
+
+							<span
+								id="calcOverdueVal"
+								class="font-mono font-bold text-amber-400"
+								>+4.0</span
+							>
+						</div>
+
+						<div
+							class="p-3 bg-card rounded-xl border border-cardBorder flex items-center justify-between"
+						>
+							<div>
+								<div class="font-semibold text-zinc-200">
+									Stale Loops ($M_{\text{stale}}$)
+								</div>
+
+								<div class="text-[10px] text-zinc-500">
+									Weight: 1.5 (untouched >72h)
+								</div>
+							</div>
+
+							<span
+								id="calcStaleVal"
+								class="font-mono font-bold text-zinc-300"
+								>+0.0</span
+							>
+						</div>
+
+						<div
+							class="p-3 bg-card rounded-xl border border-cardBorder flex items-center justify-between"
+						>
+							<div>
+								<div class="font-semibold text-zinc-200">
+									72h Upcoming Load ($M_{\text{load72h}}$)
+								</div>
+
+								<div class="text-[10px] text-zinc-500">
+									Weight: 1.0 per event
+								</div>
+							</div>
+
+							<span
+								id="calc72hVal"
+								class="font-mono font-bold text-zinc-300"
+								>+3.0</span
+							>
+						</div>
+
+						<div
+							class="p-3 bg-card rounded-xl border border-cardBorder flex items-center justify-between"
+						>
+							<div>
+								<div class="font-semibold text-zinc-200">
+									Context Drift Ratio ($M_{\text{drift}}$)
+								</div>
+
+								<div class="text-[10px] text-zinc-500">
+									Weight: 15.0 x (Orphans / Total)
+								</div>
+							</div>
+
+							<span
+								id="calcDriftVal"
+								class="font-mono font-bold text-purpleAccent"
+								>+1.8</span
+							>
+						</div>
+
+						<div
+							class="p-3 bg-card rounded-xl border border-cardBorder flex items-center justify-between sm:col-span-2"
+						>
+							<div>
+								<div class="font-semibold text-zinc-200">
+									24h Momentum Credit ($M_{\text{momentum}}$)
+								</div>
+
+								<div class="text-[10px] text-zinc-500">
+									Credit: -2.0 per resolved loop
+								</div>
+							</div>
+
+							<span
+								id="calcMomentumVal"
+								class="font-mono font-bold text-success"
+								>-6.0</span
+							>
+						</div>
+					</div>
+				</div>
+
+				<div
+					class="pt-3 border-t border-cardBorder flex items-center justify-between"
+				>
+					<span class="text-xs text-zinc-400"
+						>Total Mathematical Raw Sum:
+						<strong
+							id="calcRawTotal"
+							class="font-mono text-white text-sm"
+							>12.8</strong
+						></span
+					>
+
+					<button
+						id="btnCloseLliModalBottom"
+						class="px-5 py-2 bg-accent text-white text-xs font-bold rounded-xl"
+					>
+						Close Engine Inspector
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- ================= MODAL 3: GRAPH CONNECTOR & ENTITY LINKER ================= -->
+
+		<div
+			id="modalGraph"
+			class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4"
+		>
+			<div
+				class="glass-panel w-full max-w-xl rounded-2xl p-5 border border-cardBorder shadow-2xl flex flex-col gap-4"
+			>
+				<div
+					class="flex items-center justify-between border-b border-cardBorder pb-3"
+				>
+					<h3
+						class="text-sm font-bold text-white flex items-center gap-2"
+					>
+						<i
+							class="fa-solid fa-circle-nodes text-purpleAccent"
+						></i>
+						Context Linker & Edge Creator
+					</h3>
+
+					<button
+						id="btnCloseGraphModal"
+						class="text-zinc-400 hover:text-white"
+					>
+						<i class="fa-solid fa-xmark text-sm"></i>
+					</button>
+				</div>
+
+				<div class="flex flex-col gap-3">
+					<div>
+						<label
+							class="text-[11px] font-semibold text-zinc-400 mb-1 block"
+							>Source Entity</label
+						>
+
+						<select
+							id="linkSourceSelect"
+							class="w-full bg-card border border-cardBorder text-xs rounded-xl p-2.5 text-zinc-200 focus:outline-none focus:border-purpleAccent"
+						>
+							<!-- Source options inserted dynamically -->
+						</select>
+					</div>
+
+					<div>
+						<label
+							class="text-[11px] font-semibold text-zinc-400 mb-1 block"
+							>Relationship Edge Type</label
+						>
+
+						<select
+							id="linkRelationSelect"
+							class="w-full bg-card border border-cardBorder text-xs rounded-xl p-2.5 text-zinc-200 focus:outline-none focus:border-purpleAccent"
+						>
+							<option value="MENTIONS">
+								MENTIONS (@Person or #Stream)
+							</option>
+
+							<option value="ASSIGNED_TO">
+								ASSIGNED_TO (Person owner)
+							</option>
+
+							<option value="DEPENDS_ON">
+								DEPENDS_ON (Prerequisite)
+							</option>
+
+							<option value="ATTACHED_TO">
+								ATTACHED_TO (Asset context)
+							</option>
+						</select>
+					</div>
+
+					<div>
+						<label
+							class="text-[11px] font-semibold text-zinc-400 mb-1 block"
+							>Target Entity / Context Node</label
+						>
+
+						<select
+							id="linkTargetSelect"
+							class="w-full bg-card border border-cardBorder text-xs rounded-xl p-2.5 text-zinc-200 focus:outline-none focus:border-purpleAccent"
+						>
+							<!-- Target options inserted dynamically -->
+						</select>
+					</div>
+				</div>
+
+				<div
+					class="flex items-center justify-end gap-2 pt-3 border-t border-cardBorder"
+				>
+					<button
+						id="btnCreateEdgeSubmit"
+						class="px-5 py-2 bg-purpleAccent hover:bg-purple-600 text-white text-xs font-bold rounded-xl transition-all shadow-md"
+					>
+						Create Graph Edge Link
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			/* ========================================================================
+
+
+         * LIFEOS V2 ARCHITECTURE - VANILLA REACTIVE STATE & MATHEMATICAL ENGINES
+
+
+         * ======================================================================== */
+
+			// --- Micro Reactive Signal Engine ---
+
+			let contextStack = [];
+
+			function createSignal(initialValue) {
+				let value = initialValue;
+
+				const subscribers = new Set();
+
+				const read = () => {
+					const currentObserver =
+						contextStack[contextStack.length - 1];
+
+					if (currentObserver) subscribers.add(currentObserver);
+
+					return value;
+				};
+
+				const write = (newValue) => {
+					const nextValue =
+						typeof newValue === "function"
+							? newValue(value)
+							: newValue;
+
+					if (value !== nextValue) {
+						value = nextValue;
+
+						for (const sub of Array.from(subscribers)) {
+							sub();
+						}
+					}
+				};
+
+				return [read, write];
+			}
+
+			function createEffect(fn) {
+				const execute = () => {
+					contextStack.push(execute);
+
+					try {
+						fn();
+					} finally {
+						contextStack.pop();
+					}
+				};
+
+				execute();
+			}
+
+			// --- Core Database Storage State ---
+
+			const STORAGE_KEY = "LIFEOS_V2_STORE_DATA";
+
+			// Baseline Seed Data
+
+			const SEED_DATA = {
+				entities: [
+					{
+						id: "ent1",
+
+						entity_type: "OpenLoop",
+
+						title: "Finalize LifeOS v2 Architecture & System Specification p1 #launch +work",
+
+						status: "active",
+
+						priority: 1,
+
+						due_at: Date.now() - 3600000 * 4,
+
+						// 4h Overdue
+
+						scheduled_at: Date.now(),
+
+						attributes: JSON.stringify({
+							body: "Complete single-file React/HTML implementation with pure signal reactive state.",
+
+							tags: ["architecture", "launch"],
+
+							metrics: {
+								focus: 60,
+							},
+
+							contexts: ["work"],
+						}),
+
+						created_at: Date.now() - 86400000 * 2,
+
+						updated_at: Date.now() - 3600000 * 2,
+					},
+
+					{
+						id: "ent2",
+
+						entity_type: "OpenLoop",
+
+						title: "Review system design parameters with @Sarah #mood(8)",
+
+						status: "active",
+
+						priority: 2,
+
+						due_at: Date.now() + 3600000 * 8,
+
+						// Today in 8h
+
+						scheduled_at: Date.now() + 3600000 * 2,
+
+						attributes: JSON.stringify({
+							body: "Walk through LLI scoring math formula and attention centralities.",
+
+							tags: ["meeting", "mood"],
+
+							metrics: {
+								mood: 8,
+							},
+
+							contexts: [],
+						}),
+
+						created_at: Date.now() - 86400000,
+
+						updated_at: Date.now() - 3600000 * 5,
+					},
+
+					{
+						id: "ent3",
+
+						entity_type: "OpenLoop",
+
+						title: "Optimize OPFS / SQLite WASM query indexes for FTS5",
+
+						status: "active",
+
+						priority: 3,
+
+						due_at: Date.now() + 86400000,
+
+						// Tomorrow
+
+						scheduled_at: Date.now() + 86400000,
+
+						attributes: JSON.stringify({
+							body: "Test compound indices on entities and graph edges.",
+
+							tags: ["performance"],
+
+							metrics: {},
+
+							contexts: [],
+						}),
+
+						created_at: Date.now() - 86400000,
+
+						updated_at: Date.now() - 86400000,
+					},
+
+					{
+						id: "ent4",
+
+						entity_type: "Person",
+
+						title: "Sarah Lin",
+
+						status: "active",
+
+						priority: 1,
+
+						due_at: null,
+
+						scheduled_at: null,
+
+						attributes: JSON.stringify({
+							handle: "@Sarah",
+							role: "Principal Systems Architect",
+							email: "sarah@lifeos.internal",
+						}),
+
+						created_at: Date.now() - 86400000 * 10,
+
+						updated_at: Date.now() - 86400000 * 10,
+					},
+
+					{
+						id: "ent5",
+
+						entity_type: "Person",
+
+						title: "Alex Rivera",
+
+						status: "active",
+
+						priority: 2,
+
+						due_at: null,
+
+						scheduled_at: null,
+
+						attributes: JSON.stringify({
+							handle: "@Alex",
+							role: "Lead Frontend Engineer",
+						}),
+
+						created_at: Date.now() - 86400000 * 10,
+
+						updated_at: Date.now() - 86400000 * 10,
+					},
+
+					{
+						id: "ent6",
+
+						entity_type: "Event",
+
+						title: "LifeOS v2 Core Sync Meeting",
+
+						status: "active",
+
+						priority: 2,
+
+						due_at: null,
+
+						scheduled_at: Date.now() + 3600000 * 3,
+
+						// Today 3h from now
+
+						attributes: JSON.stringify({
+							body: "Team sync regarding UI layer reactivity and SQLite performance.",
+							location: "Room 4B",
+						}),
+
+						created_at: Date.now() - 3600000 * 10,
+
+						updated_at: Date.now() - 3600000 * 10,
+					},
+
+					{
+						id: "ent7",
+
+						entity_type: "Event",
+
+						title: "P2P Sync Engine Architecture Review",
+
+						status: "active",
+
+						priority: 3,
+
+						due_at: null,
+
+						scheduled_at: Date.now() + 86400000 + 3600000 * 2,
+
+						// Tomorrow
+
+						attributes: JSON.stringify({
+							body: "WebRTC Mesh DataChannel stress test.",
+						}),
+
+						created_at: Date.now() - 3600000 * 10,
+
+						updated_at: Date.now() - 3600000 * 10,
+					},
+
+					{
+						id: "ent8",
+
+						entity_type: "Notebook",
+
+						title: "Hydration log #water(500) +home",
+
+						status: "active",
+
+						priority: 4,
+
+						due_at: null,
+
+						scheduled_at: null,
+
+						attributes: JSON.stringify({
+							body: "Quick capture log via Nomie tracker regex.",
+
+							tags: ["water"],
+
+							metrics: {
+								water: 500,
+							},
+
+							contexts: ["home"],
+						}),
+
+						created_at: Date.now() - 3600000 * 24,
+
+						updated_at: Date.now() - 3600000 * 24,
+					},
+				],
+
+				edges: [
+					{
+						id: "ed1",
+
+						source_id: "ent1",
+
+						target_id: "ent4",
+
+						relation: "ASSIGNED_TO",
+
+						weight: 1.5,
+					},
+
+					{
+						id: "ed2",
+
+						source_id: "ent2",
+
+						target_id: "ent4",
+
+						relation: "MENTIONS",
+
+						weight: 1.0,
+					},
+
+					{
+						id: "ed3",
+
+						source_id: "ent6",
+
+						target_id: "ent5",
+
+						relation: "MENTIONS",
+
+						weight: 1.0,
+					},
+				],
+
+				tags: [
+					"architecture",
+
+					"launch",
+
+					"meeting",
+
+					"performance",
+
+					"water",
+
+					"mood",
+				],
+			};
+
+			// Persistence Loader
+
+			function loadStorageData() {
+				try {
+					const saved = localStorage.getItem(STORAGE_KEY);
+
+					if (saved) return JSON.parse(saved);
+				} catch (e) {
+					console.error("Storage parse error, fallback to seed:", e);
+				}
+
+				return SEED_DATA;
+			}
+
+			function saveStorageData(data) {
+				try {
+					localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+				} catch (e) {
+					console.error("Failed to persist state:", e);
+				}
+			}
+
+			// Reactive Global State Signals
+
+			const dbState = loadStorageData();
+
+			const [getEntities, setEntities] = createSignal(dbState.entities);
+
+			const [getEdges, setEdges] = createSignal(dbState.edges);
+
+			const [getSearchQuery, setSearchQuery] = createSignal("");
+
+			const [getZenOverride, setZenOverride] = createSignal(false);
+
+			// Save helper wrapper
+
+			function updateEntitiesStore(updater) {
+				setEntities((prev) => {
+					const next =
+						typeof updater === "function" ? updater(prev) : updater;
+
+					dbState.entities = next;
+
+					saveStorageData(dbState);
+
+					return next;
+				});
+			}
+
+			function updateEdgesStore(updater) {
+				setEdges((prev) => {
+					const next =
+						typeof updater === "function" ? updater(prev) : updater;
+
+					dbState.edges = next;
+
+					saveStorageData(dbState);
+
+					return next;
+				});
+			}
+
+			// --- MATHEMATICAL ENGINE LOGIC ---
+
+			/**
+
+
+        * Life Load Index (LLI) Calculator
+
+
+        */
+
+			function computeLLI(entities, edges) {
+				const now = Date.now();
+
+				const loops = entities.filter(
+					(e) => e.entity_type === "OpenLoop" && e.status === "active"
+				);
+
+				const inbox = entities.filter(
+					(e) => e.entity_type === "Notebook" && e.status === "active"
+				);
+
+				const inboxCount = inbox.length;
+
+				const overdueCount = loops.filter(
+					(e) => e.due_at && e.due_at < now
+				).length;
+
+				const staleCount = loops.filter(
+					(e) => now - e.updated_at > 86400000 * 3
+				).length;
+
+				const load72hCount = entities.filter(
+					(e) =>
+						e.status === "active" &&
+						e.scheduled_at &&
+						e.scheduled_at >= now &&
+						e.scheduled_at <= now + 86400000 * 3
+				).length;
+
+				const linkedEntityIds = new Set();
+
+				edges.forEach((edge) => {
+					linkedEntityIds.add(edge.source_id);
+
+					linkedEntityIds.add(edge.target_id);
+				});
+
+				const activeEntities = entities.filter(
+					(e) => e.status === "active"
+				);
+
+				const orphanEntities = activeEntities.filter(
+					(e) => !linkedEntityIds.has(e.id)
+				);
+
+				const totalEntities = activeEntities.length || 1;
+
+				const driftRatio = orphanEntities.length / totalEntities;
+
+				const momentum24hCount = entities.filter(
+					(e) =>
+						e.status === "resolved" &&
+						e.updated_at >= now - 86400000
+				).length;
+
+				const beta0 = 5.0;
+
+				const rawVal =
+					beta0 +
+					2.5 * inboxCount +
+					4.0 * overdueCount +
+					1.5 * staleCount +
+					1.0 * load72hCount +
+					15.0 * driftRatio -
+					2.0 * momentum24hCount;
+
+				const lli = Math.min(100, Math.max(0, Math.round(rawVal)));
+
+				let status = "Optimal";
+
+				let band = "green";
+
+				if (lli > 85) {
+					status = "Zen Mode";
+					band = "red";
+				} else if (lli > 60) {
+					status = "Overloaded";
+					band = "orange";
+				} else if (lli > 30) {
+					status = "Elevated";
+					band = "yellow";
+				}
+
+				return {
+					score: lli,
+
+					status,
+
+					band,
+
+					rawVal: rawVal.toFixed(1),
+
+					inboxCount,
+
+					overdueCount,
+
+					staleCount,
+
+					load72hCount,
+
+					orphanCount: orphanEntities.length,
+
+					driftRatio: (driftRatio * 100).toFixed(1) + "%",
+
+					driftContribution: (15.0 * driftRatio).toFixed(1),
+
+					momentum24hCount,
+				};
+			}
+
+			/**
+
+
+        * Attention Engine Priority Score Calculator A(e)
+
+
+        */
+
+			function computeAttentionScore(entity, edges, now = Date.now()) {
+				let attrs = {};
+
+				try {
+					attrs =
+						typeof entity.attributes === "string"
+							? JSON.parse(entity.attributes)
+							: entity.attributes || {};
+				} catch (e) {}
+
+				let U = 0.1;
+
+				const targetTime = entity.due_at || entity.scheduled_at;
+
+				if (targetTime) {
+					const diffMs = now - targetTime;
+
+					const diffDays = diffMs / 86400000;
+
+					if (diffMs > 0) {
+						U = 1.0 + Math.log2(1.0 + diffDays);
+					} else {
+						U = Math.exp(-Math.abs(diffDays) / 2.0);
+					}
+				}
+
+				const connectedEdges = edges.filter(
+					(ed) =>
+						ed.source_id === entity.id || ed.target_id === entity.id
+				);
+
+				const edgeWeightSum = connectedEdges.reduce(
+					(acc, curr) => acc + (curr.weight || 1.0),
+					0
+				);
+
+				const degree = connectedEdges.length;
+
+				const mu = 3.0,
+					sigma = 1.5;
+
+				const sigmoid = 1.0 / (1.0 + Math.exp(-(degree - mu) / sigma));
+
+				const G = edgeWeightSum * sigmoid;
+
+				const lastTouched =
+					entity.updated_at || entity.created_at || now;
+
+				const daysUntouched = (now - lastTouched) / 86400000;
+
+				const D = 1.0 + 2.5 * (1.0 - Math.exp(-daysUntouched / 5.0));
+
+				const score = (0.65 * U + 0.35 * G) * D;
+
+				return parseFloat(score.toFixed(3));
+			}
+
+			// --- FULL-TEXT SEARCH & QUERY PARSER ---
+
+			function parseSearchQuery(rawQuery) {
+				const tokens = rawQuery.trim().split(/\s+/);
+
+				const ast = {
+					typeFilter: null,
+
+					priorityFilter: null,
+
+					tagFilters: [],
+
+					contextFilters: [],
+
+					terms: [],
+				};
+
+				for (const token of tokens) {
+					if (!token) continue;
+
+					if (token.startsWith("is:")) {
+						const val = token.slice(3).toLowerCase();
+
+						if (["loop", "openloop"].includes(val))
+							ast.typeFilter = "OpenLoop";
+						else if (["person"].includes(val))
+							ast.typeFilter = "Person";
+						else if (["event"].includes(val))
+							ast.typeFilter = "Event";
+						else if (["note", "notebook"].includes(val))
+							ast.typeFilter = "Notebook";
+					} else if (/^p[1-5]$/i.test(token)) {
+						ast.priorityFilter = parseInt(token.substring(1), 10);
+					} else if (token.startsWith("#")) {
+						ast.tagFilters.push(
+							token.slice(1).split("(")[0].toLowerCase()
+						);
+					} else if (token.startsWith("+")) {
+						ast.contextFilters.push(token.slice(1).toLowerCase());
+					} else {
+						ast.terms.push(token.toLowerCase());
+					}
+				}
+
+				return ast;
+			}
+
+			function filterEntitiesByAST(entities, ast) {
+				return entities.filter((ent) => {
+					if (ent.status !== "active") return false;
+
+					if (ast.typeFilter && ent.entity_type !== ast.typeFilter)
+						return false;
+
+					if (
+						ast.priorityFilter &&
+						ent.priority !== ast.priorityFilter
+					)
+						return false;
+
+					let attrs = {};
+
+					try {
+						attrs =
+							typeof ent.attributes === "string"
+								? JSON.parse(ent.attributes)
+								: ent.attributes || {};
+					} catch (e) {}
+
+					const entTags = (attrs.tags || []).map((t) =>
+						t.toLowerCase()
+					);
+
+					for (const tag of ast.tagFilters) {
+						if (
+							!entTags.includes(tag) &&
+							!ent.title.toLowerCase().includes("#" + tag)
+						)
+							return false;
+					}
+
+					const entContexts = (attrs.contexts || []).map((c) =>
+						c.toLowerCase()
+					);
+
+					for (const ctx of ast.contextFilters) {
+						if (
+							!entContexts.includes(ctx) &&
+							!ent.title.toLowerCase().includes("+" + ctx)
+						)
+							return false;
+					}
+
+					if (ast.terms.length > 0) {
+						const fullContent = (
+							ent.title +
+							" " +
+							(attrs.body || "") +
+							" " +
+							(attrs.handle || "")
+						).toLowerCase();
+
+						for (const term of ast.terms) {
+							if (!fullContent.includes(term)) return false;
+						}
+					}
+
+					return true;
+				});
+			}
+
+			// --- REACTIVE RENDER PIPELINE ---
+
+			createEffect(() => {
+				const entities = getEntities();
+
+				const edges = getEdges();
+
+				const query = getSearchQuery();
+
+				const isZenOverridden = getZenOverride();
+
+				const lli = computeLLI(entities, edges);
+
+				const scoreEl = document.getElementById("lliScoreText");
+
+				const circle = document.getElementById("lliGaugeCircle");
+
+				const bandBadge = document.getElementById("lliBandBadge");
+
+				if (scoreEl) scoreEl.textContent = lli.score;
+
+				if (circle) {
+					const offset = 263.89 - 263.89 * (lli.score / 100);
+
+					circle.style.strokeDashoffset = offset;
+
+					circle.classList.remove(
+						"text-success",
+						"text-amber-400",
+						"text-orange-500",
+						"text-red-500"
+					);
+
+					bandBadge.classList.remove(
+						"bg-success/20",
+						"text-success",
+						"border-success/30",
+						"bg-amber-400/20",
+						"text-amber-400",
+						"border-amber-400/30",
+						"bg-orange-500/20",
+						"text-orange-500",
+						"border-orange-500/30",
+						"bg-red-500/20",
+						"text-red-500",
+						"border-red-500/30"
+					);
+
+					if (lli.band === "green") {
+						circle.classList.add("text-success");
+
+						bandBadge.textContent = "OPTIMAL";
+
+						bandBadge.classList.add(
+							"bg-success/20",
+							"text-success",
+							"border-success/30"
+						);
+					} else if (lli.band === "yellow") {
+						circle.classList.add("text-amber-400");
+
+						bandBadge.textContent = "ELEVATED";
+
+						bandBadge.classList.add(
+							"bg-amber-400/20",
+							"text-amber-400",
+							"border-amber-400/30"
+						);
+					} else if (lli.band === "orange") {
+						circle.classList.add("text-orange-500");
+
+						bandBadge.textContent = "OVERLOADED";
+
+						bandBadge.classList.add(
+							"bg-orange-500/20",
+							"text-orange-500",
+							"border-orange-500/30"
+						);
+					} else {
+						circle.classList.add("text-red-500");
+
+						bandBadge.textContent = "ZEN MODE";
+
+						bandBadge.classList.add(
+							"bg-red-500/20",
+							"text-red-500",
+							"border-red-500/30"
+						);
+					}
+				}
+
+				document.getElementById("metricInbox").textContent =
+					lli.inboxCount;
+
+				document.getElementById("metricOverdue").textContent =
+					lli.overdueCount;
+
+				document.getElementById("metricDrift").textContent =
+					lli.driftRatio;
+
+				document.getElementById(
+					"metricMomentum"
+				).textContent = `+${lli.momentum24hCount} loops`;
+
+				document.getElementById("statEntities").textContent =
+					entities.length;
+
+				document.getElementById("statEdges").textContent = edges.length;
+
+				const uniqueTags = new Set();
+
+				entities.forEach((e) => {
+					try {
+						const a =
+							typeof e.attributes === "string"
+								? JSON.parse(e.attributes)
+								: e.attributes || {};
+
+						(a.tags || []).forEach((t) => uniqueTags.add(t));
+					} catch (err) {}
+				});
+
+				document.getElementById("statTags").textContent =
+					uniqueTags.size;
+
+				document.getElementById("calcInboxVal").textContent =
+					"+" + (2.5 * lli.inboxCount).toFixed(1);
+
+				document.getElementById("calcOverdueVal").textContent =
+					"+" + (4.0 * lli.overdueCount).toFixed(1);
+
+				document.getElementById("calcStaleVal").textContent =
+					"+" + (1.5 * lli.staleCount).toFixed(1);
+
+				document.getElementById("calc72hVal").textContent =
+					"+" + (1.0 * lli.load72hCount).toFixed(1);
+
+				document.getElementById("calcDriftVal").textContent =
+					"+" + lli.driftContribution;
+
+				document.getElementById("calcMomentumVal").textContent =
+					"-" + (2.0 * lli.momentum24hCount).toFixed(1);
+
+				document.getElementById("calcRawTotal").textContent =
+					lli.rawVal;
+
+				const isZenActive = lli.score > 85 && !isZenOverridden;
+
+				const zenBanner = document.getElementById("zenModeBanner");
+
+				const layer3 = document.getElementById("layer3Container");
+
+				const layer4 = document.getElementById("layer4Container");
+
+				const layer5 = document.getElementById("layer5Container");
+
+				if (isZenActive) {
+					zenBanner.classList.remove("hidden");
+
+					document.getElementById("zenScoreVal").textContent =
+						lli.score;
+
+					layer3.classList.add("opacity-30", "pointer-events-none");
+
+					layer4.classList.add("opacity-30", "pointer-events-none");
+
+					layer5.classList.add("opacity-30", "pointer-events-none");
+				} else {
+					zenBanner.classList.add("hidden");
+
+					layer3.classList.remove(
+						"opacity-30",
+						"pointer-events-none"
+					);
+
+					layer4.classList.remove(
+						"opacity-30",
+						"pointer-events-none"
+					);
+
+					layer5.classList.remove(
+						"opacity-30",
+						"pointer-events-none"
+					);
+				}
+
+				const ast = parseSearchQuery(query);
+
+				const filteredEntities = filterEntitiesByAST(entities, ast);
+
+				const filterBar = document.getElementById("activeFilterBar");
+
+				if (query.trim()) {
+					filterBar.classList.remove("hidden");
+
+					document.getElementById("filterDescription").textContent =
+						query;
+				} else {
+					filterBar.classList.add("hidden");
+				}
+
+				const openLoops = filteredEntities
+
+					.filter(
+						(e) =>
+							e.entity_type === "OpenLoop" &&
+							e.status === "active"
+					)
+
+					.map((e) => ({
+						...e,
+						attentionScore: computeAttentionScore(e, edges),
+					}))
+
+					.sort((a, b) => b.attentionScore - a.attentionScore);
+
+				document.getElementById("openLoopCount").textContent =
+					openLoops.length;
+
+				const focalCard = document.getElementById("focalCard");
+
+				if (openLoops.length > 0) {
+					const top = openLoops[0];
+
+					focalCard.classList.remove("hidden");
+
+					document.getElementById("focalTitle").textContent =
+						top.title;
+
+					document.getElementById("focalScore").textContent =
+						top.attentionScore;
+
+					let attrs = {};
+
+					try {
+						attrs =
+							typeof top.attributes === "string"
+								? JSON.parse(top.attributes)
+								: top.attributes || {};
+					} catch (e) {}
+
+					document.getElementById("focalDescription").textContent =
+						attrs.body ||
+						"No detail body available for this priority open loop.";
+
+					const dueEl = document.getElementById("focalDue");
+
+					if (top.due_at) {
+						const isOverdue = top.due_at < Date.now();
+
+						dueEl.textContent = isOverdue ? "Overdue" : "Due Soon";
+
+						dueEl.className = isOverdue
+							? "text-xs text-red-400 font-bold"
+							: "text-xs text-amber-400 font-medium";
+					} else {
+						dueEl.textContent = "No Due Target";
+
+						dueEl.className = "text-xs text-zinc-500";
+					}
+
+					document.getElementById("btnResolveFocal").onclick = () =>
+						resolveEntity(top.id);
+
+					document.getElementById("btnDeferFocal").onclick = () =>
+						deferEntity(top.id);
+
+					const tagsContainer = document.getElementById("focalTags");
+
+					let tagMarkup = (attrs.tags || [])
+						.map(
+							(t) =>
+								`<span class="bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded border border-zinc-700">#${t}</span>`
+						)
+						.join(" ");
+
+					if (attrs.metrics) {
+						tagMarkup +=
+							" " +
+							Object.entries(attrs.metrics)
+								.map(
+									([k, v]) =>
+										`<span class="bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded border border-blue-500/30 font-mono">#${k}(${v})</span>`
+								)
+								.join(" ");
+					}
+
+					if (attrs.contexts) {
+						tagMarkup +=
+							" " +
+							attrs.contexts
+								.map(
+									(c) =>
+										`<span class="bg-purpleAccent/20 text-purpleAccent px-2 py-0.5 rounded border border-purpleAccent/30 font-semibold">+${c}</span>`
+								)
+								.join(" ");
+					}
+
+					tagsContainer.innerHTML = tagMarkup;
+				} else {
+					document.getElementById("focalTitle").textContent =
+						"No active open loops in current focus filter.";
+
+					document.getElementById("focalDescription").textContent =
+						"Your attention stack is currently clear or matches no search parameters.";
+
+					document.getElementById("focalScore").textContent = "0.00";
+				}
+
+				const stackContainer =
+					document.getElementById("loopStackContainer");
+
+				const queueItems = openLoops.slice(1);
+
+				if (queueItems.length === 0) {
+					stackContainer.innerHTML = `<div class="text-xs text-zinc-500 py-3 text-center italic">No additional loops in queue.</div>`;
+				} else {
+					stackContainer.innerHTML = queueItems
+						.map((item) => {
+							let attrs = {};
+
+							try {
+								attrs =
+									typeof item.attributes === "string"
+										? JSON.parse(item.attributes)
+										: item.attributes || {};
+							} catch (e) {}
+
+							const isOverdue =
+								item.due_at && item.due_at < Date.now();
+
+							let metricsHtml = "";
+
+							if (
+								attrs.metrics &&
+								Object.keys(attrs.metrics).length > 0
+							) {
+								metricsHtml = Object.entries(attrs.metrics)
+									.map(
+										([k, v]) =>
+											`<span class="text-blue-400 font-mono">#${k}(${v})</span>`
+									)
+									.join(" ");
+							}
+
+							let contextsHtml = "";
+
+							if (attrs.contexts && attrs.contexts.length > 0) {
+								contextsHtml = attrs.contexts
+									.map(
+										(c) =>
+											`<span class="text-emerald-400 font-semibold">+${c}</span>`
+									)
+									.join(" ");
+							}
+
+							return `
+
+
+                    <div class="swipe-card bg-cardElevated/70 hover:bg-cardElevated p-3 rounded-xl border border-cardBorder flex items-center justify-between gap-3 transition-all">
+
+
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+
+
+                    <button onclick="resolveEntity('${
+						item.id
+					}')" class="w-5 h-5 rounded-lg border border-zinc-600 hover:border-success hover:bg-success/20 flex items-center justify-center text-transparent hover:text-success transition-all">
+
+
+                    <i class="fa-solid fa-check text-[10px]"></i>
+
+
+                    </button>
+
+
+                    <div class="min-w-0 flex-1">
+
+
+                    <div class="flex items-center gap-2">
+
+
+                    <span class="text-xs font-bold text-white truncate">${escapeHtml(
+						item.title
+					)}</span>
+
+
+                    <span class="text-[10px] font-mono font-semibold px-1.5 py-0.2 rounded bg-zinc-800 text-accent">A(e): ${
+						item.attentionScore
+					}</span>
+
+
+                    </div>
+
+
+                    <div class="flex items-center gap-2 text-[10px] text-zinc-400 mt-0.5 flex-wrap">
+
+
+                    <span>Priority P${item.priority}</span>
+
+
+                    ${
+						isOverdue
+							? `<span class="text-red-400 font-bold">• OVERDUE</span>`
+							: ""
+					}
+
+
+                    ${(attrs.tags || [])
+						.map(
+							(t) =>
+								`<span class="text-purpleAccent">#${t}</span>`
+						)
+						.join(" ")}
+
+
+                    ${metricsHtml}
+
+
+                    ${contextsHtml}
+
+
+                    </div>
+
+
+                    </div>
+
+
+                    </div>
+
+
+                    <div class="flex items-center gap-1">
+
+
+                    <button onclick="deferEntity('${
+						item.id
+					}')" title="Defer +24h" class="p-1.5 text-zinc-400 hover:text-amber-400 text-xs">
+
+
+                    <i class="fa-solid fa-clock"></i>
+
+
+                    </button>
+
+
+                    <button onclick="deleteEntity('${
+						item.id
+					}')" title="Archive Loop" class="p-1.5 text-zinc-400 hover:text-red-400 text-xs">
+
+
+                    <i class="fa-solid fa-trash"></i>
+
+
+                    </button>
+
+
+                    </div>
+
+
+                    </div>
+
+
+                    `;
+						})
+						.join("");
+				}
+
+				const now = Date.now();
+
+				const events = filteredEntities.filter(
+					(e) =>
+						e.status === "active" &&
+						(e.entity_type === "Event" || e.scheduled_at)
+				);
+
+				const day1Events = events.filter(
+					(e) => e.scheduled_at && e.scheduled_at <= now + 86400000
+				);
+
+				const day2Events = events.filter(
+					(e) =>
+						e.scheduled_at &&
+						e.scheduled_at > now + 86400000 &&
+						e.scheduled_at <= now + 86400000 * 2
+				);
+
+				const day3Events = events.filter(
+					(e) =>
+						e.scheduled_at &&
+						e.scheduled_at > now + 86400000 * 2 &&
+						e.scheduled_at <= now + 86400000 * 3
+				);
+
+				renderTimelineStream(
+					"day1Stream",
+
+					day1Events
+				);
+
+				renderTimelineStream(
+					"day2Stream",
+
+					day2Events
+				);
+
+				renderTimelineStream(
+					"day3Stream",
+
+					day3Events
+				);
+
+				document.getElementById(
+					"day1Count"
+				).textContent = `${day1Events.length} scheduled`;
+
+				document.getElementById(
+					"day2Count"
+				).textContent = `${day2Events.length} scheduled`;
+
+				document.getElementById(
+					"day3Count"
+				).textContent = `${day3Events.length} scheduled`;
+
+				const people = entities.filter(
+					(e) => e.entity_type === "Person" && e.status === "active"
+				);
+
+				const peopleContainer =
+					document.getElementById("peopleContainer");
+
+				peopleContainer.innerHTML = people
+					.map((p) => {
+						let attrs = {};
+
+						try {
+							attrs =
+								typeof p.attributes === "string"
+									? JSON.parse(p.attributes)
+									: p.attributes || {};
+						} catch (e) {}
+
+						return `
+
+
+                <button onclick="setQuickSearch('${
+					attrs.handle || p.title
+				}')" class="flex items-center gap-2 bg-cardElevated hover:bg-zinc-800 border border-cardBorder text-zinc-200 text-xs px-3 py-1.5 rounded-xl transition-all">
+
+
+                <div class="w-5 h-5 rounded-full bg-purple-600/30 text-purpleAccent flex items-center justify-center font-bold text-[10px]">
+
+
+                ${p.title.charAt(0)}
+
+
+                </div>
+
+
+                <span class="font-medium">${escapeHtml(p.title)}</span>
+
+
+                <span class="text-[10px] text-zinc-500">${
+					attrs.handle || ""
+				}</span>
+
+
+                </button>
+
+
+                `;
+					})
+					.join("");
+
+				const streamsContainer =
+					document.getElementById("streamsContainer");
+
+				streamsContainer.innerHTML = Array.from(uniqueTags)
+					.map(
+						(tag) => `
+
+
+                <button onclick="setQuickSearch('#${tag}')" class="bg-cardElevated/80 hover:bg-zinc-800 border border-cardBorder text-purpleAccent hover:text-white text-xs px-3 py-1 rounded-xl transition-all font-mono">
+
+
+                #${tag}
+
+
+                </button>
+
+
+                `
+					)
+					.join("");
+
+				const linkedIds = new Set();
+
+				edges.forEach((ed) => {
+					linkedIds.add(ed.source_id);
+					linkedIds.add(ed.target_id);
+				});
+
+				const orphanEntities = entities.filter(
+					(e) => e.status === "active" && !linkedIds.has(e.id)
+				);
+
+				document.getElementById("orphanCount").textContent =
+					orphanEntities.length;
+
+				const orphanList = document.getElementById("orphanList");
+
+				if (orphanEntities.length === 0) {
+					orphanList.innerHTML = `<span class="text-xs text-zinc-400 italic">No orphaned entities detected. Context drift optimal!</span>`;
+				} else {
+					orphanList.innerHTML = orphanEntities
+						.slice(0, 3)
+						.map(
+							(o) => `
+
+
+                    <div class="bg-card/70 p-2 rounded-lg border border-amber-500/20 flex items-center justify-between text-xs">
+
+
+                    <span class="font-medium text-zinc-200 truncate max-w-[200px]">${escapeHtml(
+						o.title
+					)}</span>
+
+
+                    <button onclick="openLinkModalFor('${
+						o.id
+					}')" class="text-[11px] text-amber-400 hover:underline font-bold">
+
+
+                    + Link Context
+
+
+                    </button>
+
+
+                    </div>
+
+
+                    `
+						)
+						.join("");
+				}
+			});
+
+			// Timeline Event Card Renderer
+
+			function renderTimelineStream(elementId, items) {
+				const container = document.getElementById(elementId);
+
+				if (items.length === 0) {
+					container.innerHTML = `<div class="text-[11px] text-zinc-600 py-3 text-center italic">No scheduled events</div>`;
+
+					return;
+				}
+
+				container.innerHTML = items
+					.map((item) => {
+						const timeStr = item.scheduled_at
+							? new Date(item.scheduled_at).toLocaleTimeString(
+									[],
+									{
+										hour: "2-digit",
+										minute: "2-digit",
+									}
+							  )
+							: "All Day";
+
+						return `
+
+
+                <div class="bg-card p-2.5 rounded-xl border border-cardBorder/80 flex flex-col gap-1 text-xs">
+
+
+                <div class="flex items-center justify-between text-zinc-400 text-[10px]">
+
+
+                <span class="font-mono text-accent font-semibold"><i class="fa-regular fa-clock mr-1"></i>${timeStr}</span>
+
+
+                <span class="capitalize">${item.entity_type}</span>
+
+
+                </div>
+
+
+                <div class="font-bold text-zinc-100">${escapeHtml(
+					item.title
+				)}</div>
+
+
+                </div>
+
+
+                `;
+					})
+					.join("");
+			}
+
+			// --- ACTION MUTATION COMMANDS ---
+
+			function resolveEntity(id) {
+				updateEntitiesStore((prev) =>
+					prev.map((e) =>
+						e.id === id
+							? {
+									...e,
+									status: "resolved",
+									updated_at: Date.now(),
+							  }
+							: e
+					)
+				);
+			}
+
+			function deferEntity(id) {
+				updateEntitiesStore((prev) =>
+					prev.map((e) =>
+						e.id === id
+							? {
+									...e,
+
+									due_at: (e.due_at || Date.now()) + 86400000,
+
+									updated_at: Date.now(),
+							  }
+							: e
+					)
+				);
+			}
+
+			function deleteEntity(id) {
+				updateEntitiesStore((prev) => prev.filter((e) => e.id !== id));
+
+				updateEdgesStore((prev) =>
+					prev.filter(
+						(ed) => ed.source_id !== id && ed.target_id !== id
+					)
+				);
+			}
+
+			function setQuickSearch(query) {
+				const input = document.getElementById("searchInput");
+
+				if (input) {
+					input.value = query;
+
+					setSearchQuery(query);
+				}
+			}
+
+			function escapeHtml(str) {
+				return (str || "")
+					.replace(/&/g, "&amp;")
+					.replace(/</g, "&lt;")
+					.replace(/>/g, "&gt;")
+					.replace(/"/g, "&quot;");
+			}
+
+			// --- MODALS CONTROLLER, NOMIE REGEX PARSER & SHORTCUTS ---
+
+			// Quick Capture
+
+			const modalCapture = document.getElementById("modalCapture");
+
+			document.getElementById("btnQuickCapture").onclick = () =>
+				modalCapture.classList.remove("hidden");
+
+			document.getElementById("btnCloseCaptureModal").onclick = () =>
+				modalCapture.classList.add("hidden");
+
+			document.getElementById("btnCancelCapture").onclick = () =>
+				modalCapture.classList.add("hidden");
+
+			// Type Selector Buttons in Capture Modal
+
+			let selectedCaptureType = "OpenLoop";
+
+			document.querySelectorAll(".type-btn").forEach((btn) => {
+				btn.onclick = (e) => {
+					document.querySelectorAll(".type-btn").forEach((b) => {
+						b.classList.remove("bg-accent", "text-white");
+
+						b.classList.add("bg-cardElevated", "text-zinc-300");
+					});
+
+					e.target.classList.remove(
+						"bg-cardElevated",
+						"text-zinc-300"
+					);
+
+					e.target.classList.add("bg-accent", "text-white");
+
+					selectedCaptureType = e.target.dataset.type;
+				};
+			});
+
+			// Quick Multi-Select Modifier Chips logic
+
+			document
+				.querySelectorAll("#quickModifierChips .chip-btn")
+				.forEach((btn) => {
+					btn.onclick = (e) => {
+						e.preventDefault();
+
+						const macro = btn.dataset.macro;
+
+						const titleInput =
+							document.getElementById("captureTitle");
+
+						let currentVal = titleInput.value.trim();
+
+						if (currentVal.includes(macro)) {
+							// Toggle Off
+
+							currentVal = currentVal
+								.replace(macro, "")
+								.replace(/\s+/g, " ")
+								.trim();
+
+							btn.classList.remove(
+								"bg-accent/30",
+								"border-accent",
+								"text-white"
+							);
+
+							btn.classList.add("bg-cardElevated");
+						} else {
+							// Toggle On
+
+							currentVal = currentVal
+								? `${currentVal} ${macro}`
+								: macro;
+
+							btn.classList.add(
+								"bg-accent/30",
+								"border-accent",
+								"text-white"
+							);
+
+							btn.classList.remove("bg-cardElevated");
+						}
+
+						titleInput.value = currentVal;
+					};
+				});
+
+			// Universal Capture Submit with Nomie Tracker & Context Parsing
+
+			document.getElementById("btnSubmitCapture").onclick = () => {
+				const title = document
+					.getElementById("captureTitle")
+					.value.trim();
+
+				if (!title) return;
+
+				let priority = parseInt(
+					document.getElementById("capturePriority").value,
+					10
+				);
+
+				const dateVal = document.getElementById("captureDate").value;
+
+				const body = document
+					.getElementById("captureBody")
+					.value.trim();
+
+				// 1. Inline Priority Parsing (e.g. p1, p2)
+
+				const priorityMatch = title.match(/\b([pP][1-5])\b/);
+
+				if (priorityMatch) {
+					priority = parseInt(priorityMatch[1].substring(1), 10);
+				}
+
+				// 2. Nomie Tracker Regex Parsing (#tracker(val) or #tracker:val or #tracker)
+
+				const metrics = {};
+
+				const tags = [];
+
+				const nomieRegex =
+					/#([a-zA-Z0-9\_]+)(?:\(([^)]+)\)|:([a-zA-Z0-9\_]+))?/g;
+
+				let match;
+
+				while ((match = nomieRegex.exec(title)) !== null) {
+					const trackerName = match[1].toLowerCase();
+
+					const rawVal =
+						match[2] !== undefined
+							? match[2]
+							: match[3] !== undefined
+							? match[3]
+							: true;
+
+					metrics[trackerName] = !isNaN(rawVal)
+						? parseFloat(rawVal)
+						: rawVal;
+
+					if (!tags.includes(trackerName)) tags.push(trackerName);
+				}
+
+				// 3. Context Regex Parsing (+context)
+
+				const contextRegex = /\+([a-zA-Z0-9\_]+)/g;
+
+				const contexts = [];
+
+				while ((match = contextRegex.exec(title)) !== null) {
+					contexts.push(match[1].toLowerCase());
+				}
+
+				const newEntity = {
+					id: "ent_" + Date.now(),
+
+					entity_type: selectedCaptureType,
+
+					title: title,
+
+					status: "active",
+
+					priority: priority,
+
+					due_at: dateVal
+						? new Date(dateVal).getTime()
+						: selectedCaptureType === "OpenLoop"
+						? Date.now() + 86400000
+						: null,
+
+					scheduled_at: dateVal ? new Date(dateVal).getTime() : null,
+
+					attributes: JSON.stringify({
+						body,
+
+						tags,
+
+						metrics,
+
+						contexts,
+					}),
+
+					created_at: Date.now(),
+
+					updated_at: Date.now(),
+				};
+
+				updateEntitiesStore((prev) => [newEntity, ...prev]);
+
+				// Reset modal fields
+
+				document.getElementById("captureTitle").value = "";
+
+				document.getElementById("captureBody").value = "";
+
+				document
+					.querySelectorAll("#quickModifierChips .chip-btn")
+					.forEach((btn) => {
+						btn.classList.remove(
+							"bg-accent/30",
+							"border-accent",
+							"text-white"
+						);
+
+						btn.classList.add("bg-cardElevated");
+					});
+
+				modalCapture.classList.add("hidden");
+			};
+
+			// LLI Simulator Modal
+
+			const modalLli = document.getElementById("modalLli");
+
+			document.getElementById("btnViewLliDetails").onclick = () =>
+				modalLli.classList.remove("hidden");
+
+			document.getElementById("btnOpenSimulator").onclick = () =>
+				modalLli.classList.remove("hidden");
+
+			document.getElementById("btnCloseLliModal").onclick = () =>
+				modalLli.classList.add("hidden");
+
+			document.getElementById("btnCloseLliModalBottom").onclick = () =>
+				modalLli.classList.add("hidden");
+
+			// Graph Linker Modal
+
+			const modalGraph = document.getElementById("modalGraph");
+
+			function openLinkModalFor(entityId) {
+				modalGraph.classList.remove("hidden");
+
+				populateGraphModalSelects(entityId);
+			}
+
+			document.getElementById("btnOpenGraphModal").onclick = () => {
+				modalGraph.classList.remove("hidden");
+
+				populateGraphModalSelects();
+			};
+
+			document.getElementById("btnCloseGraphModal").onclick = () =>
+				modalGraph.classList.add("hidden");
+
+			function populateGraphModalSelects(preselectSourceId) {
+				const entities = getEntities();
+
+				const sourceSel = document.getElementById("linkSourceSelect");
+
+				const targetSel = document.getElementById("linkTargetSelect");
+
+				sourceSel.innerHTML = entities
+					.map(
+						(e) =>
+							`<option value="${e.id}" ${
+								e.id === preselectSourceId ? "selected" : ""
+							}>[${e.entity_type}] ${escapeHtml(
+								e.title
+							)}</option>`
+					)
+					.join("");
+
+				targetSel.innerHTML = entities
+					.map(
+						(e) =>
+							`<option value="${e.id}">[${
+								e.entity_type
+							}] ${escapeHtml(e.title)}</option>`
+					)
+					.join("");
+			}
+
+			document.getElementById("btnCreateEdgeSubmit").onclick = () => {
+				const sourceId =
+					document.getElementById("linkSourceSelect").value;
+
+				const targetId =
+					document.getElementById("linkTargetSelect").value;
+
+				const relation =
+					document.getElementById("linkRelationSelect").value;
+
+				if (sourceId === targetId) return;
+
+				const newEdge = {
+					id: "ed_" + Date.now(),
+
+					source_id: sourceId,
+
+					target_id: targetId,
+
+					relation: relation,
+
+					weight: 1.0,
+
+					created_at: Date.now(),
+				};
+
+				updateEdgesStore((prev) => [...prev, newEdge]);
+
+				modalGraph.classList.add("hidden");
+			};
+
+			// Override Zen mode
+
+			document.getElementById("btnOverrideZen").onclick = () => {
+				setZenOverride(true);
+			};
+
+			// Reset baseline seed data
+
+			document.getElementById("btnResetData").onclick = () => {
+				localStorage.removeItem(STORAGE_KEY);
+
+				updateEntitiesStore(SEED_DATA.entities);
+
+				updateEdgesStore(SEED_DATA.edges);
+
+				setZenOverride(false);
+			};
+
+			// Search input listeners
+
+			const searchInput = document.getElementById("searchInput");
+
+			const searchInputMobile =
+				document.getElementById("searchInputMobile");
+
+			searchInput.addEventListener("input", (e) =>
+				setSearchQuery(e.target.value)
+			);
+
+			searchInputMobile.addEventListener("input", (e) =>
+				setSearchQuery(e.target.value)
+			);
+
+			document.getElementById("btnClearFilter").onclick = () =>
+				setQuickSearch("");
+
+			// Global Cmd+K / Ctrl+K keyboard shortcut
+
+			window.addEventListener("keydown", (e) => {
+				if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+					e.preventDefault();
+
+					searchInput.focus();
+				}
+
+				if (e.key === "Escape") {
+					modalCapture.classList.add("hidden");
+
+					modalLli.classList.add("hidden");
+
+					modalGraph.classList.add("hidden");
+				}
+			});
+
+			// Add Event Button Layer 3
+
+			document.getElementById("btnAddEvent").onclick = () => {
+				selectedCaptureType = "Event";
+
+				modalCapture.classList.remove("hidden");
+			};
+
+			// Reflection Save Button Layer 5 with Nomie parsing support
+
+			document.getElementById("btnSaveReflection").onclick = () => {
+				const input = document.getElementById("reflectionInput");
+
+				const val = input.value.trim();
+
+				if (!val) return;
+
+				const metrics = {};
+
+				const tags = ["reflection"];
+
+				const nomieRegex =
+					/#([a-zA-Z0-9\_]+)(?:\(([^)]+)\)|:([a-zA-Z0-9\_]+))?/g;
+
+				let match;
+
+				while ((match = nomieRegex.exec(val)) !== null) {
+					const trackerName = match[1].toLowerCase();
+
+					const rawVal =
+						match[2] !== undefined
+							? match[2]
+							: match[3] !== undefined
+							? match[3]
+							: true;
+
+					metrics[trackerName] = !isNaN(rawVal)
+						? parseFloat(rawVal)
+						: rawVal;
+
+					if (!tags.includes(trackerName)) tags.push(trackerName);
+				}
+
+				const contextRegex = /\+([a-zA-Z0-9\_]+)/g;
+
+				const contexts = [];
+
+				while ((match = contextRegex.exec(val)) !== null) {
+					contexts.push(match[1].toLowerCase());
+				}
+
+				const note = {
+					id: "ent_" + Date.now(),
+
+					entity_type: "Notebook",
+
+					title: "Reflection: " + val,
+
+					status: "active",
+
+					priority: 3,
+
+					due_at: null,
+
+					scheduled_at: null,
+
+					attributes: JSON.stringify({
+						body: val,
+
+						tags,
+
+						metrics,
+
+						contexts,
+					}),
+
+					created_at: Date.now(),
+
+					updated_at: Date.now(),
+				};
+
+				updateEntitiesStore((prev) => [note, ...prev]);
+
+				input.value = "";
+			};
+
+			console.log(
+				"LifeOS v2 Core Master Mission Control initialized with Nomie Micro-Tracking."
+			);
+		</script>
+	</body>
+</html>
