@@ -1,18 +1,27 @@
 import type {LifeOSDatabase,CollectionName} from "@/domain/contracts/database";
 export interface IntegrityIssue{severity:"error"|"warning";code:string;message:string;recordId?:string;recordType?:string}
-export interface IntegrityResult{valid:boolean;errors:IntegrityIssue[];warnings:IntegrityIssue[];counts:Record<CollectionName,number>}
+export interface IntegrityResult{valid:boolean;errors:IntegrityIssue[];warnings:IntegrityIssue[];counts:Record<CollectionName,number>&{transactionImports:number}}
 const entityCollections=["entities","events","openLoops","people","assets","accounts","transactions","loans","loanPayments","vehicles","vehicleMaintenance","properties","rooms","homeSystems","electricalDevices","projects","goals","decisions","documents","recurringRules"] as const;
 const typedCollections=entityCollections.filter(c=>c!=="entities") as Exclude<typeof entityCollections[number],"entities">[];
 function expectedEntityType(collection:string):string|undefined{const map:Record<string,string>={entities:"entity",events:"event",openLoops:"open_loop",people:"person",assets:"asset",accounts:"financial_account",transactions:"financial_transaction",loans:"loan",loanPayments:"loan_payment",vehicles:"vehicle",vehicleMaintenance:"vehicle_maintenance",properties:"property",rooms:"room",homeSystems:"home_system",electricalDevices:"electrical_device",projects:"project",goals:"goal",decisions:"decision",documents:"document",recurringRules:"recurring_rule"};return map[collection]}
 export function validateDatabaseIntegrity(db:LifeOSDatabase):IntegrityResult{
  const errors:IntegrityIssue[]=[]; const warnings:IntegrityIssue[]=[]; const ids=new Map<string,string>();
- const counts={} as Record<CollectionName,number>;
+ const counts={} as Record<CollectionName,number>&{transactionImports:number};
  for(const c of ["entities","relationships",...entityCollections,"auditEntries"] as CollectionName[]){counts[c]=db[c].length}
+ counts.transactionImports=db.transactionImports?.length??0
  for(const c of entityCollections){for(const x of db[c]){
    if(ids.has(x.id)) errors.push({severity:"error",code:"DUPLICATE_ID",message:`Duplicate id ${x.id} in ${ids.get(x.id)} and ${c}.`,recordId:x.id,recordType:x.entityType});
    else ids.set(x.id,c);
    if(x.entityType!==expectedEntityType(c)) warnings.push({severity:"warning",code:"ENTITY_TYPE_MISMATCH",message:`${c} record ${x.id} declares entityType ${x.entityType}.`,recordId:x.id,recordType:x.entityType});
  }}
+ for(const batch of db.transactionImports??[]){
+  if(ids.has(batch.id)) errors.push({severity:"error",code:"DUPLICATE_ID",message:`Duplicate id ${batch.id} in ${ids.get(batch.id)} and transactionImports.`,recordId:batch.id,recordType:batch.entityType});
+  else ids.set(batch.id,"transactionImports");
+  if(batch.entityType!=="transaction_import_batch") warnings.push({severity:"warning",code:"ENTITY_TYPE_MISMATCH",message:`transactionImports record ${batch.id} declares entityType ${batch.entityType}.`,recordId:batch.id,recordType:batch.entityType});
+  if(batch.rawTransactionsPersisted!==false) errors.push({severity:"error",code:"RAW_TRANSACTION_RETENTION_VIOLATION",message:`Transaction import batch ${batch.id} must not persist raw transactions.`,recordId:batch.id,recordType:batch.entityType});
+  if(!batch.sourceFingerprint) errors.push({severity:"error",code:"MISSING_IMPORT_FINGERPRINT",message:`Transaction import batch ${batch.id} is missing a source fingerprint.`,recordId:batch.id,recordType:batch.entityType});
+  if(!["analyzed","reviewed","approved","discarded"].includes(batch.status)) errors.push({severity:"error",code:"INVALID_IMPORT_STATUS",message:`Transaction import batch ${batch.id} has invalid status ${batch.status}.`,recordId:batch.id,recordType:batch.entityType});
+ }
  const ref=(recordId:string,target:string,field:string,expectedType?:string):[string,string,string,string?]=>[recordId,target,field,expectedType];
  const refs:Array<[string,string,string,string?]> = [];
  const entityRefArrays:Array<[string,string,string[]|undefined][]> = [];

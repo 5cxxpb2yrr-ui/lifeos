@@ -3,35 +3,45 @@
   "name": "lifeos-v2",
   "pages_build_output_dir": "./out",
   "compatibility_date": "2026-10-01",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "services": [
     {
       "binding": "ATTACHMENTS",
       "service": "lifeos-attachments"
     }
-{
-  "previews": {
-    // ...
-    "d1_databases": [
-      {
-        "binding": "DB",
-        "database_id": "6c1ca4a8-68d3-4d81-9ef7-24eed5642962"
-      },
-      {
-        "binding": "lifeos-plaid-sandbox",
-        "database_id": "6c1ca4a8-68d3-4d81-9ef7-24eed5642962"
-      }
-    ],
-    // ...
-  }
-}
-{
-  // ...
-  "vars": {
-    "PLAID_ENV": "sandbox"
-  },
-  // ...
-}
   ],
-  "observability": { "enabled": true }
+  "d1_databases": [
+    {
+      "binding": "PLAID_DB",
+      "database_name": "financetracker-db",
+      "database_id": "23666e35-57e4-4b8f-97a7-7bef8fdd6750",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "env": {
+    "preview": {
+      "d1_databases": [
+        {
+          "binding": "PLAID_DB",
+          "database_name": "lifeos-plaid-sandbox",
+          "database_id": "6c1ca4a8-68d3-4d81-9ef7-24eed5642962",
+          "migrations_dir": "workers/lifeos-plaid-sandbox/migrations"
+        }
+      ],
+      "vars": {
+        "PLAID_ENV": "sandbox"
+      },
+      "services": [
+        {
+          "binding": "PLAID_WORKER",
+          "service": "lifeos-plaid-sandbox"
+        }
+      ]
+    }
+  },
+  "observability": {
+    "enabled": true
+  }
 }
