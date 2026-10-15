@@ -13,6 +13,14 @@ export function validateDatabaseIntegrity(db:LifeOSDatabase):IntegrityResult{
    else ids.set(x.id,c);
    if(x.entityType!==expectedEntityType(c)) warnings.push({severity:"warning",code:"ENTITY_TYPE_MISMATCH",message:`${c} record ${x.id} declares entityType ${x.entityType}.`,recordId:x.id,recordType:x.entityType});
  }}
+ for(const batch of db.transactionImports??[]){
+  if(ids.has(batch.id)) errors.push({severity:"error",code:"DUPLICATE_ID",message:`Duplicate id ${batch.id} in ${ids.get(batch.id)} and transactionImports.`,recordId:batch.id,recordType:batch.entityType});
+  else ids.set(batch.id,"transactionImports");
+  if(batch.entityType!=="transaction_import_batch") warnings.push({severity:"warning",code:"ENTITY_TYPE_MISMATCH",message:`transactionImports record ${batch.id} declares entityType ${batch.entityType}.`,recordId:batch.id,recordType:batch.entityType});
+  if(batch.rawTransactionsPersisted!==false) errors.push({severity:"error",code:"RAW_TRANSACTION_RETENTION_VIOLATION",message:`Transaction import batch ${batch.id} must not persist raw transactions.`,recordId:batch.id,recordType:batch.entityType});
+  if(!batch.sourceFingerprint) errors.push({severity:"error",code:"MISSING_IMPORT_FINGERPRINT",message:`Transaction import batch ${batch.id} is missing a source fingerprint.`,recordId:batch.id,recordType:batch.entityType});
+  if(!["analyzed","reviewed","approved","discarded"].includes(batch.status)) errors.push({severity:"error",code:"INVALID_IMPORT_STATUS",message:`Transaction import batch ${batch.id} has invalid status ${batch.status}.`,recordId:batch.id,recordType:batch.entityType});
+ }
  const ref=(recordId:string,target:string,field:string,expectedType?:string):[string,string,string,string?]=>[recordId,target,field,expectedType];
  const refs:Array<[string,string,string,string?]> = [];
  const entityRefArrays:Array<[string,string,string[]|undefined][]> = [];
