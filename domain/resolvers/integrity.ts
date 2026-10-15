@@ -1,13 +1,14 @@
 import type {LifeOSDatabase,CollectionName} from "@/domain/contracts/database";
 export interface IntegrityIssue{severity:"error"|"warning";code:string;message:string;recordId?:string;recordType?:string}
-export interface IntegrityResult{valid:boolean;errors:IntegrityIssue[];warnings:IntegrityIssue[];counts:Record<CollectionName,number>}
+export interface IntegrityResult{valid:boolean;errors:IntegrityIssue[];warnings:IntegrityIssue[];counts:Record<CollectionName,number>&{transactionImports:number}}
 const entityCollections=["entities","events","openLoops","people","assets","accounts","transactions","loans","loanPayments","vehicles","vehicleMaintenance","properties","rooms","homeSystems","electricalDevices","projects","goals","decisions","documents","recurringRules"] as const;
 const typedCollections=entityCollections.filter(c=>c!=="entities") as Exclude<typeof entityCollections[number],"entities">[];
 function expectedEntityType(collection:string):string|undefined{const map:Record<string,string>={entities:"entity",events:"event",openLoops:"open_loop",people:"person",assets:"asset",accounts:"financial_account",transactions:"financial_transaction",loans:"loan",loanPayments:"loan_payment",vehicles:"vehicle",vehicleMaintenance:"vehicle_maintenance",properties:"property",rooms:"room",homeSystems:"home_system",electricalDevices:"electrical_device",projects:"project",goals:"goal",decisions:"decision",documents:"document",recurringRules:"recurring_rule"};return map[collection]}
 export function validateDatabaseIntegrity(db:LifeOSDatabase):IntegrityResult{
  const errors:IntegrityIssue[]=[]; const warnings:IntegrityIssue[]=[]; const ids=new Map<string,string>();
- const counts={} as Record<CollectionName,number>;
+ const counts={} as Record<CollectionName,number>&{transactionImports:number};
  for(const c of ["entities","relationships",...entityCollections,"auditEntries"] as CollectionName[]){counts[c]=db[c].length}
+ counts.transactionImports=db.transactionImports?.length??0
  for(const c of entityCollections){for(const x of db[c]){
    if(ids.has(x.id)) errors.push({severity:"error",code:"DUPLICATE_ID",message:`Duplicate id ${x.id} in ${ids.get(x.id)} and ${c}.`,recordId:x.id,recordType:x.entityType});
    else ids.set(x.id,c);
