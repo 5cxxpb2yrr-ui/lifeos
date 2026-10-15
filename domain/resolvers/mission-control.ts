@@ -6,7 +6,7 @@ export interface AttentionItem {
  dueAt?:string; priority?:number; reason?:string; context?:Record<string,unknown>;
 }
 export interface MissionControlViewModel {
- attention:AttentionItem[]; today:Event[]; next72Hours:Event[]; openLoops:OpenLoop[];
+ attention:AttentionItem[]; today:Event[]; next72Hours:Array<Event & {timelineAt:string}>; openLoops:OpenLoop[];
  systemLoad:{openLoops:number;overdueLoops:number;staleLoops:number;upcoming72Hours:number;resolvedLast24Hours:number}; finance:{accounts:number;loans:number;upcomingPayments:number};
  assets:{vehicles:number;properties:number}; recent:Event[];
 }
@@ -81,13 +81,21 @@ export function resolveMissionControl(db:LifeOSDatabase,now=new Date()):MissionC
  const resolvedLast24Hours=db.openLoops.filter(o=>o.status==="resolved"&&new Date(o.resolvedAt??o.updatedAt).getTime()>=resolvedCutoff).length+
   db.events.filter(e=>e.status==="completed"&&new Date(e.completedAt??e.updatedAt).getTime()>=resolvedCutoff).length;
  const horizon72=now.getTime()+72*60*60*1000;
- const next72Hours=db.events.filter(e=>{
-  if(!["planned","scheduled","in_progress"].includes(e.status))return false;
-  const value=e.startAt??e.dueAt;
-  if(!value)return false;
-  const time=new Date(value).getTime();
-  return Number.isFinite(time)&&time>=now.getTime()&&time<=horizon72;
- }).sort((a,b)=>new Date(a.startAt??a.dueAt??0).getTime()-new Date(b.startAt??b.dueAt??0).getTime());
+ const eventTimelineAt=(e:Event):string|undefined=>{
+  const inWindow=(value?:string)=>{
+   if(!value)return false;
+   const time=new Date(value).getTime();
+   return Number.isFinite(time)&&time>=now.getTime()&&time<=horizon72;
+  };
+  if(inWindow(e.startAt))return e.startAt;
+  if(inWindow(e.dueAt))return e.dueAt;
+  return undefined;
+ };
+ const next72Hours=db.events
+  .filter(e=>["planned","scheduled","in_progress"].includes(e.status))
+  .map(e=>{const timelineAt=eventTimelineAt(e);return timelineAt?{...e,timelineAt}:null;})
+  .filter((e):e is Event & {timelineAt:string}=>e!==null)
+  .sort((a,b)=>new Date(a.timelineAt).getTime()-new Date(b.timelineAt).getTime());
  return{
   attention,
   systemLoad:{openLoops:activeLoops.length,overdueLoops:overdueLoops.length,staleLoops:staleLoops.length,upcoming72Hours:next72Hours.length,resolvedLast24Hours},
