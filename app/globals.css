@@ -560,3 +560,8 @@ select optgroup{
 .system-load-metric span{color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.035em}
 .system-load-metric strong{color:var(--gold);font:700 clamp(17px,2.2vw,24px) Orbitron,sans-serif;overflow-wrap:anywhere}
 @media(max-width:620px){.system-load-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.system-load-metric{padding:10px}.system-load-metric span{font-size:9px}}
+
+
+/* Mission Control primary capture action: use LifeOS amber rather than the default cyan accent. */
+.global-capture-button{border-color:rgba(255,106,0,.5)!important;color:#ffd54f!important;background:rgba(255,106,0,.1)!important;font-weight:700;white-space:nowrap}
+.global-capture-button:hover,.global-capture-button:focus-visible{border-color:#ff6a00!important;background:rgba(255,106,0,.18)!important;box-shadow:0 0 0 2px rgba(255,106,0,.12)}
