@@ -551,3 +551,24 @@ select optgroup{
 .payroll-stat-strip strong{font:700 clamp(14px,3vw,20px) Orbitron,sans-serif;overflow-wrap:anywhere}
 .payroll-stat-strip small{color:var(--muted);font-size:11px}
 @media(max-width:520px){.payroll-top-nav{align-items:flex-start;flex-direction:column}.payroll-nav-links{justify-content:flex-start;gap:12px}.payroll-hero-mark{display:none}.payroll-stat-strip{gap:6px}.payroll-stat-strip>div{padding:10px 8px}.payroll-stat-strip span{font-size:8px}.payroll-stat-strip strong{font-size:13px}.payroll-stat-strip small{font-size:9px}}
+
+
+/* Mission Control reference restoration: compact, data-backed System Load */
+.system-load-card{border-color:rgba(255,106,0,.28);background:linear-gradient(135deg,rgba(255,106,0,.07),var(--glass))}
+.system-load-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.system-load-metric{min-width:0;display:flex;flex-direction:column;gap:7px;padding:12px 10px;border:1px solid var(--border);border-radius:12px;background:rgba(0,0,0,.16)}
+.system-load-metric span{color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.035em}
+.system-load-metric strong{color:var(--gold);font:700 clamp(17px,2.2vw,24px) Orbitron,sans-serif;overflow-wrap:anywhere}
+@media(max-width:620px){.system-load-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.system-load-metric{padding:10px}.system-load-metric span{font-size:9px}}
+
+
+/* Mission Control primary capture action: use LifeOS amber rather than the default cyan accent. */
+.global-capture-button{border-color:rgba(255,106,0,.5)!important;color:#ffd54f!important;background:rgba(255,106,0,.1)!important;font-weight:700;white-space:nowrap}
+.global-capture-button:hover,.global-capture-button:focus-visible{border-color:#ff6a00!important;background:rgba(255,106,0,.18)!important;box-shadow:0 0 0 2px rgba(255,106,0,.12)}
+
+
+/* Mobile universal search stays one tap away without permanently consuming header space. */
+.mobile-search-toggle{display:none;min-width:40px;padding:8px 10px;color:var(--gold);border-color:rgba(255,106,0,.3)}
+.mobile-search-row{display:none}
+@media(max-width:850px){.mobile-search-toggle{display:inline-flex;align-items:center;justify-content:center;font-size:18px;line-height:1}.mobile-search-row{display:block;width:calc(100% - 28px);margin:0 auto;padding:0 0 10px}.mobile-search-input{box-sizing:border-box;width:100%;min-width:0;padding:11px 12px;border:1px solid rgba(255,106,0,.28);border-radius:11px;background:rgba(255,255,255,.04);color:var(--text);outline:none;font:inherit;font-size:16px}.mobile-search-input:focus{border-color:#ff6a00;box-shadow:0 0 0 2px rgba(255,106,0,.1)}}
+@media(max-width:560px){.topbar-inner{min-height:60px;gap:7px}.brand{font-size:15px;letter-spacing:.04em}.global-capture-button{padding:9px 10px;font-size:12px}.status-pill{padding:6px 7px;font-size:9px;letter-spacing:.04em}.mobile-search-row{display:block;width:calc(100% - 20px);margin:0 auto;padding:0 0 10px}.mobile-search-input{box-sizing:border-box;width:100%;min-width:0;padding:11px 12px;border:1px solid rgba(255,106,0,.28);border-radius:11px;background:rgba(255,255,255,.04);color:var(--text);outline:none;font:inherit;font-size:16px}.mobile-search-input:focus{border-color:#ff6a00;box-shadow:0 0 0 2px rgba(255,106,0,.1)}}

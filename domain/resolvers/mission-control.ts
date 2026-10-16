@@ -6,8 +6,8 @@ export interface AttentionItem {
  dueAt?:string; priority?:number; reason?:string; context?:Record<string,unknown>;
 }
 export interface MissionControlViewModel {
- attention:AttentionItem[]; today:Event[]; openLoops:OpenLoop[];
- finance:{accounts:number;loans:number;upcomingPayments:number};
+ attention:AttentionItem[]; today:Event[]; next72Hours:Array<Event & {timelineAt:string}>; openLoops:OpenLoop[];
+ systemLoad:{openLoops:number;overdueLoops:number;staleLoops:number;upcoming72Hours:number;resolvedLast24Hours:number}; finance:{accounts:number;loans:number;upcomingPayments:number};
  assets:{vehicles:number;properties:number}; recent:Event[];
 }
 function localDay(date:Date):string {
@@ -73,9 +73,34 @@ export function resolveMissionControl(db:LifeOSDatabase,now=new Date()):MissionC
   })
  ].filter(x=>x.attention!=="none").sort((a,b)=>(b.priority??0)-(a.priority??0)||((a.dueAt??"").localeCompare(b.dueAt??"")));
  const today=db.events.filter(e=>eventDay(e)===currentDay);
+ const activeLoops=db.openLoops.filter(o=>!["resolved","cancelled"].includes(o.status));
+ const overdueLoops=activeLoops.filter(o=>{if(!o.dueAt)return false;const due=o.dueAt.slice(0,10);return /^\d{4}-\d{2}-\d{2}$/.test(o.dueAt)?due<currentDay:new Date(o.dueAt).getTime()<now.getTime()});
+ const staleCutoff=now.getTime()-3*24*60*60*1000;
+ const staleLoops=activeLoops.filter(o=>new Date(o.updatedAt).getTime()<staleCutoff);
+ const resolvedCutoff=now.getTime()-24*60*60*1000;
+ const resolvedLast24Hours=db.openLoops.filter(o=>o.status==="resolved"&&new Date(o.resolvedAt??o.updatedAt).getTime()>=resolvedCutoff).length+
+  db.events.filter(e=>e.status==="completed"&&new Date(e.completedAt??e.updatedAt).getTime()>=resolvedCutoff).length;
+ const horizon72=now.getTime()+72*60*60*1000;
+ const eventTimelineAt=(e:Event):string|undefined=>{
+  const inWindow=(value?:string)=>{
+   if(!value)return false;
+   const time=new Date(value).getTime();
+   return Number.isFinite(time)&&time>=now.getTime()&&time<=horizon72;
+  };
+  if(inWindow(e.startAt))return e.startAt;
+  if(inWindow(e.dueAt))return e.dueAt;
+  return undefined;
+ };
+ const next72Hours=db.events
+  .filter(e=>["planned","scheduled","in_progress"].includes(e.status))
+  .map(e=>{const timelineAt=eventTimelineAt(e);return timelineAt?{...e,timelineAt}:null;})
+  .filter((e):e is Event & {timelineAt:string}=>e!==null)
+  .sort((a,b)=>new Date(a.timelineAt).getTime()-new Date(b.timelineAt).getTime());
  return{
   attention,
+  systemLoad:{openLoops:activeLoops.length,overdueLoops:overdueLoops.length,staleLoops:staleLoops.length,upcoming72Hours:next72Hours.length,resolvedLast24Hours},
   today,
+  next72Hours,
   openLoops:db.openLoops.filter(o=>!["resolved","cancelled"].includes(o.status)),
   finance:{accounts:db.accounts.length,loans:db.loans.length,upcomingPayments:db.loanPayments.filter(p=>p.status==="scheduled").length},
   assets:{vehicles:db.vehicles.length,properties:db.properties.length},
