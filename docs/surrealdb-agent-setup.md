@@ -4,17 +4,21 @@ This repository's SurrealDB agent setup follows the official instructions at htt
 
 ## Agent Skills
 
-From the repository root, run:
+The three official skill packages are vendored under `.agents/skills/`:
+
+- `surrealql` — query language, schema, graph relationships, and reference patterns.
+- `surrealdb-vector` — vector search, HNSW indexes, and KNN queries.
+- `surrealdb-python` — Python SDK and embedded database usage.
+
+They were copied from the corresponding directories in https://github.com/surrealdb/agent-skills. To refresh/install through the official CLI in a coding environment, run:
 
 ```bash
 bash scripts/setup-surrealdb-agent-skills.sh
 ```
 
-This uses the official `npx skills` installer to install the three requested skills from `surrealdb/agent-skills`: `surrealql`, `surrealdb-vector`, and `surrealdb-python`. The install must be run in a coding environment with Node.js/npm and network access; this GitHub integration cannot execute repository shell commands, so the skill payloads are not falsely reported as installed by this change.
-
 ## MCP server
 
-`.vscode/mcp.json` configures the official hosted server at `https://mcp.surrealdb.com` for VS Code/GitHub Copilot. No credentials or tokens are stored in the repository. After this change is merged or checked out, reload VS Code, start/connect to the `surrealdb` server from the MCP view, and approve browser sign-in.
+`.vscode/mcp.json` configures the official hosted server at `https://mcp.surrealdb.com` for VS Code/GitHub Copilot. No credentials or tokens are stored in the repository. After checking out this branch or merging it, reload VS Code, start/connect to the `surrealdb` server from the MCP view, and approve browser sign-in.
 
 For Codex, the equivalent user-level command is:
 
