@@ -551,3 +551,14 @@ select optgroup{
 .payroll-stat-strip strong{font:700 clamp(14px,3vw,20px) Orbitron,sans-serif;overflow-wrap:anywhere}
 .payroll-stat-strip small{color:var(--muted);font-size:11px}
 @media(max-width:520px){.payroll-top-nav{align-items:flex-start;flex-direction:column}.payroll-nav-links{justify-content:flex-start;gap:12px}.payroll-hero-mark{display:none}.payroll-stat-strip{gap:6px}.payroll-stat-strip>div{padding:10px 8px}.payroll-stat-strip span{font-size:8px}.payroll-stat-strip strong{font-size:13px}.payroll-stat-strip small{font-size:9px}}
+
+
+/* Universal Capture: keep the first pass focused; reveal optional metadata on demand. */
+.capture-advanced{margin:4px 0 2px;border:1px solid rgba(255,213,79,.16);border-radius:12px;background:rgba(255,255,255,.018);overflow:hidden}
+.capture-advanced>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:42px;padding:10px 12px;cursor:pointer;list-style:none;color:var(--gold);font-size:12px;font-weight:700}
+.capture-advanced>summary::-webkit-details-marker{display:none}
+.capture-advanced>summary::after{content:"＋";flex:0 0 auto;color:var(--gold);font-size:15px}
+.capture-advanced[open]>summary::after{content:"−"}
+.capture-advanced>summary span{margin-left:auto;color:var(--muted);font-size:10px;font-weight:400;text-align:right}
+.capture-advanced-content{display:grid;gap:12px;padding:12px;border-top:1px solid rgba(255,255,255,.07)}
+@media(max-width:560px){.capture-advanced>summary{align-items:flex-start;flex-wrap:wrap;gap:4px 10px}.capture-advanced>summary span{margin-left:0;text-align:left;flex:1 1 100%}.capture-advanced-content{padding:10px}}
